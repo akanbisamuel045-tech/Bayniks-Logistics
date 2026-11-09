@@ -1,7 +1,8 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { authRouter } from './routes/auth.routes';
-import { riderRouter, fleetRouter, adminRiderRouter } from './routes/rider.routes';
+import { riderRouter, fleetRouter } from './routes/rider.routes';
+import { adminRouter } from './routes/admin.routes';
 import { mapsRouter, pricingRouter } from './routes/pricing.routes';
 import { orderRouter } from './routes/order.routes';
 import { walletRouter, webhookRouter } from './routes/wallet.routes';
@@ -44,7 +45,7 @@ export function createApp(): Express {
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/riders', riderRouter);
   app.use('/api/v1/fleet', fleetRouter);
-  app.use('/api/v1/admin', adminRiderRouter);
+  app.use('/api/v1/admin', adminRouter);
   app.use('/api/v1/maps', mapsRouter);
   app.use('/api/v1/pricing', pricingRouter);
   app.use('/api/v1/orders', orderRouter);

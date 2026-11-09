@@ -38,7 +38,9 @@ export default function VendorWorkstationPage() {
   const fetchVendorOrders = useCallback(async () => {
     setIsLoadingOrders(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+        ? window.localStorage.getItem('auth_token')
+        : null;
       const res = await fetch('/api/v1/vendor/orders', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -69,7 +71,9 @@ export default function VendorWorkstationPage() {
 
     setIsEstimating(true);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+        ? window.localStorage.getItem('auth_token')
+        : null;
       const res = await fetch('/api/v1/vendor/batch-estimate', {
         method: 'POST',
         headers: {
@@ -106,7 +110,9 @@ export default function VendorWorkstationPage() {
     setIsDispatching(true);
     setStatusMessage(null);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      const token = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+        ? window.localStorage.getItem('auth_token')
+        : null;
       const res = await fetch('/api/v1/vendor/batch-create', {
         method: 'POST',
         headers: {
@@ -430,3 +436,4 @@ export default function VendorWorkstationPage() {
     </div>
   );
 }
+

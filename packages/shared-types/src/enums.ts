@@ -16,6 +16,7 @@ export const RiderStatusSchema = z.enum(['offline', 'available', 'busy']);
 export type RiderStatus = z.infer<typeof RiderStatusSchema>;
 
 export const KycStatusSchema = z.enum([
+  'pending',
   'pending_review',
   'approved',
   'rejected',

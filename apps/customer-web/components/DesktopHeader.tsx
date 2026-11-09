@@ -119,6 +119,17 @@ export function DesktopHeader({
           <span className="hidden lg:inline font-mono text-[11px]">Bulk CSV</span>
         </button>
 
+        {/* Command Center Shortcut */}
+        <button
+          type="button"
+          onClick={() => router.push('/admin')}
+          title="Super-Admin & Fleet Command Center"
+          className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-300 hover:text-white hover:border-bayniks-orange transition-all flex items-center space-x-1.5 text-xs font-medium"
+        >
+          <span>🛡️</span>
+          <span className="hidden lg:inline font-mono text-[11px]">Command</span>
+        </button>
+
         {/* Quick CTA */}
         <button
           type="button"

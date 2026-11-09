@@ -81,3 +81,4 @@ export const VendorBatchSummaryResponseSchema = z.object({
   runs: z.array(VendorBatchRunItemSchema),
 });
 export type VendorBatchSummaryResponse = z.infer<typeof VendorBatchSummaryResponseSchema>;
+

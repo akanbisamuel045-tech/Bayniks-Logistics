@@ -43,6 +43,12 @@ export function DesktopSidebar({
       icon: '📊',
       onClick: () => router.push('/vendor'),
     },
+    {
+      id: 'admin',
+      label: 'Command Center',
+      icon: '🛡️',
+      onClick: () => router.push('/admin'),
+    },
     { id: 'schedule', label: 'Scheduled Fleet', icon: '📅' },
     { id: 'repeat', label: 'Repeat Orders', icon: '🔄' },
     { id: 'archive', label: 'Waybill Archive', icon: '📑' },

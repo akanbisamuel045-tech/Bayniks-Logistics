@@ -11,3 +11,4 @@ export * from './dispatch';
 export * from './interpolation';
 export * from './notification';
 export * from './vendor';
+export * from './admin';

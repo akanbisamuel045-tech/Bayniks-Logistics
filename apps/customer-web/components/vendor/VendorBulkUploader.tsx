@@ -361,3 +361,4 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
     </div>
   );
 }
+
