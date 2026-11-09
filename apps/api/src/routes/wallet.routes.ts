@@ -14,6 +14,7 @@ import {
   OrderNotFoundError,
 } from '../services/wallet.service';
 import { dispatchService } from '../services/dispatch.service';
+import { payoutService } from '../services/payout.service';
 
 export const walletRouter = Router();
 export const webhookRouter = Router();
@@ -185,7 +186,7 @@ webhookRouter.post(
           await walletService.creditWalletIdempotent({
             userId: metadata.userId as string,
             amountKobo: amount,
-            reference,
+            reference: reference || `PSK-ORD-${Date.now()}`,
             orderId: metadata.orderId as string,
           });
           await walletService.lockOrderEscrowFromWallet({
@@ -198,9 +199,11 @@ webhookRouter.post(
           await walletService.creditWalletIdempotent({
             userId: metadata.userId as string,
             amountKobo: amount,
-            reference,
+            reference: reference || `PSK-REF-${Date.now()}`,
           });
         }
+      } else if (event.startsWith('transfer.')) {
+        await payoutService.handlePaystackTransferWebhook(event, data);
       }
 
       res.status(200).json({ status: 'success', received: true });

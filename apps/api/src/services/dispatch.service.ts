@@ -19,6 +19,7 @@ import {
 import { walletService } from './wallet.service';
 import { telemetryService } from './telemetry.service';
 import { notificationService } from './notification.service';
+import { payoutService } from './payout.service';
 
 export class DispatchError extends Error {
   public statusCode: number;
@@ -846,10 +847,16 @@ export class DispatchService {
       console.error('[NotificationService] Failed to dispatch order delivered receipt:', err);
     }
 
-    // 2. Atomic Wallet Escrow Settlement / COD Accounting (Golden Rule 6)
+    // 2. Atomic Wallet Escrow Settlement / COD Accounting (Golden Rule 6 & Stage 19 Split Settlement)
     if (order.paymentMethod === 'wallet' || order.paymentMethod === 'card_bank') {
       if (order.paymentStatus === 'paid') {
-        await walletService.releaseOrderEscrowToRider({ orderId: order._id.toString() });
+        try {
+          await payoutService.processOrderSplitSettlement(order._id.toString());
+        } catch (err) {
+          console.error('[DispatchService] Error executing order split settlement:', err);
+          // Fallback to wallet escrow release if split settlement encountered unexpected error
+          await walletService.releaseOrderEscrowToRider({ orderId: order._id.toString() });
+        }
       }
     } else if (order.paymentMethod === 'pay_on_pickup' || order.paymentMethod === 'pay_on_delivery') {
       order.paymentStatus = 'paid';

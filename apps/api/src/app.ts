@@ -9,6 +9,7 @@ import { walletRouter, webhookRouter } from './routes/wallet.routes';
 import { telemetryRouter } from './routes/telemetry.routes';
 import { dispatchRouter } from './routes/dispatch.routes';
 import { vendorRouter } from './routes/vendor.routes';
+import { payoutRouter } from './routes/payout.routes';
 import { checkMongoHealth } from './config/db';
 import { checkRedisHealth } from './config/redis';
 
@@ -50,6 +51,8 @@ export function createApp(): Express {
   app.use('/api/v1/pricing', pricingRouter);
   app.use('/api/v1/orders', orderRouter);
   app.use('/api/v1/wallet', walletRouter);
+  app.use('/api/v1/wallet', payoutRouter);
+  app.use('/api/v1/payout', payoutRouter);
   app.use('/api/v1/webhooks', webhookRouter);
   app.use('/api/v1/telemetry', telemetryRouter);
   app.use('/api/v1/dispatch', dispatchRouter);

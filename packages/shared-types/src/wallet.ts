@@ -25,11 +25,13 @@ export type OrderEscrowPayRequest = z.infer<typeof OrderEscrowPayRequestSchema>;
  * Paystack webhook event structure validation.
  */
 export const PaystackWebhookEventSchema = z.object({
-  event: z.enum(['charge.success', 'transfer.success', 'transfer.failed']),
+  event: z.enum(['charge.success', 'transfer.success', 'transfer.failed', 'transfer.reversed']),
   data: z.object({
-    reference: z.string(),
+    reference: z.string().optional(),
+    transfer_code: z.string().optional(),
     amount: z.number().int().positive('Webhook amount must be a positive integer in kobo'),
-    status: z.string(),
+    status: z.string().optional(),
+    reason: z.string().optional(),
     metadata: z.record(z.unknown()).optional(),
     customer: z
       .object({

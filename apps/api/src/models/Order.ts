@@ -56,6 +56,8 @@ export interface IOrder extends Document {
   stops: IOrderStop[];
   encodedRoutePolyline?: string;
   deliveredAt?: Date;
+  payoutStatus?: 'pending' | 'settled';
+  settledAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -263,6 +265,14 @@ export const OrderSchema = new Schema<IOrder>(
       default: undefined,
     },
     deliveredAt: {
+      type: Date,
+    },
+    payoutStatus: {
+      type: String,
+      enum: ['pending', 'settled'],
+      default: 'pending',
+    },
+    settledAt: {
       type: Date,
     },
   },
