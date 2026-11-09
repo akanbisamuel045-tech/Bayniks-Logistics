@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { formatNaira } from '@logistics/shared-types';
 
 export interface DesktopSidebarProps {
@@ -24,6 +25,8 @@ export function DesktopSidebar({
   onOpenSupport,
   onOpenDeliveries,
 }: DesktopSidebarProps) {
+  const router = useRouter();
+
   const navItems = [
     { id: 'dashboard', label: 'Console Home', icon: '⚡' },
     {
@@ -34,6 +37,12 @@ export function DesktopSidebar({
       onClick: onOpenDeliveries,
     },
     { id: 'new_delivery', label: 'New Delivery', icon: '📦' },
+    {
+      id: 'vendor',
+      label: 'Vendor Bulk CSV',
+      icon: '📊',
+      onClick: () => router.push('/vendor'),
+    },
     { id: 'schedule', label: 'Scheduled Fleet', icon: '📅' },
     { id: 'repeat', label: 'Repeat Orders', icon: '🔄' },
     { id: 'archive', label: 'Waybill Archive', icon: '📑' },

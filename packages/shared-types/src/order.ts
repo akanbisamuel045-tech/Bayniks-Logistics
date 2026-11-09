@@ -39,21 +39,27 @@ export const OrderStopCreateInputSchema = z.object({
 export type OrderStopCreateInput = z.infer<typeof OrderStopCreateInputSchema>;
 
 /**
+ * Input schema for order pickup location & sender contacts.
+ */
+export const OrderPickupInputSchema = z.object({
+  address: z.string().min(3, 'Pickup address is required (min 3 chars)'),
+  landmark: z
+    .string()
+    .min(2, 'Pickup landmark is required for Nigerian street navigation')
+    .max(150),
+  location: LatLngSchema,
+  contactName: z.string().min(2, 'Contact name is required').max(100),
+  contactPhone: OrderPhoneNumberSchema,
+});
+export type OrderPickupInput = z.infer<typeof OrderPickupInputSchema>;
+
+/**
  * Input schema for creating a new order (pickup + 1 to 10 stops).
  */
 export const CreateOrderRequestSchema = z.object({
   vehicleType: VehicleTypeSchema.default('bike'),
   paymentMethod: PaymentMethodSchema,
-  pickup: z.object({
-    address: z.string().min(3, 'Pickup address is required (min 3 chars)'),
-    landmark: z
-      .string()
-      .min(2, 'Pickup landmark is required for Nigerian street navigation')
-      .max(150),
-    location: LatLngSchema,
-    contactName: z.string().min(2, 'Contact name is required').max(100),
-    contactPhone: OrderPhoneNumberSchema,
-  }),
+  pickup: OrderPickupInputSchema,
   stops: z
     .array(OrderStopCreateInputSchema)
     .min(1, 'At least 1 delivery stop is required')
