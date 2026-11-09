@@ -20,9 +20,9 @@ const LiveTrackingMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full min-h-[320px] bg-slate-950 flex flex-col items-center justify-center text-slate-500 text-xs font-mono space-y-2">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <span>Initializing Tactical Cartography...</span>
+      <div className="w-full h-full min-h-[320px] bg-bayniks-black flex flex-col items-center justify-center text-slate-500 text-xs font-mono space-y-2">
+        <div className="w-8 h-8 border-2 border-bayniks-orange border-t-transparent rounded-full animate-spin" />
+        <span>Initializing Bayniks Tactical Cartography...</span>
       </div>
     ),
   }
@@ -122,18 +122,18 @@ export default function TrackingPage({
     });
 
     socket.on('tracking:update', (update: any) => {
-      if (update.status) {
-        setTrackingData((prev) => (prev ? { ...prev, status: update.status } : prev));
-      }
-      if (update.lat !== undefined && update.lng !== undefined) {
+      if (update.trackingCode === trackingCode.toUpperCase()) {
         setLiveTelemetry({
           lat: update.lat,
           lng: update.lng,
-          bearing: update.bearing ?? 0,
-          speed: update.speed ?? 0,
-          accuracy: update.accuracy,
-          timestamp: update.timestamp ?? Date.now(),
+          bearing: update.bearing || 0,
+          speed: update.speed || 0,
+          accuracy: update.accuracy || 10,
+          timestamp: update.updatedAt || Date.now(),
         });
+        if (update.status) {
+          setTrackingData((prev) => (prev ? { ...prev, status: update.status } : prev));
+        }
       }
     });
 
@@ -143,26 +143,39 @@ export default function TrackingPage({
     };
   }, [trackingCode]);
 
-  // 3. Compute Dynamic ETA and Distance to Next Destination
+  // Decode route coordinates
+  const routeCoordinates = useMemo(() => {
+    if (trackingData?.encodedRoutePolyline) {
+      try {
+        return decodeGooglePolyline(trackingData.encodedRoutePolyline);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [trackingData?.encodedRoutePolyline]);
+
+  // Compute live remaining ETA and distance
   const dynamicEta = useMemo(() => {
-    if (!trackingData) return null;
+    if (!liveTelemetry || routeCoordinates.length === 0) {
+      if (trackingData?.estimatedDistanceKm) {
+        return {
+          remainingDistanceKm: trackingData.estimatedDistanceKm,
+          etaMinutes: Math.round(trackingData.estimatedDistanceKm * 2.5),
+        };
+      }
+      return null;
+    }
 
-    // Determine target location (first undelivered stop or pickup)
-    const targetLoc: LatLng =
-      trackingData.status === 'rider_assigned' || trackingData.status === 'arrived_pickup'
-        ? trackingData.pickup.location
-        : (trackingData.stops.find((s) => s.status !== 'delivered')?.dropoffLocation ??
-          trackingData.stops[trackingData.stops.length - 1]!.dropoffLocation);
+    const currentPos: LatLng = { lat: liveTelemetry.lat, lng: liveTelemetry.lng };
+    const targetPos =
+      routeCoordinates.length > 0
+        ? routeCoordinates[routeCoordinates.length - 1]!
+        : trackingData?.stops[trackingData.stops.length - 1]?.dropoffLocation || currentPos;
+    return computeRemainingDistanceAndEta(currentPos, targetPos, liveTelemetry.speed || 25);
+  }, [liveTelemetry, routeCoordinates, trackingData?.estimatedDistanceKm]);
 
-    const riderPos: LatLng = liveTelemetry
-      ? { lat: liveTelemetry.lat, lng: liveTelemetry.lng }
-      : trackingData.pickup.location;
-
-    const speed = liveTelemetry?.speed ?? 0;
-    return computeRemainingDistanceAndEta(riderPos, targetLoc, speed);
-  }, [trackingData, liveTelemetry]);
-
-  // 4. Interactive Simulation Mode Handler (Demonstrates 60fps Interpolation)
+  // Local Client Simulation Mode
   const toggleSimulation = () => {
     if (isSimulating) {
       if (simulationTimerRef.current) clearInterval(simulationTimerRef.current);
@@ -170,53 +183,31 @@ export default function TrackingPage({
       return;
     }
 
-    if (!trackingData) return;
-
-    let points: LatLng[] = [];
-    if (trackingData.encodedRoutePolyline) {
-      try {
-        points = decodeGooglePolyline(trackingData.encodedRoutePolyline);
-      } catch {
-        // Fallback
-      }
-    }
-    if (points.length < 2) {
-      points = [trackingData.pickup.location, ...trackingData.stops.map((s) => s.dropoffLocation)];
-    }
+    if (routeCoordinates.length < 2) return;
 
     setIsSimulating(true);
     let stepIndex = 0;
+    const totalSteps = routeCoordinates.length;
 
-    const runStep = () => {
-      if (stepIndex >= points.length - 1) {
-        stepIndex = 0; // Loop simulation
-      }
-      const current = points[stepIndex]!;
-      const next = points[stepIndex + 1]!;
+    simulationTimerRef.current = setInterval(() => {
+      stepIndex = (stepIndex + 1) % totalSteps;
+      const targetCoord = routeCoordinates[stepIndex]!;
+      const nextCoord = routeCoordinates[(stepIndex + 1) % totalSteps]!;
 
-      // Calculate bearing from current to next point
-      const y = Math.sin((next.lng - current.lng) * (Math.PI / 180)) * Math.cos(next.lat * (Math.PI / 180));
-      const x =
-        Math.cos(current.lat * (Math.PI / 180)) * Math.sin(next.lat * (Math.PI / 180)) -
-        Math.sin(current.lat * (Math.PI / 180)) *
-          Math.cos(next.lat * (Math.PI / 180)) *
-          Math.cos((next.lng - current.lng) * (Math.PI / 180));
-      const bearing = (((Math.atan2(y, x) * 180) / Math.PI + 360) % 360);
+      const dLat = nextCoord.lat - targetCoord.lat;
+      const dLng = nextCoord.lng - targetCoord.lng;
+      let calculatedBearing = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+      if (calculatedBearing < 0) calculatedBearing += 360;
 
       setLiveTelemetry({
-        lat: current.lat,
-        lng: current.lng,
-        bearing: Math.round(bearing),
-        speed: 35 + Math.floor(Math.random() * 15),
-        accuracy: 4,
+        lat: targetCoord.lat,
+        lng: targetCoord.lng,
+        bearing: Math.round(calculatedBearing),
+        speed: 38 + Math.sin(stepIndex) * 8,
+        accuracy: 8,
         timestamp: Date.now(),
       });
-
-      stepIndex++;
-    };
-
-    runStep();
-    simulationTimerRef.current = setInterval(runStep, 4500);
+    }, 1500);
   };
 
   useEffect(() => {
@@ -225,76 +216,99 @@ export default function TrackingPage({
     };
   }, []);
 
-  // WhatsApp Share URL generator
-  const whatsappShareUrl = useMemo(() => {
-    if (!trackingData) return '';
-    const shareText = `Track my LagosExpress package in real-time!\nTracking Code: ${trackingData.trackingCode}\nStatus: ${trackingData.status.toUpperCase()}\nTrack here: ${typeof window !== 'undefined' ? window.location.href : ''}`;
-    return `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-  }, [trackingData]);
+  const currentShareUrl =
+    typeof window !== 'undefined'
+      ? window.location.href
+      : `https://bayniks.com/track/${trackingCode}`;
+
+  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
+    `Track my Bayniks express delivery live: ${currentShareUrl}`
+  )}`;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Header */}
-      <header className="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1.5 transition-colors"
-        >
-          <span>← Book Dispatch</span>
-        </Link>
-
+    <div className="min-h-screen bg-bayniks-black text-slate-100 flex flex-col font-sans">
+      {/* Top Navigation Bar */}
+      <header className="h-16 bg-bayniks-cardDark/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-30 px-4 md:px-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          {/* Connection status indicator */}
-          <div className="flex items-center space-x-1.5 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-full text-[11px] font-mono">
+          <Link
+            href="/"
+            className="w-10 h-10 rounded-xl bg-bayniks-orange text-white flex items-center justify-center font-bold text-lg shadow-bolt-glow hover:scale-105 transition-transform"
+          >
+            ⚡
+          </Link>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="font-mono font-bold text-sm tracking-wider text-white">BAYNIKS</span>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-bayniks-orange/20 text-bayniks-orange border border-bayniks-orange/40">
+                LIVE GPS RADAR
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-mono">
+              Waybill: {trackingCode.toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2 md:space-x-3">
+          {/* WhatsApp Share Link */}
+          <a
+            href={whatsappShareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-800/80 hover:bg-emerald-900 text-emerald-400 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+          >
+            <span>💬</span>
+            <span className="hidden sm:inline">Share on WhatsApp</span>
+          </a>
+
+          {/* Socket.io Live Status Pill */}
+          <div
+            className={`flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-mono font-semibold border ${
+              isSocketConnected
+                ? 'bg-emerald-950/80 text-emerald-400 border-emerald-800'
+                : 'bg-amber-950/80 text-amber-400 border-amber-800'
+            }`}
+          >
             <span
               className={`w-2 h-2 rounded-full ${
-                isSocketConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                isSocketConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
               }`}
             />
-            <span className="text-slate-400">
-              {isSocketConnected ? 'Live 5s GPS' : 'Connecting Gateway...'}
+            <span className="hidden sm:inline">
+              {isSocketConnected ? 'TELEMETRY LIVE' : 'RECONNECTING'}
             </span>
           </div>
 
-          {whatsappShareUrl && (
-            <a
-              href={whatsappShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-full text-[11px] font-medium flex items-center space-x-1 transition-all"
-              title="Share tracking link via WhatsApp"
-            >
-              <span>💬</span>
-              <span className="hidden sm:inline">WhatsApp</span>
-            </a>
-          )}
+          <Link
+            href="/"
+            className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-xl bg-bayniks-surfaceDark border border-slate-800 transition-colors"
+          >
+            New Waybill
+          </Link>
         </div>
       </header>
 
-      {/* Main Body */}
+      {/* Main Content Viewport */}
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-24 space-y-4">
-          <div className="w-12 h-12 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-mono text-slate-400">
-            Triangulating telemetry for {trackingCode}...
-          </p>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-3">
+          <div className="w-10 h-10 border-4 border-bayniks-orange border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-mono text-slate-400">Loading Bayniks live telemetry...</span>
         </div>
       ) : error || !trackingData ? (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center space-y-5 shadow-2xl">
-            <div className="text-5xl">📦</div>
-            <h2 className="text-xl font-bold text-white">Shipment Not Found</h2>
-            <p className="text-xs text-slate-400">
-              Could not find active telemetry matching code{' '}
-              <span className="font-mono text-emerald-400 font-semibold">{trackingCode}</span>.
-            </p>
-            <Link
-              href="/"
-              className="inline-block w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all"
-            >
-              Return to Booking
-            </Link>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-rose-950/80 border border-rose-800 text-rose-400 text-3xl flex items-center justify-center">
+            ⚠️
           </div>
+          <h2 className="text-xl font-bold text-white">Waybill Not Found</h2>
+          <p className="text-xs text-slate-400 max-w-sm">
+            We could not locate shipment with tracking code <span className="font-mono text-white">{trackingCode}</span>. Please verify your waybill number.
+          </p>
+          <Link
+            href="/"
+            className="px-5 py-2.5 bg-bayniks-orange hover:bg-bayniks-orangeDark text-white font-semibold text-xs rounded-xl shadow-bolt-glow transition-all"
+          >
+            Return to Console Home
+          </Link>
         </div>
       ) : (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0">
@@ -313,15 +327,15 @@ export default function TrackingPage({
           </div>
 
           {/* Details & Itinerary Drawer (Right / Bottom) */}
-          <div className="lg:col-span-5 p-4 md:p-6 space-y-5 overflow-y-auto max-h-[calc(100vh-60px)]">
+          <div className="lg:col-span-5 p-4 md:p-6 space-y-5 overflow-y-auto max-h-[calc(100vh-64px)]">
             {/* Status & Tracking Code Card */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div className="clay-card rounded-3xl p-5 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
-                    Tracking ID
+                    Waybill Tracking ID
                   </span>
-                  <div className="text-2xl font-black font-mono text-emerald-400">
+                  <div className="text-2xl font-black font-mono text-bayniks-orange tracking-wider mt-0.5">
                     {trackingData.trackingCode}
                   </div>
                 </div>
@@ -331,16 +345,16 @@ export default function TrackingPage({
               {/* Live Distance & ETA Pills */}
               {dynamicEta && (
                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
-                  <div className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl">
+                  <div className="bg-bayniks-surfaceDark border border-slate-800/80 p-3 rounded-2xl">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block">
                       Estimated Arrival
                     </span>
-                    <span className="text-lg font-bold text-emerald-400 font-mono">
+                    <span className="text-lg font-bold text-bayniks-orange font-mono">
                       ~{dynamicEta.etaMinutes}{' '}
                       <span className="text-xs text-slate-400 font-normal">mins</span>
                     </span>
                   </div>
-                  <div className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl">
+                  <div className="bg-bayniks-surfaceDark border border-slate-800/80 p-3 rounded-2xl">
                     <span className="text-[10px] uppercase font-mono text-slate-400 block">
                       Remaining Distance
                     </span>
@@ -355,7 +369,7 @@ export default function TrackingPage({
 
             {/* Assigned Rider Card */}
             {trackingData.assignedRider ? (
-              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+              <div className="clay-card rounded-3xl p-5 shadow-xl space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                     Assigned Dispatch Rider
@@ -367,7 +381,7 @@ export default function TrackingPage({
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-sky-600 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                    <div className="w-12 h-12 rounded-2xl bg-bayniks-orange flex items-center justify-center text-xl font-black text-white shadow-bolt-glow">
                       {trackingData.assignedRider.fullName.slice(0, 1)}
                     </div>
                     <div>
@@ -375,7 +389,9 @@ export default function TrackingPage({
                         {trackingData.assignedRider.fullName}
                       </h3>
                       <div className="text-xs text-slate-400 flex items-center space-x-2 mt-0.5">
-                        <span className="capitalize">{trackingData.assignedRider.vehicleType}</span>
+                        <span className="capitalize">
+                          {trackingData.assignedRider.vehicleType === 'bike' ? '🏍️ Motorcycle' : trackingData.assignedRider.vehicleType}
+                        </span>
                         {trackingData.assignedRider.plateNumber && (
                           <>
                             <span>•</span>
@@ -394,7 +410,7 @@ export default function TrackingPage({
 
                   <a
                     href={`tel:${trackingData.assignedRider.phone}`}
-                    className="p-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 active:scale-95"
+                    className="p-3 bg-bayniks-orange hover:bg-bayniks-orangeDark text-white rounded-xl transition-all shadow-bolt-glow active:scale-95"
                     title="Direct call to rider"
                   >
                     📞
@@ -402,21 +418,21 @@ export default function TrackingPage({
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-center space-y-1">
+              <div className="clay-card rounded-3xl p-4 text-center space-y-1">
                 <span className="text-xs font-semibold text-slate-300">Searching Dispatch Fleet</span>
                 <p className="text-[11px] text-slate-400">
-                  Broadcasting order to nearby qualified motorcycle riders in Lagos...
+                  Broadcasting order to nearby qualified motorcycle couriers in Lagos...
                 </p>
               </div>
             )}
 
             {/* Multi-Stop Itinerary Timeline */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+            <div className="clay-card rounded-3xl p-5 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
                   Route Waypoints ({1 + trackingData.stops.length})
                 </span>
-                <span className="text-xs font-mono font-bold text-emerald-400">
+                <span className="text-xs font-mono font-bold text-bayniks-orange">
                   {formatNaira(trackingData.totalFareKobo)}
                 </span>
               </div>
@@ -424,7 +440,7 @@ export default function TrackingPage({
               <div className="space-y-4 border-l-2 border-slate-800 ml-2.5 pl-4">
                 {/* Pickup */}
                 <div className="relative">
-                  <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-slate-900" />
+                  <div className="absolute -left-[22px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-bayniks-cardDark" />
                   <div className="text-[11px] font-mono font-semibold text-emerald-400">PICKUP</div>
                   <div className="text-sm font-semibold text-slate-200 mt-0.5">
                     {trackingData.pickup.address}
@@ -440,7 +456,7 @@ export default function TrackingPage({
                   return (
                     <div key={stop.sequenceNumber} className="relative pt-2">
                       <div
-                        className={`absolute -left-[22px] top-3 w-3 h-3 rounded-full ring-4 ring-slate-900 ${
+                        className={`absolute -left-[22px] top-3 w-3 h-3 rounded-full ring-4 ring-bayniks-cardDark ${
                           isDelivered ? 'bg-emerald-500' : 'bg-sky-500'
                         }`}
                       />
@@ -452,7 +468,7 @@ export default function TrackingPage({
                           className={`text-[9px] uppercase font-mono px-2 py-0.5 rounded ${
                             isDelivered
                               ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                              : 'bg-slate-800 text-slate-300'
+                              : 'bg-bayniks-surfaceDark text-slate-300 border border-slate-800'
                           }`}
                         >
                           {stop.status}
@@ -474,13 +490,13 @@ export default function TrackingPage({
             </div>
 
             {/* Anti-Fraud Security Notice */}
-            <div className="bg-slate-950 border border-slate-800/80 rounded-2xl p-4 text-xs text-slate-400 flex items-start space-x-3">
-              <span className="text-amber-400 text-lg leading-none">🛡️</span>
+            <div className="clay-card rounded-2xl p-4 text-xs text-slate-400 flex items-start space-x-3">
+              <span className="text-bayniks-orange text-lg leading-none">🛡️</span>
               <div className="space-y-1">
                 <span className="font-semibold text-slate-200 block">Anti-Fraud PIN Shield</span>
                 <p className="text-[11px] leading-relaxed">
                   Verification PINs are strictly hidden from this public link. The 4-digit pickup
-                  PIN is delivered only to the sender, and the delivery PIN to the recipient.
+                  PIN is delivered only to the sender, and the delivery PIN to the recipient via Termii DND SMS and WhatsApp.
                 </p>
               </div>
             </div>

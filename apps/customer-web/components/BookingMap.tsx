@@ -67,7 +67,7 @@ export function BookingMap({
     return waypoints.map((w) => w.location);
   }, [encodedPolyline, waypoints]);
 
-  // 3. Compute Bounding Box (fitBounds) with padding
+  // 3. Compute Bounding Box with margin
   const bounds = useMemo(() => {
     const allCoords = routePoints.length > 0 ? routePoints : waypoints.map((w) => w.location);
     if (allCoords.length === 0) {
@@ -101,32 +101,36 @@ export function BookingMap({
     };
   }, [routePoints, waypoints]);
 
-  // Project (lat, lng) to SVG viewBox (1000 x 800)
-  const project = (coords: LatLng) => {
-    const width = 1000;
-    const height = 800;
-    const padding = 80;
-
-    const xFrac = (coords.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng);
-    // Invert Y because latitude increases northward (upward)
-    const yFrac = 1 - (coords.lat - bounds.minLat) / (bounds.maxLat - bounds.minLat);
-
-    const x = padding + xFrac * (width - 2 * padding);
-    const y = padding + yFrac * (height - 2 * padding);
-
+  // 4. Projection helper: converts { lat, lng } to SVG (x, y) coordinates
+  const project = (coord: LatLng) => {
+    const x = ((coord.lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * 1000;
+    // Invert Y because SVG coordinates increase downwards
+    const y = ((bounds.maxLat - coord.lat) / (bounds.maxLat - bounds.minLat)) * 800;
     return { x, y };
   };
 
   const svgPolylinePoints = useMemo(() => {
     if (routePoints.length < 2) return '';
-    return routePoints.map((pt) => {
-      const { x, y } = project(pt);
+    return routePoints.map((c) => {
+      const { x, y } = project(c);
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
   }, [routePoints, bounds]);
 
+  // First waypoint or mid-point for simulated bike marker
+  const bikePoint = useMemo(() => {
+    if (routePoints.length >= 2) {
+      const midIdx = Math.floor(routePoints.length / 2);
+      return project(routePoints[midIdx]!);
+    }
+    if (waypoints.length > 0) {
+      return project(waypoints[0]!.location);
+    }
+    return { x: 500, y: 400 };
+  }, [routePoints, waypoints, bounds]);
+
   return (
-    <div className={`relative w-full h-full bg-slate-950 overflow-hidden select-none ${className}`}>
+    <div className={`relative w-full h-full bg-bayniks-black overflow-hidden select-none ${className}`}>
       {/* Interactive Cartography SVG */}
       <svg
         viewBox="0 0 1000 800"
@@ -134,63 +138,63 @@ export function BookingMap({
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          {/* Glowing emerald filter for route */}
-          <filter id="emeraldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          {/* Glowing Atomic Orange filter for route */}
+          <filter id="orangeGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
           {/* Subtle grid pattern */}
-          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.8" opacity="0.4" />
+          <pattern id="bayniksGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2228" strokeWidth="0.8" opacity="0.5" />
           </pattern>
         </defs>
 
         {/* Background Grid */}
-        <rect width="1000" height="800" fill="#090d16" />
-        <rect width="1000" height="800" fill="url(#grid)" />
+        <rect width="1000" height="800" fill="#0E1013" />
+        <rect width="1000" height="800" fill="url(#bayniksGrid)" />
 
         {/* Lagos Stylized Lagoon & Ocean Shapes */}
         <path
           d="M 0 720 Q 250 680, 500 700 T 1000 680 L 1000 800 L 0 800 Z"
-          fill="#0c192c"
-          opacity="0.8"
+          fill="#13161B"
+          opacity="0.9"
         />
         <path
           d="M 120 400 Q 300 480, 550 430 T 900 490 L 950 560 Q 600 520, 250 560 Z"
-          fill="#0c1e38"
-          opacity="0.5"
+          fill="#161A22"
+          opacity="0.6"
         />
 
-        {/* Stylized Key Arteries (Third Mainland Bridge & Expressway Lines) */}
-        <line x1="280" y1="200" x2="620" y2="580" stroke="#1e293b" strokeWidth="4" opacity="0.6" strokeDasharray="6 4" />
-        <line x1="150" y1="520" x2="880" y2="540" stroke="#1e293b" strokeWidth="3" opacity="0.6" />
+        {/* Key Express Arteries */}
+        <line x1="280" y1="200" x2="620" y2="580" stroke="#1E2228" strokeWidth="4" opacity="0.8" strokeDasharray="6 4" />
+        <line x1="150" y1="520" x2="880" y2="540" stroke="#1E2228" strokeWidth="3" opacity="0.8" />
 
         {/* Route Polyline (Shadow) */}
         {svgPolylinePoints && (
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#064e3b"
+            stroke="#EA580C"
             strokeWidth="10"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.7"
+            opacity="0.25"
           />
         )}
 
-        {/* Route Polyline (Main Glowing Line) */}
+        {/* Route Polyline (Main Glowing Line: Atomic Orange) */}
         {svgPolylinePoints && (
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#10b981"
+            stroke="#FF6D1F"
             strokeWidth="4.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#emeraldGlow)"
+            filter="url(#orangeGlow)"
           />
         )}
 
@@ -199,12 +203,24 @@ export function BookingMap({
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#6ee7b7"
+            stroke="#FB923C"
             strokeWidth="2"
             strokeDasharray="8 16"
             strokeLinecap="round"
             className="animate-pulse"
           />
+        )}
+
+        {/* Moving Motorcycle Marker on Route */}
+        {routePoints.length >= 2 && (
+          <g transform={`translate(${bikePoint.x}, ${bikePoint.y})`}>
+            {/* Pulse aura */}
+            <circle cx="0" cy="0" r="22" fill="#FF6D1F" opacity="0.25" className="animate-ping" />
+            <circle cx="0" cy="0" r="14" fill="#FF6D1F" stroke="#FFFFFF" strokeWidth="2" className="shadow-lg" />
+            <text x="0" y="4" textAnchor="middle" fontSize="12" fill="white">
+              🏍️
+            </text>
+          </g>
         )}
 
         {/* Waypoint Markers */}
@@ -221,7 +237,7 @@ export function BookingMap({
               onMouseLeave={() => setActiveTooltip(null)}
               onClick={() => setActiveTooltip(isHovered ? null : `wp-${i}`)}
             >
-              {/* Outer Pulse Ring for Pickup */}
+              {/* Outer Pulse Ring for Pickup (Emerald) */}
               {isPickup && (
                 <circle
                   cx={x}
@@ -234,9 +250,9 @@ export function BookingMap({
               )}
 
               {/* Marker Pin Base Shadow */}
-              <ellipse cx={x} cy={y + 14} rx="12" ry="5" fill="#000000" opacity="0.5" />
+              <ellipse cx={x} cy={y + 14} rx="12" ry="5" fill="#000000" opacity="0.6" />
 
-              {/* Pin Circle */}
+              {/* Pin Circle: Emerald for Pickup, Sky Blue for Dropoffs */}
               <circle
                 cx={x}
                 cy={y}
@@ -250,48 +266,51 @@ export function BookingMap({
               {/* Pin Label */}
               <text
                 x={x}
-                y={y + 4.5}
+                y={y + (isPickup ? 4 : 4)}
                 textAnchor="middle"
                 fill="#ffffff"
-                fontSize={isPickup ? '12' : '11'}
+                fontSize={isPickup ? '10' : '11'}
                 fontWeight="bold"
-                fontFamily="sans-serif"
+                fontFamily="monospace"
               >
                 {isPickup ? 'P' : wp.index}
               </text>
 
-              {/* Tooltip Card on Hover/Click */}
-              {isHovered && (
-                <g transform={`translate(${x}, ${y - 42})`}>
+              {/* Waypoint Tooltip Popup */}
+              {(isHovered || waypoints.length <= 2) && (
+                <g transform={`translate(${x}, ${y - 48})`}>
                   <rect
-                    x="-100"
-                    y="-30"
-                    width="200"
-                    height="32"
-                    rx="6"
-                    fill="#0f172a"
-                    stroke="#334155"
+                    x="-90"
+                    y="0"
+                    width="180"
+                    height="38"
+                    rx="8"
+                    fill="#16181D"
+                    stroke="#FF6D1F"
                     strokeWidth="1"
+                    opacity="0.95"
                     className="shadow-2xl"
                   />
                   <text
                     x="0"
-                    y="-18"
+                    y="15"
                     textAnchor="middle"
-                    fill="#f8fafc"
-                    fontSize="11"
-                    fontWeight="600"
+                    fill={isPickup ? '#10b981' : '#38bdf8'}
+                    fontSize="9"
+                    fontWeight="bold"
+                    fontFamily="monospace"
                   >
-                    {isPickup ? 'Pickup' : `Stop ${wp.index}`}
+                    {isPickup ? 'PICKUP LOCATION' : `STOP #${wp.index}`}
                   </text>
                   <text
                     x="0"
-                    y="-6"
+                    y="28"
                     textAnchor="middle"
-                    fill="#94a3b8"
-                    fontSize="9.5"
+                    fill="#e2e8f0"
+                    fontSize="10"
+                    fontWeight="500"
                   >
-                    {wp.landmark || wp.name.slice(0, 28)}
+                    {wp.name.length > 22 ? `${wp.name.substring(0, 20)}...` : wp.name}
                   </text>
                 </g>
               )}
@@ -300,39 +319,52 @@ export function BookingMap({
         })}
       </svg>
 
-      {/* Floating HUD: Distance & ETA Banner */}
-      {estimatedDistanceKm !== undefined && estimatedDurationMinutes !== undefined && (
-        <div className="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl px-4 py-2.5 shadow-2xl flex items-center space-x-4 text-xs font-medium z-10">
-          <div className="flex items-center space-x-1.5 text-slate-300">
-            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            <span>{estimatedDistanceKm} km</span>
-          </div>
-          <div className="h-3 w-px bg-slate-700" />
-          <div className="flex items-center space-x-1.5 text-slate-300">
-            <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>~{estimatedDurationMinutes} mins</span>
-          </div>
-          {stops.length > 1 && (
-            <>
-              <div className="h-3 w-px bg-slate-700" />
-              <div className="text-emerald-400 font-semibold">
-                {stops.length} Stops
-              </div>
-            </>
-          )}
+      {/* Floating HUD: Route Statistics */}
+      <div className="absolute top-4 left-4 z-10 clay-card rounded-2xl p-3 backdrop-blur-md border border-slate-800 shadow-xl space-y-1.5 max-w-xs">
+        <div className="flex items-center space-x-2">
+          <span className="w-2 h-2 rounded-full bg-bayniks-orange animate-ping" />
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-300">
+            Bayniks Radar Viewport
+          </span>
         </div>
-      )}
 
-      {/* Lagos Watermark Badge */}
-      <div className="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-lg px-3 py-1 text-[11px] font-mono text-slate-400 z-10 flex items-center space-x-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span>Lagos Real-Time Fleet Radar</span>
+        {estimatedDistanceKm !== undefined && estimatedDurationMinutes !== undefined ? (
+          <div className="flex items-baseline space-x-3 pt-1 border-t border-slate-800/80">
+            <div>
+              <span className="text-[9px] uppercase font-mono text-slate-400 block">Distance</span>
+              <span className="text-sm font-bold text-white font-mono">{estimatedDistanceKm} km</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase font-mono text-slate-400 block">Motorcycle ETA</span>
+              <span className="text-sm font-bold text-bayniks-orange font-mono">~{estimatedDurationMinutes} mins</span>
+            </div>
+            <div>
+              <span className="text-[9px] uppercase font-mono text-slate-400 block">Waypoints</span>
+              <span className="text-sm font-bold text-slate-200 font-mono">{waypoints.length}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-[10px] text-slate-400 font-mono">
+            Routing express motorcycle itinerary...
+          </div>
+        )}
+      </div>
+
+      {/* Legend Card */}
+      <div className="absolute bottom-4 right-4 z-10 clay-card rounded-2xl p-2.5 backdrop-blur-md border border-slate-800 text-[10px] font-mono text-slate-300 space-y-1 hidden sm:block">
+        <div className="flex items-center space-x-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+          <span>Pickup Point</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+          <span>Drop-off Stops</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-1 rounded bg-bayniks-orange" />
+          <span>Bayniks Active Route</span>
+        </div>
       </div>
     </div>
   );
 }
-

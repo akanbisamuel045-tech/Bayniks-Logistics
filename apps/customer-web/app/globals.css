@@ -5,3 +5,100 @@
 :root {
   color-scheme: dark;
 }
+
+/* Claymorphic and Glassmorphic Surfaces */
+.clay-blur-dock {
+  background: rgba(22, 24, 29, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.clay-card {
+  background: #16181D;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 30px rgba(14, 16, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.clay-card-interactive {
+  background: #16181D;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 30px rgba(14, 16, 19, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.clay-card-interactive:hover {
+  border-color: rgba(255, 109, 31, 0.35);
+  box-shadow: 0 12px 32px -4px rgba(255, 109, 31, 0.15), inset 0 1px 0 rgba(255, 109, 31, 0.2);
+}
+
+/* Atomic Orange Glow & Pulse */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(255, 109, 31, 0.4), 0 0 24px rgba(255, 109, 31, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 109, 31, 0.7), 0 0 40px rgba(255, 109, 31, 0.35);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+/* Scanner Laser Sweep Animation */
+@keyframes laserSweep {
+  0% {
+    top: 0%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 0.8;
+  }
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FF6D1F, #FB923C, #FF6D1F, transparent);
+  box-shadow: 0 0 12px #FF6D1F, 0 0 20px #FF6D1F;
+  animation: laserSweep 2s ease-in-out infinite;
+}
+
+/* Radar Scan Rotation */
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep {
+  animation: radarSweep 6s linear infinite;
+  transform-origin: center center;
+}
+
+/* Subtle Dark Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0E1013;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E2228;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF6D1F;
+}

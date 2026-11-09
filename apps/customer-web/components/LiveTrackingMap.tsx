@@ -285,9 +285,9 @@ export function LiveTrackingMap({
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          {/* Glowing emerald filter for route */}
-          <filter id="emeraldGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          {/* Glowing Atomic Orange filter for route */}
+          <filter id="orangeGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -305,53 +305,53 @@ export function LiveTrackingMap({
 
           {/* Dark Tactical Grid */}
           <pattern id="tacticalGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.8" opacity="0.3" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2228" strokeWidth="0.8" opacity="0.4" />
           </pattern>
         </defs>
 
         {/* Background Grid */}
-        <rect width="1000" height="800" fill="#080c14" />
+        <rect width="1000" height="800" fill="#0E1013" />
         <rect width="1000" height="800" fill="url(#tacticalGrid)" />
 
         {/* Lagos Stylized Coastal Contours */}
         <path
           d="M 0 740 Q 250 700, 500 720 T 1000 700 L 1000 800 L 0 800 Z"
-          fill="#0c192c"
+          fill="#13161B"
           opacity="0.9"
         />
         <path
           d="M 80 440 Q 300 500, 550 460 T 920 520 L 980 600 Q 600 560, 200 600 Z"
-          fill="#0d213f"
-          opacity="0.4"
+          fill="#161A22"
+          opacity="0.5"
         />
 
         {/* Key Expressways / Arteries */}
-        <line x1="280" y1="180" x2="620" y2="600" stroke="#1e293b" strokeWidth="3" opacity="0.5" strokeDasharray="6 4" />
-        <line x1="120" y1="540" x2="890" y2="560" stroke="#1e293b" strokeWidth="2.5" opacity="0.5" />
+        <line x1="280" y1="180" x2="620" y2="600" stroke="#1E2228" strokeWidth="3" opacity="0.7" strokeDasharray="6 4" />
+        <line x1="120" y1="540" x2="890" y2="560" stroke="#1E2228" strokeWidth="2.5" opacity="0.7" />
 
         {/* Full Route Polyline (Shadow) */}
         {svgPolylinePoints && (
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#064e3b"
+            stroke="#EA580C"
             strokeWidth="10"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.6"
+            opacity="0.25"
           />
         )}
 
-        {/* Main Glowing Route Polyline */}
+        {/* Main Glowing Route Polyline (Atomic Orange) */}
         {svgPolylinePoints && (
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#10b981"
+            stroke="#FF6D1F"
             strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#emeraldGlow)"
+            filter="url(#orangeGlow)"
           />
         )}
 
@@ -360,7 +360,7 @@ export function LiveTrackingMap({
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#6ee7b7"
+            stroke="#FB923C"
             strokeWidth="2"
             strokeDasharray="8 16"
             strokeLinecap="round"
