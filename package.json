@@ -13,6 +13,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "seed": "npm run seed --workspace=api",
+    "demo:seed": "npm run demo:seed --workspace=api",
     "deploy:verify": "node scripts/deploy-verify.mjs"
   },
   "devDependencies": {

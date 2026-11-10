@@ -10,7 +10,8 @@
     "lint": "tsc --noEmit",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "demo:seed": "tsx src/scripts/seed-demo.ts"
   },
   "dependencies": {
     "@logistics/shared-types": "*",

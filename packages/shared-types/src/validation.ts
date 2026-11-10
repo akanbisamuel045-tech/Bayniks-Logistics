@@ -9,11 +9,11 @@ export const FourDigitPinSchema = z
 export type FourDigitPin = z.infer<typeof FourDigitPinSchema>;
 
 /**
- * Unique order tracking code format: e.g. LGS-849201 (3 uppercase letters, hyphen, 6 digits).
+ * Unique order tracking code format: e.g. LGS-849201 or BYN-LIVE01 (3 uppercase letters, hyphen, 6 alphanumeric characters).
  */
 export const TrackingCodeSchema = z
   .string()
-  .regex(/^[A-Z]{3}-\d{6}$/, 'Tracking code must match format ABC-123456 (e.g., LGS-849201)');
+  .regex(/^[A-Z]{3}-[A-Z0-9]{6}$/, 'Tracking code must match format ABC-123456 or ABC-XXXXXX (e.g., LGS-849201, BYN-LIVE01)');
 export type TrackingCode = z.infer<typeof TrackingCodeSchema>;
 
 /**
