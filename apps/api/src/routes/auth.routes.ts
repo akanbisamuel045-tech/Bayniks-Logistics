@@ -4,6 +4,7 @@ import { User, Wallet } from '../models';
 import { authService } from '../services/auth.service';
 import { otpService } from '../services/otp.service';
 import { requireAuth, requireRoles } from '../middleware/auth.middleware';
+import { createRedisRateLimiter } from '../middleware/rateLimiter.middleware';
 import {
   normalizeNigerianPhone,
   UserRoleSchema,
@@ -111,6 +112,47 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
     next(error);
   }
 });
+
+/**
+ * POST /api/v1/auth/request-otp
+ * Generates and dispatches a new 6-digit OTP to a normalized Nigerian phone number.
+ * Rate-limited via Redis sliding window to prevent SMS bombing.
+ */
+authRouter.post(
+  '/request-otp',
+  createRedisRateLimiter({ windowSeconds: 60, maxRequests: 5, keyPrefix: 'otp-req' }),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { phone } = req.body;
+      if (!phone) {
+        res.status(400).json({ error: 'phone is required' });
+        return;
+      }
+
+      let normalizedPhone: string;
+      try {
+        normalizedPhone = normalizeNigerianPhone(phone);
+      } catch (err: any) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+
+      const user = await User.findOne({ phone: normalizedPhone });
+      if (!user) {
+        res.status(404).json({ error: 'No account registered with this phone number' });
+        return;
+      }
+
+      await otpService.generateAndSaveOtp(normalizedPhone);
+      res.status(200).json({
+        message: 'Verification code sent successfully',
+        phone: normalizedPhone,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /**
  * POST /api/v1/auth/verify-otp

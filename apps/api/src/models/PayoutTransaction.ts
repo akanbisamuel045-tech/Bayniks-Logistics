@@ -97,3 +97,4 @@ export const PayoutTransactionSchema = new Schema<IPayoutTransaction>(
 export const PayoutTransaction: Model<IPayoutTransaction> =
   (mongoose.models.PayoutTransaction as Model<IPayoutTransaction>) ||
   mongoose.model<IPayoutTransaction>('PayoutTransaction', PayoutTransactionSchema);
+

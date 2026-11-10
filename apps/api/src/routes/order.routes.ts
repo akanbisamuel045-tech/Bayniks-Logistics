@@ -14,6 +14,7 @@ import { getPricingService } from '../services/pricing.service';
 import { telemetryService } from '../services/telemetry.service';
 import { dispatchService } from '../services/dispatch.service';
 import { notificationService } from '../services/notification.service';
+import { createRedisRateLimiter } from '../middleware/rateLimiter.middleware';
 import { getNotificationsForOrder } from '../providers/termii.provider';
 
 export const orderRouter = Router();
@@ -190,6 +191,7 @@ orderRouter.post(
  */
 orderRouter.get(
   '/track/:trackingCode',
+  createRedisRateLimiter({ windowSeconds: 60, maxRequests: 60, keyPrefix: 'track' }),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const parsedCode = TrackingCodeSchema.safeParse(req.params.trackingCode?.toUpperCase());

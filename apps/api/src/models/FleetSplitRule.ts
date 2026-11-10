@@ -49,3 +49,4 @@ FleetSplitRuleSchema.index({ fleetOwnerId: 1, riderUserId: 1 }, { unique: true }
 export const FleetSplitRule: Model<IFleetSplitRule> =
   (mongoose.models.FleetSplitRule as Model<IFleetSplitRule>) ||
   mongoose.model<IFleetSplitRule>('FleetSplitRule', FleetSplitRuleSchema);
+

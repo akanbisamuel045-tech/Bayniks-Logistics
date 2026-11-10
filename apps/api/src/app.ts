@@ -1,5 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import crypto from 'crypto';
 import { authRouter } from './routes/auth.routes';
 import { riderRouter, fleetRouter } from './routes/rider.routes';
 import { adminRouter } from './routes/admin.routes';
@@ -10,11 +11,25 @@ import { telemetryRouter } from './routes/telemetry.routes';
 import { dispatchRouter } from './routes/dispatch.routes';
 import { vendorRouter } from './routes/vendor.routes';
 import { payoutRouter } from './routes/payout.routes';
+import { healthRouter } from './routes/health.routes';
 import { checkMongoHealth } from './config/db';
 import { checkRedisHealth } from './config/redis';
 
 export function createApp(): Express {
   const app = express();
+
+  // Security Headers & Request Correlation Middleware
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    const requestId =
+      (req.headers['x-request-id'] as string) ||
+      `req_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    (req as any).id = requestId;
+    res.setHeader('X-Request-Id', requestId);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
 
   // Core Middleware
   app.use(cors());
@@ -28,7 +43,10 @@ export function createApp(): Express {
   );
   app.use(express.urlencoded({ extended: true }));
 
-  // Healthcheck endpoint
+  // Mount Health Probes (Live & Deep Readiness)
+  app.use('/api/v1/health', healthRouter);
+
+  // Healthcheck fallback endpoint
   app.get('/api/v1/health', async (_req: Request, res: Response): Promise<void> => {
     const mongoHealth = await checkMongoHealth();
     const redisHealth = await checkRedisHealth();
