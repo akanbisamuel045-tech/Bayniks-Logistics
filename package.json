@@ -12,7 +12,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "seed": "npm run seed --workspace=api"
+    "seed": "npm run seed --workspace=api",
+    "deploy:verify": "node scripts/deploy-verify.mjs"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

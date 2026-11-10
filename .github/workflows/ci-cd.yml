@@ -1,0 +1,61 @@
+name: Bayniks Logistics CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    name: Build, Test & Deployment Verification
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup MongoDB 7.0 Replica Set (rs0)
+        uses: supercharge/mongodb-github-action@1.11.0
+        with:
+          mongodb-version: '7.0'
+          mongodb-replica-set: 'rs0'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Verify Production Deployment Manifests
+        run: npm run deploy:verify
+
+      - name: TypeScript Strict Typecheck Gate
+        run: npm run typecheck
+
+      - name: Automated Multi-Package Test Suite Gate
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://127.0.0.1:27017/logistics_db?replicaSet=rs0
+          REDIS_URL: redis://127.0.0.1:6379
+          JWT_SECRET: test_ci_jwt_secret_32_characters_minimum_len
+          JWT_REFRESH_SECRET: test_ci_jwt_refresh_secret_32_chars_min
+        run: npm run test
+
+      - name: Production Monorepo Build Gate
+        run: npm run build
+

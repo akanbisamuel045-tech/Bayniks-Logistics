@@ -1,0 +1,114 @@
+# ==============================================================================
+# Bayniks Nigerian Real-Time Logistics Platform — Production Docker Compose Stack
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. MongoDB 7.0 Replica Set (rs0) — Multi-Document ACID Transactions
+  # ----------------------------------------------------------------------------
+  mongodb:
+    image: mongo:7.0
+    container_name: bayniks-mongodb
+    restart: unless-stopped
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=logistics_db
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - bayniks-network
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "try { rs.status().ok } catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }).ok }" || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  # ----------------------------------------------------------------------------
+  # 2. Redis 7.0 RAM In-Memory Store — Sub-15ms Telemetry & Geospatial Clustering
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: bayniks-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bayniks-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  # ----------------------------------------------------------------------------
+  # 3. Express 5 API Backend Service
+  # ----------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: bayniks-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - MONGO_URI=mongodb://mongodb:27017/logistics_db?replicaSet=rs0
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-bayniks_jwt_secret_production_key_minimum_32_characters}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-bayniks_jwt_refresh_secret_production_key_32_chars}
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY:-sk_test_paystack_default}
+      - TERMII_API_KEY=${TERMII_API_KEY:-termii_api_key_default}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY:-google_maps_key_default}
+      - PUBLIC_WEB_URL=${PUBLIC_WEB_URL:-http://localhost:3000}
+    networks:
+      - bayniks-network
+
+  # ----------------------------------------------------------------------------
+  # 4. Next.js 14 Customer, Vendor & Admin Web Application
+  # ----------------------------------------------------------------------------
+  customer-web:
+    build:
+      context: .
+      dockerfile: apps/customer-web/Dockerfile
+    container_name: bayniks-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL:-http://localhost:4000}
+    networks:
+      - bayniks-network
+
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  bayniks-network:
+    driver: bridge
+
