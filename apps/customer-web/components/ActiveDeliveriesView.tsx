@@ -201,9 +201,9 @@ export function ActiveDeliveriesView({
       </div>
 
       {/* Scrollable Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-4 pb-28 space-y-4 max-w-4xl mx-auto w-full hide-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 pb-28 space-y-6 max-w-5xl mx-auto w-full hide-scrollbar">
         {/* 1. Live Telemetry Summary Banner (Matches ca84fd7b.jpg) */}
-        <div className="bg-[#0B0F19] text-white rounded-3xl sm:rounded-[28px] p-4.5 shadow-xl relative overflow-hidden flex items-center justify-between">
+        <div className="bg-[#0B0F19] text-white rounded-[28px] sm:rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden flex items-center justify-between">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-[#FF6D1F]/20 rounded-full blur-xl pointer-events-none" />
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-[#FF6D1F] text-white flex items-center justify-center shadow-bolt-glow shrink-0">
@@ -233,12 +233,12 @@ export function ActiveDeliveriesView({
         </div>
 
         {/* 2. Status Filter Pills */}
-        <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-0.5">
+        <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1">
           <h3 className="sr-only">Active Dispatches in Fleet ({filteredList.length})</h3>
           <button
             type="button"
             onClick={() => setFilter('all')}
-            className={`px-3.5 py-1.5 rounded-full text-[11px] font-extrabold transition shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-extrabold transition shrink-0 ${
               filter === 'all'
                 ? 'bg-[#0B0F19] text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
@@ -249,7 +249,7 @@ export function ActiveDeliveriesView({
           <button
             type="button"
             onClick={() => setFilter('transit')}
-            className={`px-3.5 py-1.5 rounded-full text-[11px] font-extrabold transition shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-extrabold transition shrink-0 ${
               filter === 'transit'
                 ? 'bg-[#0B0F19] text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
@@ -261,7 +261,7 @@ export function ActiveDeliveriesView({
             type="button"
             aria-label="Pickup (1)"
             onClick={() => setFilter('pickup')}
-            className={`px-3.5 py-1.5 rounded-full text-[11px] font-extrabold transition shrink-0 ${
+            className={`px-4 py-2 rounded-full text-xs font-extrabold transition shrink-0 ${
               filter === 'pickup'
                 ? 'bg-[#0B0F19] text-white shadow-sm'
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-900'
@@ -272,7 +272,7 @@ export function ActiveDeliveriesView({
         </div>
 
         {/* 3. Active Delivery Cards Stack */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {filteredList.map((item) => {
             const isSelected = selectedOrder.waybillId === item.waybillId;
 
@@ -284,46 +284,46 @@ export function ActiveDeliveriesView({
                   setRadarCenter(item.riderLocation);
                   onSelectOrder?.(item);
                 }}
-                className={`rounded-3xl sm:rounded-[28px] p-4.5 space-y-4 transition cursor-pointer ${
+                className={`rounded-[28px] sm:rounded-3xl p-6 sm:p-7 md:p-8 space-y-6 transition cursor-pointer ${
                   isSelected
-                    ? 'bg-white border-2 border-[#FF6D1F] shadow-card-soft ring-1 ring-[#FF6D1F]'
+                    ? 'bg-white border-2 border-[#FF6D1F] shadow-card-soft'
                     : 'bg-white border border-neutral-200/90 shadow-card-soft hover:border-neutral-300'
                 }`}
               >
                 {/* Top Row */}
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3.5">
                     <div
-                      className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                         isSelected
-                          ? 'bg-orange-50 border border-[#FF6D1F]/30 text-neutral-900'
+                          ? 'bg-orange-50/70 border border-[#FF6D1F]/30 text-neutral-900'
                           : 'bg-neutral-100 border border-neutral-200 text-neutral-900'
                       }`}
                     >
                       <Package className="w-5 h-5 text-neutral-900 stroke-[2.2]" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-extrabold text-sm text-neutral-900 font-mono">
+                      <div className="flex items-center gap-2.5">
+                        <h4 className="font-extrabold text-sm sm:text-base text-neutral-900 font-mono tracking-tight">
                           #{item.orderNumber}
                           <span className="sr-only"> #{item.waybillId}</span>
                         </h4>
-                        <span className="px-2 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 font-mono text-[10px] font-extrabold text-neutral-900">
+                        <span className="px-2.5 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 font-mono text-[10px] font-extrabold text-neutral-900">
                           OTP: {item.handoverPin}
                         </span>
                       </div>
-                      <p className="text-[11px] text-neutral-400 font-medium mt-0.5">
+                      <p className="text-xs text-neutral-400 font-medium mt-1">
                         {item.title} • {item.category}
                       </p>
                     </div>
                   </div>
                   {item.status === 'in_transit' ? (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#FF6D1F] text-white flex items-center space-x-1 shadow-xs">
+                    <span className="px-3.5 py-1.5 rounded-full text-[11px] font-extrabold bg-[#FF6D1F] text-white flex items-center space-x-1.5 shadow-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                       <span>In Transit</span>
                     </span>
                   ) : (
-                    <span className="px-3 py-1 rounded-full text-[10px] font-extrabold bg-[#0B0F19] text-white flex items-center space-x-1.5 shadow-xs">
+                    <span className="px-3.5 py-1.5 rounded-full text-[11px] font-extrabold bg-[#0B0F19] text-white flex items-center space-x-1.5 shadow-xs">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                       <span>Awaiting Pickup</span>
                     </span>
@@ -331,8 +331,8 @@ export function ActiveDeliveriesView({
                 </div>
 
                 {/* 4-Step Visual Progress Bar */}
-                <div className="bg-neutral-50 rounded-2xl p-3 border border-neutral-200/70 space-y-2">
-                  <div className="flex items-center justify-between text-[10px] font-extrabold">
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px] font-extrabold">
                     <span className="text-[#FF6D1F] uppercase tracking-wider">
                       Step {item.currentStep} of 4 • {item.status === 'in_transit' ? 'In Transit' : 'Awaiting Pickup'}
                     </span>
@@ -340,7 +340,7 @@ export function ActiveDeliveriesView({
                       {item.status === 'in_transit' ? 'ETA: 18 mins' : 'Arriving in 6 mins'}
                     </span>
                   </div>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-4 gap-2 sm:gap-3">
                     <div
                       className={`h-1.5 rounded-full ${
                         item.currentStep >= 1 ? 'bg-[#FF6D1F]' : 'bg-neutral-200'
@@ -362,7 +362,7 @@ export function ActiveDeliveriesView({
                     />
                     <div className="h-1.5 rounded-full bg-neutral-200" />
                   </div>
-                  <div className="flex items-center justify-between text-[9px] font-bold text-neutral-400">
+                  <div className="flex items-center justify-between text-[10px] font-bold text-neutral-400 pt-0.5">
                     <span className="text-neutral-900">{item.status === 'in_transit' ? '1. Booked' : 'Booked'}</span>
                     <span className="text-neutral-900">{item.status === 'in_transit' ? '2. Picked Up' : 'Pickup'}</span>
                     <span className="text-[#FF6D1F] font-extrabold">{item.status === 'in_transit' ? '3. In Transit' : 'In Transit'}</span>
@@ -371,18 +371,18 @@ export function ActiveDeliveriesView({
                 </div>
 
                 {/* Route Timeline */}
-                <div className="relative pl-4 space-y-3 before:content-[''] before:absolute before:left-[5px] before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
+                <div className="relative pl-5 space-y-5 before:content-[''] before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-0.5 before:bg-neutral-200">
                   <div className="relative flex items-start justify-between">
-                    <span className="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full bg-neutral-900 ring-4 ring-white" />
-                    <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-400 block">
+                    <span className="absolute -left-5 top-1.5 w-3 h-3 rounded-full bg-neutral-900 ring-4 ring-white" />
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
                         Pickup {item.pickupTime ? `• ${item.pickupTime}` : 'Location'}
                       </span>
-                      <p className="text-xs font-extrabold text-neutral-900">{item.pickupAddress}</p>
-                      <p className="text-[10px] text-neutral-500">Sender: {item.senderName}</p>
+                      <p className="text-sm font-extrabold text-neutral-900">{item.pickupAddress}</p>
+                      <p className="text-xs text-neutral-500">Sender: {item.senderName}</p>
                     </div>
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      className={`text-[11px] font-bold px-2.5 py-1 rounded-md ${
                         item.status === 'in_transit'
                           ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
                           : 'text-neutral-900 bg-neutral-100 border border-neutral-200'
@@ -393,44 +393,44 @@ export function ActiveDeliveriesView({
                   </div>
 
                   <div className="relative flex items-start justify-between">
-                    <span className="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full bg-[#FF6D1F] ring-4 ring-orange-100" />
-                    <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-neutral-400 block">
+                    <span className="absolute -left-5 top-1.5 w-3 h-3 rounded-full bg-[#FF6D1F] ring-4 ring-orange-100" />
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
                         Drop-off Destination
                       </span>
-                      <p className="text-xs font-extrabold text-neutral-900">{item.dropoffAddress}</p>
-                      <p className="text-[10px] text-neutral-500">Recipient: {item.recipientName}</p>
+                      <p className="text-sm font-extrabold text-neutral-900">{item.dropoffAddress}</p>
+                      <p className="text-xs text-neutral-500">Recipient: {item.recipientName}</p>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-neutral-500">
+                    <span className="text-xs font-mono font-bold text-neutral-500">
                       {item.distanceLeftLabel}
                     </span>
                   </div>
                 </div>
 
                 {/* Assigned Courier Mini-Card */}
-                <div className="bg-[#0B0F19] text-white rounded-2xl p-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-2.5">
+                <div className="bg-[#0B0F19] text-white rounded-2xl p-4 sm:p-4.5 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
                     <img
                       src={item.courierAvatarUrl}
                       alt={item.courierName}
-                      className="w-9 h-9 rounded-full object-cover border-2 border-[#FF6D1F]"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-[#FF6D1F]"
                     />
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h5 className="text-xs font-extrabold text-white">{item.courierName}</h5>
+                        <h5 className="text-xs sm:text-sm font-extrabold text-white">{item.courierName}</h5>
                         <span className="text-[10px] text-[#FF6D1F] font-bold">★ {item.courierRating}</span>
                       </div>
-                      <p className="text-[10px] text-neutral-400">
+                      <p className="text-[11px] text-neutral-400">
                         {item.courierVehicle} • {item.courierPlate}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1.5">
+                  <div className="flex items-center space-x-2">
                     <a
                       href={`tel:${item.courierPhone}`}
                       aria-label={item.status === 'in_transit' ? 'Call Rider' : 'Call Courier'}
                       title="Call Courier"
-                      className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-90"
+                      className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition active:scale-90"
                     >
                       <Phone className="w-4 h-4 stroke-[2.2]" />
                     </a>
@@ -439,7 +439,7 @@ export function ActiveDeliveriesView({
                       aria-label={item.status === 'in_transit' ? 'In-App Chat' : 'Message Courier'}
                       onClick={() => onOpenChat?.(item.courierName, item.waybillId)}
                       title="Message Courier"
-                      className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-[#FF6D1F] flex items-center justify-center transition active:scale-90"
+                      className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-[#FF6D1F] flex items-center justify-center transition active:scale-90"
                     >
                       <MessageSquare className="w-4 h-4 stroke-[2.2]" />
                     </button>
@@ -449,7 +449,7 @@ export function ActiveDeliveriesView({
                         setSelectedOrder(item);
                         setRadarCenter(item.riderLocation);
                       }}
-                      className="px-3 py-2 rounded-xl bg-[#FF6D1F] hover:bg-[#EA580C] text-white text-[10px] font-extrabold transition active:scale-95 shadow-sm"
+                      className="px-4 py-2 rounded-xl bg-[#FF6D1F] hover:bg-[#EA580C] text-white text-xs font-extrabold transition active:scale-95 shadow-sm"
                     >
                       {item.status === 'in_transit' ? 'Live Map' : 'Track'}
                     </button>

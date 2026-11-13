@@ -145,28 +145,28 @@ export default function BookingPage() {
 
       {/* 3. Main Workstation Viewport */}
       {activeTab === 'active_deliveries' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <ActiveDeliveriesView
             onBackClick={() => setActiveTab('dashboard')}
             onOpenChat={() => setActiveTab('rider_chat')}
           />
         </div>
       ) : activeTab === 'schedule' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <ScheduleDeliveryView
             onBackClick={() => setActiveTab('dashboard')}
             onConfirmSchedule={() => setActiveTab('dashboard')}
           />
         </div>
       ) : activeTab === 'repeat' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <RepeatDeliveryView
             onBackClick={() => setActiveTab('dashboard')}
             onConfirmReOrder={() => setActiveTab('dashboard')}
           />
         </div>
       ) : activeTab === 'archive' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <ShipmentHistoryView
             onBackClick={() => setActiveTab('dashboard')}
             onTrackShipment={() => setActiveTab('active_deliveries')}
@@ -174,27 +174,27 @@ export default function BookingPage() {
           />
         </div>
       ) : activeTab === 'notifications' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <NotificationsCenterView
             onBackClick={() => setActiveTab('dashboard')}
             onTrackWaybill={() => setActiveTab('active_deliveries')}
           />
         </div>
       ) : activeTab === 'rider_chat' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <CourierChatView
             onBackClick={() => setActiveTab('dashboard')}
             onOpenLiveMap={() => setActiveTab('active_deliveries')}
           />
         </div>
       ) : activeTab === 'support' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <SupportDeskView
             onBackClick={() => setActiveTab('dashboard')}
           />
         </div>
       ) : activeTab === 'profile' || activeTab === 'settings' ? (
-        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50 p-4 md:p-8">
+        <div className="flex-1 flex flex-col h-full w-full min-w-0 overflow-y-auto pb-28 relative bg-neutral-50">
           <ProfileSettingsView
             initialTab={activeTab === 'settings' ? 'settings' : 'profile'}
             onBackClick={() => setActiveTab('dashboard')}

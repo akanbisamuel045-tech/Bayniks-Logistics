@@ -434,7 +434,7 @@ export function ShipmentHistoryView({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {filteredShipments.map((item) => {
               const isDelivered = item.status === 'delivered';
               const isTransit = item.status === 'transit';
@@ -443,7 +443,7 @@ export function ShipmentHistoryView({
               return (
                 <div
                   key={item.id}
-                  className="rounded-3xl p-5 border transition shadow-card-soft bg-white border-neutral-200/90 hover:border-[#FF6D1F]/50 flex flex-col justify-between space-y-4"
+                  className="rounded-3xl p-6 sm:p-7 border transition shadow-card-soft bg-white border-neutral-200/90 hover:border-[#FF6D1F]/50 flex flex-col justify-between space-y-5"
                 >
                   {/* Top Row: Box Icon, Waybill ID + Item Name, Status Badge */}
                   <div className="flex items-start justify-between gap-3">
