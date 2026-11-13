@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Headphones, X, PhoneCall, MessageSquare, Send } from 'lucide-react';
 
 export interface SupportDrawerProps {
   isOpen: boolean;
@@ -44,20 +45,20 @@ export function SupportDrawer({ isOpen, onClose }: SupportDrawerProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md h-full bg-bayniks-cardDark border-l border-slate-800 flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-md h-full bg-white border-l border-slate-200 flex flex-col shadow-2xl text-slate-900">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-bayniks-black/60">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-bayniks-orange text-white flex items-center justify-center font-bold text-lg shadow-bolt-glow">
-              🎧
+            <div className="w-10 h-10 rounded-xl bg-bayniks-orange text-white flex items-center justify-center shadow-bolt-glow">
+              <Headphones className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white tracking-tight">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
                 24/7 Priority Support Desk
               </h3>
-              <span className="text-[10px] font-mono text-emerald-400 flex items-center space-x-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-mono text-emerald-600 font-bold flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Controllers Live • Avg Reply 45s</span>
               </span>
             </div>
@@ -66,41 +67,46 @@ export function SupportDrawer({ isOpen, onClose }: SupportDrawerProps) {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-bayniks-surfaceDark transition-colors"
+            aria-label="Close support drawer"
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Quick Connect Channels */}
-        <div className="p-4 grid grid-cols-2 gap-2 bg-bayniks-surfaceDark/50 border-b border-slate-800">
+        <div className="p-4 grid grid-cols-2 gap-2 bg-slate-50 border-b border-slate-200">
           <a
             href="tel:08002296457"
-            className="p-3 rounded-xl bg-bayniks-cardDark border border-slate-800 hover:border-bayniks-orange text-left transition-all group"
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-bayniks-orange text-left transition-all group shadow-sm flex flex-col justify-between"
           >
-            <span className="text-base block mb-1">📞</span>
-            <span className="text-xs font-bold text-white block group-hover:text-bayniks-orange">
-              0800-BAYNIKS
-            </span>
-            <span className="text-[10px] text-slate-400 block">Toll-Free Hotline</span>
+            <PhoneCall className="w-4 h-4 text-bayniks-orange mb-2" />
+            <div>
+              <span className="text-xs font-bold text-slate-900 block group-hover:text-bayniks-orange">
+                0800-BAYNIKS
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium block">Toll-Free Hotline</span>
+            </div>
           </a>
 
           <a
             href="https://wa.me/2348002296457?text=Hello%20Bayniks%20Support"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-3 rounded-xl bg-bayniks-cardDark border border-slate-800 hover:border-emerald-500 text-left transition-all group"
+            className="p-3 rounded-xl bg-white border border-slate-200 hover:border-emerald-500 text-left transition-all group shadow-sm flex flex-col justify-between"
           >
-            <span className="text-base block mb-1">💬</span>
-            <span className="text-xs font-bold text-white block group-hover:text-emerald-400">
-              WhatsApp Desk
-            </span>
-            <span className="text-[10px] text-slate-400 block">Instant Chat</span>
+            <MessageSquare className="w-4 h-4 text-emerald-600 mb-2" />
+            <div>
+              <span className="text-xs font-bold text-slate-900 block group-hover:text-emerald-600">
+                WhatsApp Desk
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium block">Instant Chat</span>
+            </div>
           </a>
         </div>
 
         {/* Chat Message Scrollable Container */}
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-slate-50/50">
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -110,7 +116,7 @@ export function SupportDrawer({ isOpen, onClose }: SupportDrawerProps) {
                 className={`max-w-[85%] p-3 rounded-2xl text-xs ${
                   m.sender === 'user'
                     ? 'bg-bayniks-orange text-white rounded-br-none shadow-bolt-glow'
-                    : 'bg-bayniks-surfaceDark border border-slate-800 text-slate-200 rounded-bl-none'
+                    : 'bg-white border border-slate-200 text-slate-900 rounded-bl-none shadow-sm'
                 }`}
               >
                 {m.text}
@@ -121,17 +127,17 @@ export function SupportDrawer({ isOpen, onClose }: SupportDrawerProps) {
         </div>
 
         {/* Chat Input */}
-        <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 bg-bayniks-black/60 flex items-center space-x-2">
+        <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-200 bg-white flex items-center space-x-2">
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Type your question or waybill issue..."
-            className="flex-1 bg-bayniks-surfaceDark border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-bayniks-orange"
+            className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-bayniks-orange focus:bg-white transition"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-bayniks-orange hover:bg-bayniks-orangeDark text-white font-semibold text-xs rounded-xl shadow-bolt-glow transition-all"
+            className="px-4 py-2 bg-bayniks-orange hover:bg-bayniks-orangeDark text-white font-bold text-xs rounded-xl shadow-bolt-glow transition-all"
           >
             Send
           </button>

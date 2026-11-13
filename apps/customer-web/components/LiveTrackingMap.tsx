@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Crosshair, Play, Pause } from 'lucide-react';
 import {
   LatLng,
   decodeGooglePolyline,
@@ -233,45 +234,46 @@ export function LiveTrackingMap({
   );
 
   return (
-    <div className={`relative w-full h-full bg-slate-950 overflow-hidden select-none ${className}`}>
+    <div className={`relative w-full h-full bg-slate-100 overflow-hidden select-none ${className}`}>
       {/* Map Control Buttons */}
       <div className="absolute top-4 right-4 z-20 flex flex-col space-y-2">
         <button
           onClick={() => setFollowRider(!followRider)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium shadow-lg backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
+          className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium shadow-sm backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
             followRider
-              ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
-              : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:bg-slate-800'
+              ? 'bg-emerald-600 text-white border-emerald-500 font-bold'
+              : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
           }`}
           title="Toggle lock camera onto moving rider"
         >
-          <span>🎯</span>
+          <Crosshair className="w-3.5 h-3.5" />
           <span>{followRider ? 'Locked on Rider' : 'Recenter Rider'}</span>
         </button>
 
         {onSimulateClick && (
           <button
             onClick={onSimulateClick}
-            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium shadow-lg backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium shadow-sm backdrop-blur-md border transition-all flex items-center space-x-1.5 ${
               isSimulating
-                ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold animate-pulse'
-                : 'bg-slate-900/80 text-amber-400 border-amber-500/30 hover:bg-slate-800'
+                ? 'bg-amber-500 text-white border-amber-400 font-bold animate-pulse'
+                : 'bg-white/95 text-amber-700 border-amber-200 hover:bg-amber-50'
             }`}
             title="Demonstrate 60fps road interpolation"
           >
-            <span>{isSimulating ? '⏸ Pause Sim' : '▶ Simulate Movement'}</span>
+            {isSimulating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            <span>{isSimulating ? 'Pause Sim' : 'Simulate Movement'}</span>
           </button>
         )}
       </div>
 
       {/* Speedometer Overlay Badge */}
       {isTripActive && (
-        <div className="absolute bottom-4 left-4 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-800 px-3.5 py-2 rounded-xl shadow-xl flex items-center space-x-3">
+        <div className="absolute bottom-4 left-4 z-20 bg-white/95 backdrop-blur-md border border-slate-200 px-3.5 py-2 rounded-xl shadow-md flex items-center space-x-3">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
           <div>
-            <div className="text-[10px] uppercase font-mono text-slate-400">Live Telemetry</div>
-            <div className="text-sm font-bold text-emerald-400 font-mono">
-              {Math.round(currentSpeed)} <span className="text-xs text-slate-400">km/h</span> •{' '}
+            <div className="text-[10px] uppercase font-mono text-slate-500 font-semibold">Live Telemetry</div>
+            <div className="text-sm font-bold text-slate-900 font-mono">
+              {Math.round(currentSpeed)} <span className="text-xs text-slate-500">km/h</span> •{' '}
               {Math.round(currentBearing)}°
             </div>
           </div>
@@ -303,38 +305,38 @@ export function LiveTrackingMap({
             </feMerge>
           </filter>
 
-          {/* Dark Tactical Grid */}
+          {/* Light Grid */}
           <pattern id="tacticalGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2228" strokeWidth="0.8" opacity="0.4" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8F0" strokeWidth="0.8" opacity="0.8" />
           </pattern>
         </defs>
 
         {/* Background Grid */}
-        <rect width="1000" height="800" fill="#0E1013" />
+        <rect width="1000" height="800" fill="#F8FAFC" />
         <rect width="1000" height="800" fill="url(#tacticalGrid)" />
 
         {/* Lagos Stylized Coastal Contours */}
         <path
           d="M 0 740 Q 250 700, 500 720 T 1000 700 L 1000 800 L 0 800 Z"
-          fill="#13161B"
+          fill="#E0F2FE"
           opacity="0.9"
         />
         <path
           d="M 80 440 Q 300 500, 550 460 T 920 520 L 980 600 Q 600 560, 200 600 Z"
-          fill="#161A22"
+          fill="#BAE6FD"
           opacity="0.5"
         />
 
         {/* Key Expressways / Arteries */}
-        <line x1="280" y1="180" x2="620" y2="600" stroke="#1E2228" strokeWidth="3" opacity="0.7" strokeDasharray="6 4" />
-        <line x1="120" y1="540" x2="890" y2="560" stroke="#1E2228" strokeWidth="2.5" opacity="0.7" />
+        <line x1="280" y1="180" x2="620" y2="600" stroke="#CBD5E1" strokeWidth="3" opacity="0.8" strokeDasharray="6 4" />
+        <line x1="120" y1="540" x2="890" y2="560" stroke="#CBD5E1" strokeWidth="2.5" opacity="0.8" />
 
         {/* Full Route Polyline (Shadow) */}
         {svgPolylinePoints && (
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#EA580C"
+            stroke="#FF6D1F"
             strokeWidth="10"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -360,7 +362,7 @@ export function LiveTrackingMap({
           <polyline
             points={svgPolylinePoints}
             fill="none"
-            stroke="#FB923C"
+            stroke="#EA580C"
             strokeWidth="2"
             strokeDasharray="8 16"
             strokeLinecap="round"
@@ -382,7 +384,7 @@ export function LiveTrackingMap({
               {/* Ping Ring */}
               <circle cx={pt.x} cy={pt.y} r="22" fill="#10b981" opacity="0.2" className="animate-ping" />
               {/* Base Shadow */}
-              <ellipse cx={pt.x} cy={pt.y + 14} rx="12" ry="5" fill="#000000" opacity="0.5" />
+              <ellipse cx={pt.x} cy={pt.y + 14} rx="12" ry="5" fill="#000000" opacity="0.15" />
               {/* Circle */}
               <circle cx={pt.x} cy={pt.y} r="15" fill="#10b981" stroke="#ffffff" strokeWidth="2.5" />
               <text
@@ -405,15 +407,15 @@ export function LiveTrackingMap({
                     y={pt.y - 50}
                     width="180"
                     height="36"
-                    rx="6"
-                    fill="#0f172a"
+                    rx="8"
+                    fill="#FFFFFF"
                     stroke="#10b981"
                     strokeWidth="1.5"
                   />
                   <text x={pt.x} y={pt.y - 34} textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold">
                     PICKUP LOCATION
                   </text>
-                  <text x={pt.x} y={pt.y - 20} textAnchor="middle" fill="#cbd5e1" fontSize="9">
+                  <text x={pt.x} y={pt.y - 20} textAnchor="middle" fill="#334155" fontSize="9" fontWeight="600">
                     {pickup.address.slice(0, 24)}...
                   </text>
                 </g>
@@ -437,7 +439,7 @@ export function LiveTrackingMap({
               onMouseLeave={() => setActiveTooltip(null)}
               onClick={() => setActiveTooltip(isHovered ? null : `stop-${i}`)}
             >
-              <ellipse cx={pt.x} cy={pt.y + 14} rx="12" ry="5" fill="#000000" opacity="0.5" />
+              <ellipse cx={pt.x} cy={pt.y + 14} rx="12" ry="5" fill="#000000" opacity="0.15" />
               <circle cx={pt.x} cy={pt.y} r="14" fill={pinColor} stroke="#ffffff" strokeWidth="2.5" />
               <text
                 x={pt.x}
@@ -458,15 +460,15 @@ export function LiveTrackingMap({
                     y={pt.y - 50}
                     width="200"
                     height="36"
-                    rx="6"
-                    fill="#0f172a"
+                    rx="8"
+                    fill="#FFFFFF"
                     stroke={pinColor}
                     strokeWidth="1.5"
                   />
                   <text x={pt.x} y={pt.y - 34} textAnchor="middle" fill={pinColor} fontSize="10" fontWeight="bold">
                     STOP {stop.sequenceNumber}: {stop.recipientName || 'Recipient'}
                   </text>
-                  <text x={pt.x} y={pt.y - 20} textAnchor="middle" fill="#cbd5e1" fontSize="9">
+                  <text x={pt.x} y={pt.y - 20} textAnchor="middle" fill="#334155" fontSize="9" fontWeight="600">
                     {stop.dropoffAddress.slice(0, 28)}...
                   </text>
                 </g>
@@ -483,16 +485,16 @@ export function LiveTrackingMap({
               cx="0"
               cy="0"
               r="34"
-              fill="#06b6d4"
+              fill="#0284c7"
               opacity="0.15"
               className="animate-ping origin-center"
             />
-            <circle cx="0" cy="0" r="24" fill="#06b6d4" opacity="0.25" />
+            <circle cx="0" cy="0" r="24" fill="#0284c7" opacity="0.2" />
 
             {/* Rotated Motorcycle Icon according to road bearing */}
             <g transform={`rotate(${currentBearing})`} filter="url(#riderGlow)">
               {/* Outer Vehicle Halo */}
-              <circle cx="0" cy="0" r="18" fill="#0284c7" stroke="#38bdf8" strokeWidth="2.5" />
+              <circle cx="0" cy="0" r="18" fill="#0284c7" stroke="#ffffff" strokeWidth="2.5" />
 
               {/* Forward Navigation Arrow / Motorcycle Silhouette */}
               <path
@@ -511,15 +513,15 @@ export function LiveTrackingMap({
                 width="52"
                 height="18"
                 rx="9"
-                fill="#0f172a"
-                stroke="#38bdf8"
+                fill="#FFFFFF"
+                stroke="#0284c7"
                 strokeWidth="1.2"
               />
               <text
                 x="0"
                 y="3"
                 textAnchor="middle"
-                fill="#38bdf8"
+                fill="#0284c7"
                 fontSize="9"
                 fontWeight="bold"
                 fontFamily="system-ui"

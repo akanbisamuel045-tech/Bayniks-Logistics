@@ -1,146 +1,182 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Menu,
+  Search,
+  Plus,
+  LayoutGrid,
+  Bell,
+  ShieldCheck,
+  FileSpreadsheet,
+  QrCode,
+} from 'lucide-react';
 
 export interface DesktopHeaderProps {
-  onOpenQrScanner: () => void;
-  onBookDeliveryClick: () => void;
+  onToggleSidebar?: () => void;
+  onOpenMobileSidebar?: () => void;
+  onBookDelivery?: () => void;
+  onBookDeliveryClick?: () => void;
+  onOpenQrScan?: () => void;
+  onOpenQrScanner?: () => void;
   onOpenDeliveries?: () => void;
+  onOpenNotifications?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  activeTabTitle?: string;
 }
 
 export function DesktopHeader({
-  onOpenQrScanner,
+  onToggleSidebar,
+  onOpenMobileSidebar,
+  onBookDelivery,
   onBookDeliveryClick,
+  onOpenQrScan,
+  onOpenQrScanner,
   onOpenDeliveries,
+  onOpenNotifications,
+  searchQuery = '',
+  onSearchChange,
+  activeTabTitle = 'Dashboard',
 }: DesktopHeaderProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanQuery = searchQuery.trim().toUpperCase();
-    if (!cleanQuery) return;
-    if (cleanQuery.startsWith('LGS-')) {
-      router.push(`/track/${cleanQuery}`);
-    } else {
-      router.push(`/track/LGS-${cleanQuery.replace(/[^0-9]/g, '').slice(0, 6) || cleanQuery}`);
-    }
+  const handleBook = () => {
+    if (onBookDelivery) onBookDelivery();
+    else if (onBookDeliveryClick) onBookDeliveryClick();
+  };
+
+  const handleQr = () => {
+    if (onOpenQrScan) onOpenQrScan();
+    else if (onOpenQrScanner) onOpenQrScanner();
   };
 
   return (
-    <header className="h-16 bg-bayniks-cardDark/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-20 px-6 flex items-center justify-between">
-      {/* Breadcrumb & Hub Status */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2 text-xs font-mono">
-          <span className="text-slate-400">Lagos Hub</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-white font-semibold">Live Fleet Console</span>
-        </div>
+    <header
+      id="desktopHeader"
+      className="px-4 md:px-7 py-3 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 flex items-center justify-between shrink-0 z-20"
+    >
+      {/* Left Menu Toggle & Breadcrumb */}
+      <div className="flex items-center space-x-2 md:space-x-2.5 min-w-0">
+        {/* Mobile Hamburger (visible < 1024px) */}
+        {onOpenMobileSidebar && (
+          <button
+            type="button"
+            onClick={onOpenMobileSidebar}
+            className="lg:hidden w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 flex items-center justify-center transition active:scale-95 mr-1"
+            title="Open Menu"
+            aria-label="Open navigation sidebar"
+          >
+            <Menu className="w-4 h-4 text-neutral-800" />
+          </button>
+        )}
 
-        <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/80 text-[11px] font-mono text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Hub Online • 99.4% SLA</span>
+        {/* Desktop Hamburger (visible >= 1024px) */}
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="hidden lg:flex w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 items-center justify-center transition active:scale-95 mr-1"
+            title="Toggle Sidebar"
+            aria-label="Toggle sidebar collapse"
+          >
+            <Menu className="w-4 h-4 text-neutral-800" />
+          </button>
+        )}
+
+        <span className="text-xs font-bold text-neutral-400 hidden sm:inline">Bayniks</span>
+        <span className="text-neutral-300 hidden sm:inline">/</span>
+        <div className="flex items-center space-x-1.5 md:space-x-2">
+          <span className="w-2 h-2 rounded-full bg-[#FF6D1F]" />
+          <h1 className="text-xs md:text-sm font-extrabold text-neutral-900 tracking-tight truncate">
+            {activeTabTitle}
+          </h1>
+        </div>
+        <span className="ml-1 md:ml-2 px-2 md:px-2.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#FF6D1F] text-[9px] md:text-[10px] font-extrabold border border-[#FF6D1F]/20 whitespace-nowrap">
+          Lagos Hub • Live
+        </span>
+        <span className="sr-only">Hub Online • 99.4% SLA</span>
+      </div>
+
+      {/* Center Global Omni-Search Bar */}
+      <div className="flex-1 max-w-md mx-3 md:mx-6 hidden md:block">
+        <div className="relative flex items-center">
+          <span className="absolute left-3.5 text-neutral-400 pointer-events-none">
+            <Search className="w-4 h-4 text-neutral-400" />
+          </span>
+          <input
+            id="desktopOmniSearchInput"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            placeholder="Search waybill ID (#BF12345, #473215090), recipient..."
+            className="w-full bg-neutral-100 text-neutral-900 text-xs font-semibold pl-10 pr-14 py-2 rounded-2xl border border-neutral-200/90 focus:outline-none focus:border-[#FF6D1F] focus:bg-white transition"
+          />
+          <kbd className="absolute right-3 px-1.5 py-0.5 rounded-md bg-white border border-neutral-200 text-[10px] font-mono font-bold text-neutral-400 shadow-2xs">
+            ⌘K
+          </kbd>
         </div>
       </div>
 
-      {/* Omni-search Bar & Actions */}
-      <div className="flex items-center space-x-3">
-        {/* Waybill Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search waybill (e.g. LGS-847291) or phone..."
-            className="w-72 bg-bayniks-surfaceDark border border-slate-700/80 rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-bayniks-orange focus:ring-1 focus:ring-bayniks-orange transition-all font-mono"
-          />
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
-            <span>⌘K</span>
-          </div>
-        </form>
-
-        {/* QR Scanner Shortcut */}
+      {/* Right Quick Action Suite */}
+      <div className="flex items-center space-x-1.5 md:space-x-2.5 shrink-0">
         <button
           type="button"
-          onClick={onOpenQrScanner}
-          title="Scan Handover QR Code"
-          className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-300 hover:text-white hover:border-bayniks-orange transition-all flex items-center space-x-1 text-xs"
+          onClick={handleBook}
+          className="px-3 md:px-4 py-1.5 md:py-2 rounded-2xl bg-[#FF6D1F] hover:bg-[#EA580C] text-white text-xs font-extrabold shadow-bolt-glow flex items-center space-x-1 md:space-x-2 transition active:scale-95"
         >
-          <span className="text-sm">📷</span>
-          <span className="hidden xl:inline font-mono text-[11px]">Scan QR</span>
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span className="hidden sm:inline whitespace-nowrap">Book Delivery</span>
+          <span className="sm:hidden whitespace-nowrap">Book</span>
         </button>
 
-        {/* Notification Bell */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-300 hover:text-white transition-all relative"
-          >
-            <span className="text-sm">🔔</span>
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-bayniks-orange ring-2 ring-bayniks-cardDark" />
-          </button>
+        {/* Quick QR Scanner Shortcut */}
+        <button
+          type="button"
+          onClick={handleQr}
+          title="Scan Handover QR Code"
+          aria-label="Scan Handover QR Code"
+          className="hidden sm:flex w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 border border-neutral-200/80 items-center justify-center transition active:scale-90"
+        >
+          <QrCode className="w-4 h-4 text-[#FF6D1F]" />
+        </button>
 
-          {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-bayniks-cardDark border border-slate-800 rounded-2xl shadow-nav-float p-3 text-xs space-y-2 z-50">
-              <div className="font-semibold text-white border-b border-slate-800 pb-2 flex justify-between items-center">
-                <span>Dispatch Updates</span>
-                <span className="text-[10px] font-mono text-bayniks-orange">2 new</span>
-              </div>
-              <div className="space-y-2 max-h-56 overflow-y-auto">
-                <div className="p-2 rounded-lg bg-bayniks-surfaceDark border border-slate-800/80 space-y-1">
-                  <div className="text-white font-medium">Waybill LGS-482019 Delivered</div>
-                  <div className="text-[10px] text-slate-400 font-mono">2 mins ago • Tariq D.</div>
-                </div>
-                <div className="p-2 rounded-lg bg-bayniks-surfaceDark border border-slate-800/80 space-y-1">
-                  <div className="text-white font-medium">Rider Assigned: LGS-938102</div>
-                  <div className="text-[10px] text-slate-400 font-mono">14 mins ago • En route pickup</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Dark Mode Indicator */}
-        <div className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-400 text-xs hidden sm:flex items-center">
-          <span>🌙</span>
-        </div>
-
-        {/* Vendor Bulk Portal Shortcut */}
+        {/* Bulk CSV Shortcut for vendor integration tests */}
         <button
           type="button"
           onClick={() => router.push('/vendor')}
           title="Vendor Bulk Multi-Stop Dispatch"
-          className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-300 hover:text-white hover:border-bayniks-orange transition-all flex items-center space-x-1.5 text-xs font-medium"
+          className="hidden xl:flex w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 border border-neutral-200/80 items-center justify-center transition active:scale-90"
         >
-          <span>📊</span>
-          <span className="hidden lg:inline font-mono text-[11px]">Bulk CSV</span>
+          <FileSpreadsheet className="w-4 h-4 text-neutral-700" />
         </button>
 
-        {/* Command Center Shortcut */}
+        {/* Command Center Shortcut for admin integration tests */}
         <button
           type="button"
           onClick={() => router.push('/admin')}
           title="Super-Admin & Fleet Command Center"
-          className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-800 text-slate-300 hover:text-white hover:border-bayniks-orange transition-all flex items-center space-x-1.5 text-xs font-medium"
+          className="hidden xl:flex w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 border border-neutral-200/80 items-center justify-center transition active:scale-90"
         >
-          <span>🛡️</span>
-          <span className="hidden lg:inline font-mono text-[11px]">Command</span>
+          <ShieldCheck className="w-4 h-4 text-neutral-700" />
         </button>
 
-        {/* Quick CTA */}
         <button
           type="button"
-          onClick={onBookDeliveryClick}
-          className="bg-bayniks-orange hover:bg-bayniks-orangeDark text-white px-3.5 py-1.5 rounded-xl font-semibold text-xs shadow-bolt-glow transition-all flex items-center space-x-1.5"
+          onClick={onOpenNotifications}
+          title="Notifications"
+          aria-label="Notifications"
+          className="relative w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 border border-neutral-200/80 flex items-center justify-center transition active:scale-90"
         >
-          <span>+</span>
-          <span>Book Delivery</span>
+          <Bell className="w-4 h-4 text-neutral-700" />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#FF6D1F]" />
         </button>
+
+        <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl bg-[#FFEDD5] border-2 border-[#FED7AA] flex items-center justify-center text-[#C2410C] font-extrabold text-xs md:text-sm shadow-xs select-none">
+          J
+        </div>
       </div>
     </header>
   );
 }
-

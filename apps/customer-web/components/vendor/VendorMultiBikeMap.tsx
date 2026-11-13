@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { LatLng } from '@logistics/shared-types';
+import { Radio, RefreshCw, Building2, Bike, Flag } from 'lucide-react';
 
 export interface VendorDispatchedOrder {
   id: string;
@@ -52,19 +53,19 @@ export function VendorMultiBikeMap({
   );
 
   return (
-    <div className="bg-bayniks-cardDark rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col h-[520px]">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[520px] text-slate-900">
       {/* Map Header */}
-      <div className="p-4 border-b border-slate-800/80 bg-bayniks-cardDark/90 backdrop-blur-md flex items-center justify-between">
+      <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-bayniks-orange/20 border border-bayniks-orange flex items-center justify-center text-bayniks-orange">
-            📡
+            <Radio className="w-4 h-4 text-bayniks-orange" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <span>Lagos Live Fleet Radar</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             </h3>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500 font-medium">
               Tracking {activeOrders.length} active motorcycle courier{activeOrders.length === 1 ? '' : 's'} across Lagos
             </p>
           </div>
@@ -76,9 +77,9 @@ export function VendorMultiBikeMap({
               type="button"
               onClick={onRefresh}
               disabled={isLoading}
-              className="p-2 rounded-xl bg-bayniks-surfaceDark border border-slate-700 text-slate-300 hover:text-white hover:border-bayniks-orange transition-colors text-xs flex items-center gap-1.5"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors text-xs font-bold flex items-center gap-1.5"
             >
-              <span className={isLoading ? 'animate-spin' : ''}>🔄</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh Fleet</span>
             </button>
           )}
@@ -86,25 +87,25 @@ export function VendorMultiBikeMap({
       </div>
 
       {/* Radar Map Canvas / Visualization */}
-      <div className="relative flex-1 bg-[#090b0e] overflow-hidden flex items-center justify-center select-none">
+      <div className="relative flex-1 bg-slate-50 overflow-hidden flex items-center justify-center select-none">
         {/* Radar Concentric Rings & Crosshair Grid */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(#FF6D1F_1px,transparent_1px)] [background-size:24px_24px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] rounded-full border border-bayniks-orange/40" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full border border-bayniks-orange/20" />
-          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-bayniks-orange/20" />
-          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-bayniks-orange/20" />
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:24px_24px]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] rounded-full border border-slate-300" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full border border-slate-200" />
+          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-slate-200" />
+          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-slate-200" />
         </div>
 
         {/* Central Warehouse Pin */}
         <div className="absolute z-10 flex flex-col items-center">
           <div className="relative">
             <div className="w-10 h-10 rounded-2xl bg-bayniks-orange border-2 border-white shadow-bolt-glow flex items-center justify-center text-lg text-white">
-              🏬
+              <Building2 className="w-5 h-5 text-white" />
             </div>
             <div className="absolute -inset-1 rounded-2xl bg-bayniks-orange/30 animate-ping -z-10" />
           </div>
-          <div className="mt-1 px-2.5 py-0.5 rounded-full bg-bayniks-black/90 border border-slate-700 text-[10px] font-mono text-white text-center whitespace-nowrap shadow-lg">
+          <div className="mt-1 px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-[10px] font-mono font-bold text-slate-900 text-center whitespace-nowrap shadow-md">
             {warehouseLocation.landmark || 'Warehouse Hub'}
           </div>
         </div>
@@ -144,7 +145,7 @@ export function VendorMultiBikeMap({
                   y1={offsetY >= 0 ? offsetY : 0}
                   x2={offsetX >= 0 ? 0 : -offsetX}
                   y2={offsetY >= 0 ? 0 : -offsetY}
-                  stroke={isAssigned ? '#FF6D1F' : '#64748B'}
+                  stroke={isAssigned ? '#FF6D1F' : '#94A3B8'}
                   strokeWidth="1.5"
                   strokeDasharray="4 4"
                   className="animate-pulse"
@@ -154,30 +155,30 @@ export function VendorMultiBikeMap({
               {/* Courier Bike Marker */}
               <div className="relative group cursor-pointer">
                 <div
-                  className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm shadow-xl transition-transform group-hover:scale-110 ${
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm shadow-md transition-transform group-hover:scale-110 ${
                     isAssigned
                       ? 'bg-bayniks-orange text-white border-white shadow-bolt-glow'
-                      : 'bg-bayniks-surfaceDark text-slate-400 border-slate-700'
+                      : 'bg-white text-slate-500 border-slate-300'
                   }`}
                 >
-                  🏍️
+                  <Bike className="w-5 h-5" />
                 </div>
                 {isAssigned && (
-                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-black" />
+                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white" />
                 )}
 
                 {/* Tooltip on Hover */}
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 p-2.5 rounded-xl bg-bayniks-black border border-slate-700 text-[11px] text-white shadow-2xl z-30 pointer-events-none">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block w-48 p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-900 shadow-xl z-30 pointer-events-none">
                   <div className="font-mono font-bold text-bayniks-orange">{order.trackingCode}</div>
-                  <div className="text-slate-300 font-medium truncate">{riderName} ({plate})</div>
-                  <div className="text-slate-400 text-[10px] mt-1">
+                  <div className="text-slate-800 font-bold truncate">{riderName} ({plate})</div>
+                  <div className="text-slate-500 text-[10px] mt-1 font-medium">
                     Stops: {order.stops.length} • Status: {order.status}
                   </div>
                 </div>
               </div>
 
               {/* Courier Mini Tag */}
-              <div className="mt-1 px-2 py-0.5 rounded bg-black/85 border border-slate-800 text-[9px] font-mono text-slate-300 whitespace-nowrap">
+              <div className="mt-1 px-2 py-0.5 rounded bg-white border border-slate-200 text-[9px] font-mono font-bold text-slate-700 whitespace-nowrap shadow-2xs">
                 {order.trackingCode}
               </div>
             </div>
@@ -186,25 +187,25 @@ export function VendorMultiBikeMap({
 
         {/* Empty State Banner if no active orders */}
         {activeOrders.length === 0 && (
-          <div className="absolute z-20 text-center max-w-xs p-4 rounded-2xl bg-bayniks-black/90 border border-slate-800 text-slate-400 text-xs">
-            <span className="text-2xl mb-1 block">🏁</span>
-            <div className="font-semibold text-white">No Active Bike Runs</div>
-            <p className="text-[11px] mt-1">Upload a batch CSV or load the demo to dispatch express courier runs.</p>
+          <div className="absolute z-20 text-center max-w-xs p-4 rounded-2xl bg-white border border-slate-200 text-slate-600 text-xs shadow-sm">
+            <Flag className="w-7 h-7 text-bayniks-orange mx-auto mb-1" />
+            <div className="font-bold text-slate-900">No Active Bike Runs</div>
+            <p className="text-[11px] mt-1 text-slate-500 font-medium">Upload a batch CSV or load the demo to dispatch express courier runs.</p>
           </div>
         )}
       </div>
 
       {/* Manifest Fleet Bar */}
-      <div className="p-3 bg-bayniks-cardDark border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400 overflow-x-auto">
+      <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between text-xs font-mono text-slate-600 overflow-x-auto">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-white">
+          <span className="flex items-center gap-1.5 text-slate-900 font-bold">
             <span className="w-2.5 h-2.5 rounded-full bg-bayniks-orange inline-block" /> Central Hub: {warehouseLocation.landmark || 'Lagos'}
           </span>
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" /> Active Couriers: {activeOrders.length}
+          <span className="flex items-center gap-1.5 text-emerald-700 font-bold">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Active Couriers: {activeOrders.length}
           </span>
         </div>
-        <span className="text-[11px]">Real-Time Telemetry: 5s Redis Sync</span>
+        <span className="text-[11px] font-semibold text-slate-500">Real-Time Telemetry: 5s Redis Sync</span>
       </div>
     </div>
   );

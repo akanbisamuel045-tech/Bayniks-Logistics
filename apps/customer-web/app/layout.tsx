@@ -3,6 +3,7 @@ import React from 'react';
 import { Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegister } from '../components/ServiceWorkerRegister';
+import { ThemeProvider } from '../components/ThemeProvider';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -56,9 +57,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="bg-bayniks-black text-slate-100 font-sans min-h-screen antialiased selection:bg-bayniks-orange selection:text-white">
-        <ServiceWorkerRegister />
-        {children}
+      <body className="bg-white text-slate-900 font-sans min-h-screen antialiased selection:bg-bayniks-orange selection:text-white">
+        <ThemeProvider>
+          <ServiceWorkerRegister />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

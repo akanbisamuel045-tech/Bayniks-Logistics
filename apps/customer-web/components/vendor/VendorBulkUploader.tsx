@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { VendorCsvRow } from '@logistics/shared-types';
+import { BarChart2, Download, Zap, FileSpreadsheet, AlertTriangle, Building, X } from 'lucide-react';
 
 export interface VendorBulkUploaderProps {
   onRowsValidated: (rows: VendorCsvRow[]) => void;
@@ -202,12 +203,13 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
   return (
     <div className="space-y-6">
       {/* Top Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-bayniks-cardDark p-4 rounded-2xl border border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h2 className="text-base font-semibold text-white flex items-center gap-2">
-            <span>📊</span> Bulk Multi-Stop Dispatch Workstation
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-bayniks-orange" />
+            <span>Bulk Multi-Stop Dispatch Workstation</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             Upload CSV with mandatory landmarks for street deliveries. Motorcycle fleet limit: max 5 stops per bike run.
           </p>
         </div>
@@ -216,17 +218,19 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
           <button
             type="button"
             onClick={handleDownloadSampleCsv}
-            className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 bg-bayniks-surfaceDark border border-slate-700 hover:text-white hover:border-bayniks-orange transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:text-slate-900 hover:bg-slate-200 transition-colors flex items-center gap-1.5"
           >
-            <span>📥</span> Download Sample CSV
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Sample CSV</span>
           </button>
 
           <button
             type="button"
             onClick={handleLoadDemoBatch}
-            className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-bayniks-orange hover:bg-bayniks-orangeDark shadow-bolt-glow transition-all flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-bayniks-orange hover:bg-bayniks-orangeDark shadow-bolt-glow transition-all flex items-center gap-1.5"
           >
-            <span>⚡</span> Load 6-Stop Demo Batch
+            <Zap className="w-3.5 h-3.5" />
+            <span>Load 6-Stop Demo Batch</span>
           </button>
         </div>
       </div>
@@ -239,8 +243,8 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
         onClick={() => fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 ${
           isDragging
-            ? 'border-bayniks-orange bg-bayniks-orange/10 scale-[1.01]'
-            : 'border-slate-700/80 hover:border-bayniks-orange/60 bg-bayniks-cardDark/60'
+            ? 'border-bayniks-orange bg-orange-50 scale-[1.01]'
+            : 'border-slate-300 hover:border-bayniks-orange bg-white shadow-sm'
         }`}
       >
         <input
@@ -251,19 +255,19 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
           className="hidden"
         />
 
-        <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-bayniks-surfaceDark border border-slate-700 flex items-center justify-center text-2xl text-bayniks-orange">
-          📑
+        <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-bayniks-orange">
+          <FileSpreadsheet className="w-6 h-6" />
         </div>
 
-        <h3 className="text-sm font-semibold text-white">
+        <h3 className="text-sm font-bold text-slate-900">
           {fileName ? `File Selected: ${fileName}` : 'Drag & drop your CSV file here, or click to browse'}
         </h3>
-        <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
-          Expected headers: <code className="text-bayniks-orange font-mono">batchGroupKey, recipientName, recipientPhone, dropoffAddress, dropoffLandmark</code>
+        <p className="text-xs text-slate-500 font-medium mt-1 max-w-md mx-auto">
+          Expected headers: <code className="text-bayniks-orange font-mono font-bold">batchGroupKey, recipientName, recipientPhone, dropoffAddress, dropoffLandmark</code>
         </p>
 
         {isProcessing && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-bayniks-orange font-mono animate-pulse">
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-bayniks-orange font-mono font-bold animate-pulse">
             <span className="w-2 h-2 rounded-full bg-bayniks-orange animate-ping" />
             Parsing rows & resolving Nigerian street coordinates...
           </div>
@@ -272,18 +276,19 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
 
       {/* Error Alert Banner */}
       {errors.length > 0 && (
-        <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/80 text-rose-300 text-xs space-y-2">
-          <div className="flex items-center gap-2 font-semibold text-rose-200">
-            <span>⚠️</span> {errors.length} Formatting Error{errors.length > 1 ? 's' : ''} Detected in CSV:
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-2">
+          <div className="flex items-center gap-2 font-bold text-rose-900">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{errors.length} Formatting Error{errors.length > 1 ? 's' : ''} Detected in CSV:</span>
           </div>
-          <ul className="list-disc list-inside space-y-1 text-[11px] font-mono text-rose-400 max-h-32 overflow-y-auto">
+          <ul className="list-disc list-inside space-y-1 text-[11px] font-mono text-rose-700 max-h-32 overflow-y-auto">
             {errors.map((err, idx) => (
               <li key={idx}>
                 Row {err.rowNumber} [{err.field}]: {err.message}
               </li>
             ))}
           </ul>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-600 font-medium">
             Tip: In Lagos, dispatch riders cannot pinpoint addresses without a known landmark (e.g., &ldquo;Opposite Slot&rdquo;, &ldquo;Beside Zenith Bank&rdquo;).
           </p>
         </div>
@@ -291,22 +296,22 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
 
       {/* Validated Rows Table */}
       {rows.length > 0 && (
-        <div className="bg-bayniks-cardDark rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-          <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-white">Batch Orders Manifest</span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-950 border border-emerald-800 text-emerald-400">
+              <span className="text-sm font-bold text-slate-900">Batch Orders Manifest</span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-50 border border-emerald-200 text-emerald-700">
                 {rows.length} Valid Stop{rows.length > 1 ? 's' : ''}
               </span>
             </div>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-slate-500 font-mono font-medium">
               Auto-grouped into {Math.ceil(rows.length / 5)} motorcycle run{Math.ceil(rows.length / 5) > 1 ? 's' : ''}
             </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-bayniks-surfaceDark/60 text-slate-400 font-mono text-[11px] border-b border-slate-800">
+              <thead className="bg-slate-50 text-slate-600 font-mono text-[11px] border-b border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">Run Key</th>
                   <th className="py-2.5 px-3">Recipient</th>
@@ -317,27 +322,29 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
                   <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-sans">
+              <tbody className="divide-y divide-slate-100 font-sans">
                 {rows.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-bayniks-surfaceDark/40 transition-colors">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-bayniks-orange font-semibold">
+                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-bayniks-orange font-bold">
                       {row.batchGroupKey}
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-white">{row.recipientName}</td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-300">
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">
-                        🇳🇬 {row.recipientPhone}
+                    <td className="py-2.5 px-3 font-bold text-slate-900">{row.recipientName}</td>
+                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-700">
+                      <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-semibold">
+                        <svg className="w-3.5 h-2.5 rounded-xs overflow-hidden" viewBox="0 0 6 4" aria-hidden="true"><rect width="2" height="4" fill="#008751"/><rect x="2" width="2" height="4" fill="#FFFFFF"/><rect x="4" width="2" height="4" fill="#008751"/></svg>
+                        <span>{row.recipientPhone}</span>
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-slate-300 max-w-[180px] truncate" title={row.dropoffAddress}>
+                    <td className="py-2.5 px-3 text-slate-700 max-w-[180px] truncate" title={row.dropoffAddress}>
                       {row.dropoffAddress}
                     </td>
                     <td className="py-2.5 px-3">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-950/60 border border-amber-800/80 text-amber-300">
-                        🏛️ {row.dropoffLandmark}
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 border border-amber-200 text-amber-800">
+                        <Building className="w-3 h-3 text-amber-700 shrink-0" />
+                        <span>{row.dropoffLandmark}</span>
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-slate-400 max-w-[120px] truncate">
+                    <td className="py-2.5 px-3 text-slate-500 max-w-[120px] truncate">
                       {row.packageDescription}
                     </td>
                     <td className="py-2.5 px-3 text-right">
@@ -346,9 +353,9 @@ export function VendorBulkUploader({ onRowsValidated, isLoading = false }: Vendo
                         onClick={() => handleDeleteRow(idx)}
                         title="Remove stop"
                         disabled={isLoading}
-                        className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors"
+                        className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>

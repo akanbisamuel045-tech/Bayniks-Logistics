@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { formatNaira, nairaToKobo, koboToNaira, NigerianBank } from '@logistics/shared-types';
+import {
+  Lock,
+  Zap,
+  Landmark,
+  X,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Check,
+} from 'lucide-react';
 
 export interface PayoutItem {
   payoutId: string;
@@ -255,19 +265,20 @@ export function WalletPayoutCard({
   };
 
   return (
-    <div className="w-full bg-bayniks-cardDark border border-bayniks-surfaceDark rounded-2xl p-6 shadow-xl text-white">
+    <div className="w-full bg-white border border-slate-200 rounded-2xl p-6 shadow-sm text-slate-900">
       {/* Wallet Balance Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-bayniks-surfaceDark">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
-          <span className="text-xs uppercase tracking-wider text-bayniks-grayMid font-mono font-semibold">
+          <span className="text-xs uppercase tracking-wider text-slate-500 font-mono font-semibold">
             Available Wallet Balance
           </span>
-          <div className="text-3xl md:text-4xl font-extrabold text-white mt-1 font-mono tracking-tight">
+          <div className="text-3xl md:text-4xl font-extrabold text-slate-900 mt-1 font-mono tracking-tight">
             {formatNaira(balanceKobo)}
           </div>
           {escrowLockedKobo > 0 && (
-            <div className="text-xs text-bayniks-orangeAccent font-mono mt-1 flex items-center gap-1.5">
-              <span>🔒 In Delivery Escrow:</span>
+            <div className="text-xs text-orange-600 font-mono mt-1 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" />
+              <span>In Delivery Escrow:</span>
               <span className="font-semibold">{formatNaira(escrowLockedKobo)}</span>
             </div>
           )}
@@ -280,49 +291,52 @@ export function WalletPayoutCard({
             setSuccessMessage(null);
           }}
           disabled={balanceKobo < 50000}
-          className={`px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 ${
+          className={`px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 ${
             balanceKobo >= 50000
               ? 'bg-bayniks-orange hover:bg-bayniks-orangeDark text-white shadow-bayniks-orange/20 cursor-pointer active:scale-95'
-              : 'bg-bayniks-surfaceDark text-bayniks-grayMid cursor-not-allowed border border-white/5'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
           }`}
         >
-          <span>⚡ Withdraw Funds</span>
+          <Zap className="w-4 h-4" />
+          <span>Withdraw Funds</span>
         </button>
       </div>
 
       {/* Withdrawal Modal */}
       {isWithdrawModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-lg bg-bayniks-cardDark border border-bayniks-orange/40 rounded-2xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl relative text-slate-900">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-bayniks-surfaceDark">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-bayniks-orange/20 border border-bayniks-orange/30 flex items-center justify-center text-bayniks-orange text-lg">
-                  🏦
+                <div className="w-9 h-9 rounded-xl bg-bayniks-orange/15 border border-bayniks-orange/30 flex items-center justify-center text-bayniks-orange">
+                  <Landmark className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white leading-tight">Instant Bank Payout</h3>
-                  <p className="text-xs text-bayniks-grayMid">Disbursed directly via Paystack Transfer API</p>
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight">Instant Bank Payout</h3>
+                  <p className="text-xs text-slate-500">Disbursed directly via Paystack Transfer API</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsWithdrawModalOpen(false)}
-                className="text-bayniks-grayMid hover:text-white text-xl p-1"
+                className="text-slate-400 hover:text-slate-700 p-1"
                 aria-label="Close"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Error & Success Messages */}
             {errorMessage && (
-              <div className="mt-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono">
-                ⚠️ {errorMessage}
+              <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-mono flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                <span>{errorMessage}</span>
               </div>
             )}
             {successMessage && (
-              <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-mono">
-                ✓ {successMessage}
+              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-mono flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>{successMessage}</span>
               </div>
             )}
 
@@ -330,16 +344,16 @@ export function WalletPayoutCard({
             <form onSubmit={handleWithdrawSubmit} className="mt-4 space-y-4">
               {/* Bank Selection */}
               <div>
-                <label className="block text-xs font-semibold text-bayniks-grayMid uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                   Select Nigerian Bank
                 </label>
                 <select
                   value={selectedBankCode}
                   onChange={(e) => setSelectedBankCode(e.target.value)}
-                  className="w-full bg-bayniks-surfaceDark border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-bayniks-orange"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-bayniks-orange focus:bg-white"
                 >
                   {banks.map((b) => (
-                    <option key={b.code} value={b.code} className="bg-bayniks-cardDark text-white">
+                    <option key={b.code} value={b.code} className="bg-white text-slate-900">
                       {b.name}
                     </option>
                   ))}
@@ -348,7 +362,7 @@ export function WalletPayoutCard({
 
               {/* 10-Digit NUBAN Account Number */}
               <div>
-                <label className="block text-xs font-semibold text-bayniks-grayMid uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                   10-Digit NUBAN Account Number
                 </label>
                 <input
@@ -357,25 +371,28 @@ export function WalletPayoutCard({
                   placeholder="e.g. 0123456789"
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-bayniks-surfaceDark border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono tracking-wider focus:outline-none focus:border-bayniks-orange"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-mono tracking-wider focus:outline-none focus:border-bayniks-orange focus:bg-white"
                   required
                 />
 
                 {/* Account Name Resolution State */}
                 <div className="mt-1.5 min-h-[20px]">
                   {isResolvingAccount && (
-                    <span className="text-xs text-bayniks-orangeAccent animate-pulse flex items-center gap-1">
-                      <span className="inline-block animate-spin">⏳</span> Verifying account with NIBSS / Paystack...
+                    <span className="text-xs text-bayniks-orange animate-pulse flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Verifying account with NIBSS / Paystack...</span>
                     </span>
                   )}
                   {accountName && !isResolvingAccount && (
-                    <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1 font-mono">
-                      ✓ Recipient: {accountName}
+                    <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5 font-mono">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Recipient: {accountName}</span>
                     </span>
                   )}
                   {accountResolveError && !isResolvingAccount && (
-                    <span className="text-xs text-rose-400 flex items-center gap-1 font-mono">
-                      ✕ {accountResolveError}
+                    <span className="text-xs text-rose-600 flex items-center gap-1.5 font-mono">
+                      <X className="w-3.5 h-3.5 text-rose-600" />
+                      <span>{accountResolveError}</span>
                     </span>
                   )}
                 </div>
@@ -384,15 +401,15 @@ export function WalletPayoutCard({
               {/* Withdrawal Amount (₦) */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-semibold text-bayniks-grayMid uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Withdrawal Amount (₦)
                   </label>
-                  <span className="text-xs text-bayniks-grayMid font-mono">
+                  <span className="text-xs text-slate-500 font-mono">
                     Max: {formatNaira(balanceKobo)}
                   </span>
                 </div>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-2.5 text-sm font-mono text-bayniks-grayMid">₦</span>
+                  <span className="absolute left-3.5 top-2.5 text-sm font-mono text-slate-400">₦</span>
                   <input
                     type="number"
                     min="500"
@@ -400,7 +417,7 @@ export function WalletPayoutCard({
                     placeholder="5,000"
                     value={withdrawNaira}
                     onChange={(e) => setWithdrawNaira(e.target.value)}
-                    className="w-full bg-bayniks-surfaceDark border border-white/10 rounded-xl pl-8 pr-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-bayniks-orange"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-3.5 py-2.5 text-sm text-slate-900 font-mono focus:outline-none focus:border-bayniks-orange focus:bg-white"
                     required
                   />
                 </div>
@@ -412,7 +429,7 @@ export function WalletPayoutCard({
                       key={pct}
                       type="button"
                       onClick={() => handleQuickPercent(pct)}
-                      className="px-2 py-1.5 rounded-lg bg-bayniks-surfaceDark hover:bg-white/10 text-xs font-mono font-medium text-bayniks-grayMid hover:text-white border border-white/5 transition"
+                      className="px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-mono font-medium text-slate-700 border border-slate-200 transition"
                     >
                       {pct}%
                     </button>
@@ -422,7 +439,7 @@ export function WalletPayoutCard({
 
               {/* Transfer Note */}
               <div>
-                <label className="block text-xs font-semibold text-bayniks-grayMid uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                   Transfer Note (Optional)
                 </label>
                 <input
@@ -430,16 +447,16 @@ export function WalletPayoutCard({
                   maxLength={150}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full bg-bayniks-surfaceDark border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-bayniks-orange"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-bayniks-orange focus:bg-white"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-bayniks-surfaceDark">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsWithdrawModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-bayniks-grayMid hover:text-white transition"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 transition"
                 >
                   Cancel
                 </button>
@@ -450,7 +467,8 @@ export function WalletPayoutCard({
                 >
                   {isSubmitting ? (
                     <>
-                      <span className="inline-block animate-spin">⏳</span> Disbursing...
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Disbursing...</span>
                     </>
                   ) : (
                     'Confirm & Disburse'
@@ -464,25 +482,25 @@ export function WalletPayoutCard({
 
       {/* Payouts History Table */}
       <div className="mt-8">
-        <h4 className="text-sm font-bold text-white mb-4 tracking-wide flex items-center justify-between">
+        <h4 className="text-sm font-bold text-slate-900 mb-4 tracking-wide flex items-center justify-between">
           <span>Recent Bank Payouts</span>
-          <span className="text-xs text-bayniks-grayMid font-mono font-normal">
+          <span className="text-xs text-slate-500 font-mono font-normal">
             {payouts.length} recorded
           </span>
         </h4>
 
         {isLoadingHistory ? (
-          <div className="p-8 text-center text-xs text-bayniks-grayMid font-mono">
+          <div className="p-8 text-center text-xs text-slate-400 font-mono">
             Loading payout records...
           </div>
         ) : payouts.length === 0 ? (
-          <div className="p-6 text-center bg-bayniks-surfaceDark/40 rounded-xl border border-white/5 text-xs text-bayniks-grayMid">
+          <div className="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
             No bank payouts recorded yet. Your completed withdrawals will appear here.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-bayniks-grayMid">
-              <thead className="bg-bayniks-surfaceDark text-white uppercase text-[10px] tracking-wider font-mono">
+            <table className="w-full text-left text-xs text-slate-600">
+              <thead className="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider font-mono">
                 <tr>
                   <th className="py-2.5 px-3 rounded-l-lg">Date</th>
                   <th className="py-2.5 px-3">Bank & Account</th>
@@ -491,34 +509,34 @@ export function WalletPayoutCard({
                   <th className="py-2.5 px-3 rounded-r-lg">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 font-mono">
+              <tbody className="divide-y divide-slate-100 font-mono">
                 {payouts.map((p) => {
                   const statusColors = {
-                    success: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-                    processing: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                    pending: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-                    failed: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-                  }[p.status] || 'bg-white/10 text-white border-white/10';
+                    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                    processing: 'bg-amber-50 text-amber-700 border-amber-200',
+                    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+                    failed: 'bg-rose-50 text-rose-700 border-rose-200',
+                  }[p.status] || 'bg-slate-100 text-slate-700 border-slate-200';
 
                   return (
-                    <tr key={p.payoutId} className="hover:bg-white/[0.02] transition">
-                      <td className="py-3 px-3 text-white">
+                    <tr key={p.payoutId} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-3 text-slate-900">
                         {new Date(p.createdAt).toLocaleDateString('en-NG', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="py-3 px-3 text-white">
+                      <td className="py-3 px-3 text-slate-900">
                         <div className="font-semibold">{p.accountName || 'Account Holder'}</div>
-                        <div className="text-[11px] text-bayniks-grayMid">
+                        <div className="text-[11px] text-slate-500">
                           {p.bankName || `Bank ${p.bankCode}`} • {p.accountNumber}
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-bold text-white">
+                      <td className="py-3 px-3 font-bold text-slate-900">
                         {formatNaira(p.amountKobo)}
                       </td>
-                      <td className="py-3 px-3 text-[11px] text-bayniks-grayMid">
+                      <td className="py-3 px-3 text-[11px] text-slate-500">
                         {p.paystackTransferReference || p.payoutId}
                       </td>
                       <td className="py-3 px-3">

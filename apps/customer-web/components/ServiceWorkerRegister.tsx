@@ -4,29 +4,29 @@ import { useEffect } from 'react';
 
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          // Registration successful
-          reg.onupdatefound = () => {
-            const installingWorker = reg.installing;
-            if (installingWorker) {
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed') {
-                  if (navigator.serviceWorker.controller) {
-                    console.log('[SW] New content is available; please refresh.');
-                  } else {
-                    console.log('[SW] Content is cached for offline use.');
-                  }
-                }
-              };
+    if (typeof window !== 'undefined') {
+      // 1. Instantly delete any stale PWA caches so browser always displays the fresh UI
+      if ('caches' in window) {
+        caches.keys().then((cacheNames) => {
+          for (const name of cacheNames) {
+            if (name !== 'bayniks-pwa-v2') {
+              caches.delete(name);
             }
-          };
-        })
-        .catch((err) => {
-          console.warn('[SW] ServiceWorker registration failed: ', err);
+          }
         });
+      }
+
+      // 2. Register fresh Service Worker and trigger update
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((reg) => {
+            reg.update();
+          })
+          .catch((err) => {
+            console.warn('[SW] Registration notice:', err);
+          });
+      }
     }
   }, []);
 

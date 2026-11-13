@@ -1,49 +1,41 @@
 /**
- * Bayniks Logistics - Progressive Web App (PWA) & TWA Service Worker
- * Version: 1.0.0
- * Strategy: Cache-first for core static assets, Network-first for dynamic API & order telemetry
+ * Bayniks Logistics - Progressive Web App (PWA) Service Worker
+ * Version: 2.0.0 (Clean Cache Purge Edition)
+ * Strategy: Network-First for all navigations and assets to prevent stale UI caching
  */
 
-const CACHE_NAME = 'bayniks-pwa-v1';
-const OFFLINE_FALLBACK_URL = '/';
+const CACHE_NAME = 'bayniks-pwa-v2';
 
 const PRECACHE_ASSETS = [
-  '/',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
 ];
 
-// 1. Install Event: Pre-cache core shell assets
+// 1. Install Event: Skip waiting immediately & precache essential metadata
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[SW] Pre-caching asset failed (ignorable during build):', err);
-      });
+      return cache.addAll(PRECACHE_ASSETS).catch(() => {});
     })
   );
-  // Force active immediately
   self.skipWaiting();
 });
 
-// 2. Activate Event: Clean up stale caches
+// 2. Activate Event: Wipe out all stale caches (including bayniks-pwa-v1)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+          return caches.delete(cache);
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// 3. Fetch Event: Network-first for API/navigation, Cache-first for static assets
+// 3. Fetch Event: Network-First for all navigation requests and dynamic assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -53,66 +45,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-First for API calls & dynamic tracking routes
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/track/')) {
+  // Network-First for navigation (HTML pages) and dynamic routes
+  if (request.mode === 'navigate' || url.pathname === '/' || url.pathname.startsWith('/api/') || url.pathname.startsWith('/track/')) {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
           return networkResponse;
         })
         .catch(async () => {
-          // If offline, check cache
           const cachedResponse = await caches.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // Return simulated offline JSON payload for API
+          if (cachedResponse) return cachedResponse;
           if (url.pathname.startsWith('/api/')) {
             return new Response(
               JSON.stringify({
                 ok: false,
-                error: 'Device is offline. Connecting to Nigerian telecommunications network...',
+                error: 'Device is offline.',
                 isOffline: true,
               }),
-              {
-                headers: { 'Content-Type': 'application/json' },
-                status: 503,
-              }
+              { headers: { 'Content-Type': 'application/json' }, status: 503 }
             );
           }
-          // Fallback to cached root shell
-          return caches.match(OFFLINE_FALLBACK_URL);
+          return new Response('Offline', { status: 503 });
         })
     );
     return;
   }
 
-  // Cache-First (Stale-While-Revalidate) for static assets (_next/static, fonts, icons)
+  // Network-First for scripts & stylesheets to prevent stale bundle lock
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // Return cached if available, else fallback
-          return cachedResponse || caches.match(OFFLINE_FALLBACK_URL);
-        });
-
-      return cachedResponse || fetchPromise;
-    })
+    fetch(request)
+      .then((networkResponse) => {
+        return networkResponse;
+      })
+      .catch(() => caches.match(request))
   );
 });
 

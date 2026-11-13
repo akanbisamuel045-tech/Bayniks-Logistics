@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { VendorBatchSummaryResponse, formatNaira } from '@logistics/shared-types';
+import { Bike, Zap, AlertTriangle, CreditCard, Banknote, Rocket } from 'lucide-react';
 
 export interface VendorBatchCheckoutCardProps {
   summary: VendorBatchSummaryResponse | null;
@@ -24,12 +25,12 @@ export function VendorBatchCheckoutCard({
 }: VendorBatchCheckoutCardProps) {
   if (isEstimating) {
     return (
-      <div className="bg-bayniks-cardDark p-6 rounded-2xl border border-slate-800 animate-pulse text-center">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm animate-pulse text-center">
         <div className="w-8 h-8 mx-auto mb-3 rounded-full bg-bayniks-orange/20 border border-bayniks-orange flex items-center justify-center text-bayniks-orange">
-          🏍️
+          <Bike className="w-5 h-5 text-bayniks-orange" />
         </div>
-        <p className="text-sm font-semibold text-white">Calculating Batch Motorcycle Routes & Fares...</p>
-        <p className="text-xs text-slate-400 mt-1">Chunking runs and optimizing waypoint matrix across Lagos</p>
+        <p className="text-sm font-bold text-slate-900">Calculating Batch Motorcycle Routes & Fares...</p>
+        <p className="text-xs text-slate-500 font-medium mt-1">Chunking runs and optimizing waypoint matrix across Lagos</p>
       </div>
     );
   }
@@ -42,14 +43,15 @@ export function VendorBatchCheckoutCard({
     paymentMethod === 'wallet' && walletBalanceKobo < summary.grandTotalFareKobo;
 
   return (
-    <div className="bg-bayniks-cardDark rounded-2xl border border-slate-800 overflow-hidden shadow-2xl space-y-5 p-5">
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm space-y-5 p-5 text-slate-900">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <span>🏍️</span> Batch Dispatch Summary
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Bike className="w-4 h-4 text-bayniks-orange" />
+            <span>Batch Dispatch Summary</span>
           </h3>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500 font-medium">
             Motorcycle fleet: max 5 parcel stops per courier
           </p>
         </div>
@@ -63,44 +65,47 @@ export function VendorBatchCheckoutCard({
         {summary.runs.map((run, idx) => (
           <div
             key={idx}
-            className="p-3 rounded-xl bg-bayniks-surfaceDark/80 border border-slate-800 flex items-center justify-between text-xs"
+            className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
           >
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2 font-mono font-bold text-white">
-                <span className="text-bayniks-orange">⚡ {run.batchGroupKey}</span>
-                <span className="text-[11px] text-slate-400 font-normal">
+              <div className="flex items-center gap-2 font-mono font-bold text-slate-900">
+                <span className="text-bayniks-orange flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{run.batchGroupKey}</span>
+                </span>
+                <span className="text-[11px] text-slate-500 font-normal">
                   ({run.stopsCount} stop{run.stopsCount > 1 ? 's' : ''})
                 </span>
               </div>
-              <div className="text-[11px] text-slate-400 font-mono">
+              <div className="text-[11px] text-slate-500 font-mono font-medium">
                 {run.totalDistanceKm.toFixed(1)} km • Est. {run.estimatedDurationMinutes} mins
               </div>
             </div>
 
             <div className="text-right">
-              <div className="font-mono font-bold text-white">
+              <div className="font-mono font-bold text-slate-900">
                 {formatNaira(run.estimatedFareKobo)}
               </div>
-              <div className="text-[10px] text-emerald-400 font-mono">Express Bike</div>
+              <div className="text-[10px] text-emerald-700 font-mono font-bold">Express Bike</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Grand Total & Wallet Balance Status */}
-      <div className="p-4 rounded-xl bg-bayniks-black border border-slate-800 space-y-3">
+      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-slate-400 font-medium">Grand Total Batch Fare</span>
-          <span className="text-xl font-mono font-bold text-bayniks-orange">
+          <span className="text-xs text-slate-600 font-bold">Grand Total Batch Fare</span>
+          <span className="text-xl font-mono font-black text-bayniks-orange">
             {formatNaira(summary.grandTotalFareKobo)}
           </span>
         </div>
 
-        <div className="flex items-center justify-between text-xs border-t border-slate-800/80 pt-2 font-mono">
-          <span className="text-slate-400">Vendor Escrow Wallet:</span>
+        <div className="flex items-center justify-between text-xs border-t border-slate-200 pt-2 font-mono">
+          <span className="text-slate-600 font-medium">Vendor Escrow Wallet:</span>
           <span
-            className={`font-semibold ${
-              hasInsufficientBalance ? 'text-rose-400' : 'text-emerald-400'
+            className={`font-bold ${
+              hasInsufficientBalance ? 'text-rose-600' : 'text-emerald-700'
             }`}
           >
             {formatNaira(walletBalanceKobo)}
@@ -108,33 +113,37 @@ export function VendorBatchCheckoutCard({
         </div>
 
         {hasInsufficientBalance && (
-          <div className="p-2.5 rounded-lg bg-rose-950/40 border border-rose-800 text-rose-300 text-[11px]">
-            ⚠️ <strong>Insufficient Wallet Balance:</strong> You need an additional{' '}
-            <span className="font-mono font-bold">
-              {formatNaira(summary.grandTotalFareKobo - walletBalanceKobo)}
-            </span>{' '}
-            to lock escrow for this batch. All-or-nothing guarantee requires full escrow funding.
+          <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium flex items-start gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div>
+              <strong>Insufficient Wallet Balance:</strong> You need an additional{' '}
+              <span className="font-mono font-bold">
+                {formatNaira(summary.grandTotalFareKobo - walletBalanceKobo)}
+              </span>{' '}
+              to lock escrow for this batch. All-or-nothing guarantee requires full escrow funding.
+            </div>
           </div>
         )}
       </div>
 
       {/* Payment Method Selector */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-slate-300">Payment Option</label>
+        <label className="text-xs font-bold text-slate-700">Payment Option</label>
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => onPaymentMethodChange('wallet')}
             className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
               paymentMethod === 'wallet'
-                ? 'bg-bayniks-orange/15 border-bayniks-orange text-white'
-                : 'bg-bayniks-surfaceDark border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-orange-50 border-bayniks-orange ring-1 ring-bayniks-orange text-slate-900'
+                : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
             }`}
           >
-            <div className="font-bold flex items-center gap-1.5">
-              <span>💳</span> Vendor Escrow
+            <div className="font-bold flex items-center gap-1.5 text-slate-900">
+              <CreditCard className="w-4 h-4 text-bayniks-orange" />
+              <span>Vendor Escrow</span>
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Instant atomic lock</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Instant atomic lock</div>
           </button>
 
           <button
@@ -142,14 +151,15 @@ export function VendorBatchCheckoutCard({
             onClick={() => onPaymentMethodChange('pay_on_pickup')}
             className={`p-2.5 rounded-xl border text-left text-xs transition-all ${
               paymentMethod === 'pay_on_pickup'
-                ? 'bg-bayniks-orange/15 border-bayniks-orange text-white'
-                : 'bg-bayniks-surfaceDark border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-orange-50 border-bayniks-orange ring-1 ring-bayniks-orange text-slate-900'
+                : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
             }`}
           >
-            <div className="font-bold flex items-center gap-1.5">
-              <span>💵</span> Pay on Pickup
+            <div className="font-bold flex items-center gap-1.5 text-slate-900">
+              <Banknote className="w-4 h-4 text-bayniks-orange" />
+              <span>Pay on Pickup</span>
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">Direct courier cash</div>
+            <div className="text-[10px] text-slate-500 mt-0.5">Direct courier cash</div>
           </button>
         </div>
       </div>
@@ -161,7 +171,7 @@ export function VendorBatchCheckoutCard({
         onClick={onConfirmDispatch}
         className={`w-full py-3.5 px-4 rounded-xl font-bold text-xs tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 ${
           isDispatching || hasInsufficientBalance
-            ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/60'
+            ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
             : 'bg-bayniks-orange hover:bg-bayniks-orangeDark text-white shadow-bolt-glow active:scale-[0.99]'
         }`}
       >
@@ -172,7 +182,7 @@ export function VendorBatchCheckoutCard({
           </>
         ) : (
           <>
-            <span>🚀</span>
+            <Rocket className="w-4 h-4 text-white" />
             <span>
               Dispatch {summary.totalRunsCount} Bike Run{summary.totalRunsCount > 1 ? 's' : ''} (
               {formatNaira(summary.grandTotalFareKobo)})

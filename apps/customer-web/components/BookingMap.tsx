@@ -130,7 +130,7 @@ export function BookingMap({
   }, [routePoints, waypoints, bounds]);
 
   return (
-    <div className={`relative w-full h-full bg-bayniks-black overflow-hidden select-none ${className}`}>
+    <div className={`relative w-full h-full bg-slate-100 overflow-hidden select-none ${className}`}>
       {/* Interactive Cartography SVG */}
       <svg
         viewBox="0 0 1000 800"
@@ -140,7 +140,7 @@ export function BookingMap({
         <defs>
           {/* Glowing Atomic Orange filter for route */}
           <filter id="orangeGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -148,29 +148,29 @@ export function BookingMap({
           </filter>
           {/* Subtle grid pattern */}
           <pattern id="bayniksGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E2228" strokeWidth="0.8" opacity="0.5" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E2E8F0" strokeWidth="0.8" opacity="0.6" />
           </pattern>
         </defs>
 
         {/* Background Grid */}
-        <rect width="1000" height="800" fill="#0E1013" />
+        <rect width="1000" height="800" fill="#F8FAFC" />
         <rect width="1000" height="800" fill="url(#bayniksGrid)" />
 
         {/* Lagos Stylized Lagoon & Ocean Shapes */}
         <path
           d="M 0 720 Q 250 680, 500 700 T 1000 680 L 1000 800 L 0 800 Z"
-          fill="#13161B"
-          opacity="0.9"
+          fill="#E0F2FE"
+          opacity="0.85"
         />
         <path
           d="M 120 400 Q 300 480, 550 430 T 900 490 L 950 560 Q 600 520, 250 560 Z"
-          fill="#161A22"
-          opacity="0.6"
+          fill="#BAE6FD"
+          opacity="0.75"
         />
 
         {/* Key Express Arteries */}
-        <line x1="280" y1="200" x2="620" y2="580" stroke="#1E2228" strokeWidth="4" opacity="0.8" strokeDasharray="6 4" />
-        <line x1="150" y1="520" x2="880" y2="540" stroke="#1E2228" strokeWidth="3" opacity="0.8" />
+        <line x1="280" y1="200" x2="620" y2="580" stroke="#CBD5E1" strokeWidth="4" opacity="0.9" strokeDasharray="6 4" />
+        <line x1="150" y1="520" x2="880" y2="540" stroke="#CBD5E1" strokeWidth="3" opacity="0.9" />
 
         {/* Route Polyline (Shadow) */}
         {svgPolylinePoints && (
@@ -217,9 +217,12 @@ export function BookingMap({
             {/* Pulse aura */}
             <circle cx="0" cy="0" r="22" fill="#FF6D1F" opacity="0.25" className="animate-ping" />
             <circle cx="0" cy="0" r="14" fill="#FF6D1F" stroke="#FFFFFF" strokeWidth="2" className="shadow-lg" />
-            <text x="0" y="4" textAnchor="middle" fontSize="12" fill="white">
-              🏍️
-            </text>
+            <g transform="translate(-8, -8) scale(0.68)" stroke="#FFFFFF" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18.5" cy="17.5" r="3.5" />
+              <circle cx="5.5" cy="17.5" r="3.5" />
+              <circle cx="15" cy="5" r="1" />
+              <path d="M12 17.5V14l-3-3 4-3 2 3h2" />
+            </g>
           </g>
         )}
 
@@ -285,17 +288,16 @@ export function BookingMap({
                     width="180"
                     height="38"
                     rx="8"
-                    fill="#16181D"
+                    fill="#FFFFFF"
                     stroke="#FF6D1F"
-                    strokeWidth="1"
-                    opacity="0.95"
-                    className="shadow-2xl"
+                    strokeWidth="1.5"
+                    className="shadow-md"
                   />
                   <text
                     x="0"
                     y="15"
                     textAnchor="middle"
-                    fill={isPickup ? '#10b981' : '#38bdf8'}
+                    fill={isPickup ? '#059669' : '#0284c7'}
                     fontSize="9"
                     fontWeight="bold"
                     fontFamily="monospace"
@@ -306,9 +308,9 @@ export function BookingMap({
                     x="0"
                     y="28"
                     textAnchor="middle"
-                    fill="#e2e8f0"
+                    fill="#0F172A"
                     fontSize="10"
-                    fontWeight="500"
+                    fontWeight="600"
                   >
                     {wp.name.length > 22 ? `${wp.name.substring(0, 20)}...` : wp.name}
                   </text>
@@ -320,49 +322,49 @@ export function BookingMap({
       </svg>
 
       {/* Floating HUD: Route Statistics */}
-      <div className="absolute top-4 left-4 z-10 clay-card rounded-2xl p-3 backdrop-blur-md border border-slate-800 shadow-xl space-y-1.5 max-w-xs">
+      <div className="absolute top-4 left-4 z-10 clay-card rounded-2xl p-3 bg-white/95 backdrop-blur-md border border-slate-200 shadow-md space-y-1.5 max-w-xs text-slate-900">
         <div className="flex items-center space-x-2">
           <span className="w-2 h-2 rounded-full bg-bayniks-orange animate-ping" />
-          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-300">
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-600">
             Bayniks Radar Viewport
           </span>
         </div>
 
         {estimatedDistanceKm !== undefined && estimatedDurationMinutes !== undefined ? (
-          <div className="flex items-baseline space-x-3 pt-1 border-t border-slate-800/80">
+          <div className="flex items-baseline space-x-3 pt-1 border-t border-slate-100">
             <div>
-              <span className="text-[9px] uppercase font-mono text-slate-400 block">Distance</span>
-              <span className="text-sm font-bold text-white font-mono">{estimatedDistanceKm} km</span>
+              <span className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Distance</span>
+              <span className="text-sm font-bold text-slate-900 font-mono">{estimatedDistanceKm} km</span>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-mono text-slate-400 block">Motorcycle ETA</span>
+              <span className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Motorcycle ETA</span>
               <span className="text-sm font-bold text-bayniks-orange font-mono">~{estimatedDurationMinutes} mins</span>
             </div>
             <div>
-              <span className="text-[9px] uppercase font-mono text-slate-400 block">Waypoints</span>
-              <span className="text-sm font-bold text-slate-200 font-mono">{waypoints.length}</span>
+              <span className="text-[9px] uppercase font-mono text-slate-500 font-bold block">Waypoints</span>
+              <span className="text-sm font-bold text-slate-700 font-mono">{waypoints.length}</span>
             </div>
           </div>
         ) : (
-          <div className="text-[10px] text-slate-400 font-mono">
+          <div className="text-[10px] text-slate-500 font-mono font-medium">
             Routing express motorcycle itinerary...
           </div>
         )}
       </div>
 
       {/* Legend Card */}
-      <div className="absolute bottom-4 right-4 z-10 clay-card rounded-2xl p-2.5 backdrop-blur-md border border-slate-800 text-[10px] font-mono text-slate-300 space-y-1 hidden sm:block">
+      <div className="absolute bottom-4 right-4 z-10 clay-card rounded-2xl p-2.5 bg-white/95 backdrop-blur-md border border-slate-200 text-[10px] font-mono text-slate-700 space-y-1 hidden sm:block shadow-md">
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-          <span>Pickup Point</span>
+          <span className="font-medium">Pickup Point</span>
         </div>
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
-          <span>Drop-off Stops</span>
+          <span className="font-medium">Drop-off Stops</span>
         </div>
         <div className="flex items-center space-x-2">
           <span className="w-3 h-1 rounded bg-bayniks-orange" />
-          <span>Bayniks Active Route</span>
+          <span className="font-bold text-bayniks-orange">Bayniks Active Route</span>
         </div>
       </div>
     </div>

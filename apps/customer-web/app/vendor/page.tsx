@@ -11,6 +11,7 @@ import {
 import { VendorBulkUploader } from '../../components/vendor/VendorBulkUploader';
 import { VendorBatchCheckoutCard } from '../../components/vendor/VendorBatchCheckoutCard';
 import { VendorMultiBikeMap, VendorDispatchedOrder } from '../../components/vendor/VendorMultiBikeMap';
+import { Zap, CheckCircle2, AlertTriangle, X, FileSpreadsheet, Radio, Building2, Bike, Key, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function VendorWorkstationPage() {
   const [activeTab, setActiveTab] = useState<'upload' | 'manifest'>('upload');
@@ -159,40 +160,41 @@ export default function VendorWorkstationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bayniks-black text-slate-100 font-sans selection:bg-bayniks-orange selection:text-white pb-16">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-bayniks-orange selection:text-white pb-16">
       {/* Top Navigation Bar */}
-      <header className="h-16 bg-bayniks-cardDark/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 px-6 flex items-center justify-between">
+      <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-6 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="w-9 h-9 rounded-xl bg-bayniks-orange flex items-center justify-center font-mono font-bold text-white shadow-bolt-glow text-base">
-              ⚡
+              <Zap className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-mono font-bold tracking-wider text-sm text-white group-hover:text-bayniks-orange transition-colors">
+              <span className="font-mono font-bold tracking-wider text-sm text-slate-900 group-hover:text-bayniks-orange transition-colors">
                 BAYNIKS
               </span>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-bayniks-orange -mt-0.5">
+              <span className="text-[10px] uppercase font-mono tracking-widest text-bayniks-orange -mt-0.5 font-bold">
                 Vendor Portal
               </span>
             </div>
           </Link>
 
-          <span className="text-slate-600 hidden sm:inline">/</span>
-          <span className="text-xs font-mono text-slate-300 hidden sm:inline">Bulk Multi-Stop Dispatch</span>
+          <span className="text-slate-400 hidden sm:inline">/</span>
+          <span className="text-xs font-mono text-slate-600 hidden sm:inline font-semibold">Bulk Multi-Stop Dispatch</span>
         </div>
 
         <div className="flex items-center space-x-3">
           {/* Wallet Balance Badge */}
-          <div className="px-3 py-1.5 rounded-xl bg-bayniks-surfaceDark border border-slate-700/80 flex items-center space-x-2 text-xs font-mono">
-            <span className="text-slate-400">Escrow Balance:</span>
-            <span className="font-bold text-emerald-400">{formatNaira(walletBalanceKobo)}</span>
+          <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center space-x-2 text-xs font-mono">
+            <span className="text-slate-500 font-medium">Escrow Balance:</span>
+            <span className="font-black text-emerald-600">{formatNaira(walletBalanceKobo)}</span>
           </div>
 
           <Link
             href="/"
-            className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 bg-bayniks-surfaceDark border border-slate-800 hover:text-white hover:border-bayniks-orange transition-colors"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:text-slate-900 hover:border-bayniks-orange transition-colors shadow-sm flex items-center gap-1.5"
           >
-            ← Live Tracking Console
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Live Tracking Console</span>
           </Link>
         </div>
       </header>
@@ -202,38 +204,43 @@ export default function VendorWorkstationPage() {
         {/* Status Toast Notification */}
         {statusMessage && (
           <div
-            className={`p-4 rounded-2xl border text-xs flex items-center justify-between shadow-xl ${
+            className={`p-4 rounded-2xl border text-xs flex items-center justify-between shadow-sm ${
               statusMessage.type === 'success'
-                ? 'bg-emerald-950/60 border-emerald-800 text-emerald-200'
-                : 'bg-rose-950/60 border-rose-800 text-rose-200'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold'
+                : 'bg-rose-50 border-rose-200 text-rose-800 font-semibold'
             }`}
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">{statusMessage.type === 'success' ? '✅' : '⚠️'}</span>
+              {statusMessage.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
               <span>{statusMessage.text}</span>
             </div>
             <button
               type="button"
               onClick={() => setStatusMessage(null)}
-              className="text-slate-400 hover:text-white ml-4"
+              className="text-slate-400 hover:text-slate-900 ml-4 font-bold"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center space-x-2 border-b border-slate-800/80 pb-3">
+        <div className="flex items-center space-x-2 border-b border-slate-200 pb-3">
           <button
             type="button"
             onClick={() => setActiveTab('upload')}
             className={`px-4 py-2 rounded-xl text-xs font-bold font-mono tracking-wide transition-all flex items-center gap-2 ${
               activeTab === 'upload'
                 ? 'bg-bayniks-orange text-white shadow-bolt-glow'
-                : 'text-slate-400 hover:text-white hover:bg-bayniks-surfaceDark'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-white border border-slate-200'
             }`}
           >
-            <span>📑</span> Batch Upload & Plan
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Batch Upload & Plan</span>
           </button>
 
           <button
@@ -242,10 +249,11 @@ export default function VendorWorkstationPage() {
             className={`px-4 py-2 rounded-xl text-xs font-bold font-mono tracking-wide transition-all flex items-center gap-2 ${
               activeTab === 'manifest'
                 ? 'bg-bayniks-orange text-white shadow-bolt-glow'
-                : 'text-slate-400 hover:text-white hover:bg-bayniks-surfaceDark'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-white border border-slate-200'
             }`}
           >
-            <span>📡</span> Live Radar & Manifest ({dispatchedOrders.length})
+            <Radio className="w-3.5 h-3.5" />
+            <span>Live Radar & Manifest ({dispatchedOrders.length})</span>
           </button>
         </div>
 
@@ -254,54 +262,55 @@ export default function VendorWorkstationPage() {
             {/* Left 2 Cols: Pickup Config & CSV Uploader */}
             <div className="lg:col-span-2 space-y-6">
               {/* Pickup Location Configuration */}
-              <div className="bg-bayniks-cardDark p-5 rounded-2xl border border-slate-800 shadow-xl space-y-3">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <span>🏬</span> Central Dispatch Hub (Pickup)
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-bayniks-orange" />
+                    <span>Central Dispatch Hub (Pickup)</span>
                   </h3>
-                  <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                     Active Hub
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <label className="text-[11px] text-slate-400 font-medium">Warehouse Address</label>
+                    <label className="text-[11px] text-slate-600 font-medium">Warehouse Address</label>
                     <input
                       type="text"
                       value={pickup.address}
                       onChange={(e) => setPickup({ ...pickup, address: e.target.value })}
-                      className="w-full mt-1 bg-bayniks-surfaceDark border border-slate-700/80 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-bayniks-orange text-xs"
+                      className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-bayniks-orange focus:bg-white text-xs transition"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 font-medium">Mandatory Hub Landmark</label>
+                    <label className="text-[11px] text-slate-600 font-medium">Mandatory Hub Landmark</label>
                     <input
                       type="text"
                       value={pickup.landmark}
                       onChange={(e) => setPickup({ ...pickup, landmark: e.target.value })}
-                      className="w-full mt-1 bg-bayniks-surfaceDark border border-slate-700/80 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-bayniks-orange text-xs"
+                      className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-bayniks-orange focus:bg-white text-xs transition"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 font-medium">Hub Contact Person</label>
+                    <label className="text-[11px] text-slate-600 font-medium">Hub Contact Person</label>
                     <input
                       type="text"
                       value={pickup.contactName}
                       onChange={(e) => setPickup({ ...pickup, contactName: e.target.value })}
-                      className="w-full mt-1 bg-bayniks-surfaceDark border border-slate-700/80 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-bayniks-orange text-xs"
+                      className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none focus:border-bayniks-orange focus:bg-white text-xs transition"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] text-slate-400 font-medium">Hub Phone (E.164)</label>
+                    <label className="text-[11px] text-slate-600 font-medium">Hub Phone (E.164)</label>
                     <input
                       type="text"
                       value={pickup.contactPhone}
                       onChange={(e) => setPickup({ ...pickup, contactPhone: e.target.value })}
-                      className="w-full mt-1 bg-bayniks-surfaceDark border border-slate-700/80 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-bayniks-orange text-xs"
+                      className="w-full mt-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-mono focus:outline-none focus:border-bayniks-orange focus:bg-white text-xs transition"
                     />
                   </div>
                 </div>
@@ -327,15 +336,16 @@ export default function VendorWorkstationPage() {
               />
 
               {/* Informational Guidance Card */}
-              <div className="bg-bayniks-cardDark p-4 rounded-2xl border border-slate-800 text-xs text-slate-400 space-y-2">
-                <div className="font-semibold text-white flex items-center gap-1.5">
-                  <span>🏍️</span> Nigerian Street Delivery Standard
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 space-y-2 shadow-sm">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <Bike className="w-4 h-4 text-bayniks-orange" />
+                  <span>Nigerian Street Delivery Standard</span>
                 </div>
-                <p className="text-[11px] leading-relaxed">
+                <p className="text-[11px] leading-relaxed text-slate-500 font-medium">
                   In Lagos, couriers navigate using bus stops, notable plazas, and recognized landmarks rather than numbering alone.
                   Every stop in your CSV must include a recognized landmark.
                 </p>
-                <div className="border-t border-slate-800 pt-2 text-[10px] font-mono text-bayniks-orange">
+                <div className="border-t border-slate-100 pt-2 text-[10px] font-mono text-bayniks-orange font-bold">
                   Fleet Rule: Maximum 5 parcels per express courier bike
                 </div>
               </div>
@@ -356,17 +366,17 @@ export default function VendorWorkstationPage() {
             />
 
             {/* Manifest Table */}
-            <div className="bg-bayniks-cardDark rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-              <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white">Dispatched Orders Manifest</h3>
-                <span className="text-xs font-mono text-slate-400">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900">Dispatched Orders Manifest</h3>
+                <span className="text-xs font-mono font-bold text-slate-500">
                   {dispatchedOrders.length} Total Waybill{dispatchedOrders.length === 1 ? '' : 's'}
                 </span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-bayniks-surfaceDark/60 text-slate-400 font-mono text-[11px] border-b border-slate-800">
+                  <thead className="bg-slate-50 text-slate-600 font-mono text-[11px] border-b border-slate-200">
                     <tr>
                       <th className="py-2.5 px-3">Tracking Code</th>
                       <th className="py-2.5 px-3">Pickup PIN</th>
@@ -377,7 +387,7 @@ export default function VendorWorkstationPage() {
                       <th className="py-2.5 px-3 text-right">Track Link</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-100">
                     {dispatchedOrders.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-8 text-center text-slate-500 font-mono text-xs">
@@ -386,41 +396,43 @@ export default function VendorWorkstationPage() {
                       </tr>
                     ) : (
                       dispatchedOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-bayniks-surfaceDark/40 transition-colors">
-                          <td className="py-2.5 px-3 font-mono font-bold text-bayniks-orange">
+                        <tr key={order.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-2.5 px-3 font-mono font-black text-bayniks-orange">
                             {order.trackingCode}
                           </td>
-                          <td className="py-2.5 px-3 font-mono text-white">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[11px]">
-                              🔑 {order.pickup.pickupPin}
+                          <td className="py-2.5 px-3 font-mono text-slate-900">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px] font-bold inline-flex items-center gap-1">
+                              <Key className="w-3 h-3 text-slate-500" />
+                              <span>{order.pickup.pickupPin}</span>
                             </span>
                           </td>
                           <td className="py-2.5 px-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-bayniks-orange/15 text-bayniks-orange border border-bayniks-orange/40">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-bayniks-orange/15 text-bayniks-orange border border-bayniks-orange/30">
                               {order.status}
                             </span>
                           </td>
-                          <td className="py-2.5 px-3 font-mono text-slate-300">
+                          <td className="py-2.5 px-3 font-mono text-slate-600 font-medium">
                             {order.stops.length} stop{order.stops.length > 1 ? 's' : ''}
                           </td>
-                          <td className="py-2.5 px-3 text-slate-300">
+                          <td className="py-2.5 px-3 text-slate-700">
                             {order.rider ? (
-                              <div className="font-medium">
+                              <div className="font-semibold text-slate-900">
                                 {order.rider.fullName} ({order.rider.plateNumber || 'BIKE'})
                               </div>
                             ) : (
-                              <span className="text-slate-500 font-mono text-[11px]">Searching...</span>
+                              <span className="text-slate-400 font-mono text-[11px]">Searching...</span>
                             )}
                           </td>
-                          <td className="py-2.5 px-3 font-mono font-semibold text-white">
+                          <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
                             {formatNaira(order.totalFareKobo)}
                           </td>
                           <td className="py-2.5 px-3 text-right">
                             <Link
                               href={`/track/${order.trackingCode}`}
-                              className="px-2.5 py-1 rounded-lg bg-bayniks-surfaceDark border border-slate-700 text-slate-300 hover:text-white hover:border-bayniks-orange text-[11px] font-mono transition-colors"
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-[11px] font-mono transition-colors inline-flex items-center gap-1"
                             >
-                              Live Track →
+                              <span>Live Track</span>
+                              <ArrowRight className="w-3 h-3 text-bayniks-orange" />
                             </Link>
                           </td>
                         </tr>

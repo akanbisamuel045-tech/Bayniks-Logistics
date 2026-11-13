@@ -250,3 +250,4 @@ npm run build
 - **Engineering:** Built by Google DeepMind Advanced Agentic Coding Pair with USER.
 - **Design System:** Bayniks Atomic Orange (`#FF6D1F`) & Obsidian (`#0E1013`).
 - **License:** Proprietary & Confidential - Bayniks Logistics Nigeria.
+

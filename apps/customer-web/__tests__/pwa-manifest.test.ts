@@ -29,7 +29,7 @@ describe('PWA & TWA Groundwork Verification', () => {
       expect(manifest.display).toBe('standalone');
       expect(manifest.orientation).toBe('portrait');
       expect(manifest.theme_color).toBe('#FF6D1F');
-      expect(manifest.background_color).toBe('#0E1013');
+      expect(manifest.background_color).toBe('#FFFFFF');
     });
 
     it('declares 192x192 and 512x512 icons with any maskable purpose', () => {

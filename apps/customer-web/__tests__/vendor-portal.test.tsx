@@ -115,8 +115,8 @@ describe('Stage 17: Business Vendor Portal & Bulk Multi-Stop Dispatch UI', () =>
 
       expect(screen.getAllByText(/2 Bike Runs/i).length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(formatNaira(750000))).toBeInTheDocument();
-      expect(screen.getByText(/⚡ RUN-1-A/i)).toBeInTheDocument();
-      expect(screen.getByText(/⚡ RUN-1-B/i)).toBeInTheDocument();
+      expect(screen.getByText(/RUN-1-A/i)).toBeInTheDocument();
+      expect(screen.getByText(/RUN-1-B/i)).toBeInTheDocument();
       expect(screen.getByText(/Motorcycle fleet: max 5 parcel stops per courier/i)).toBeInTheDocument();
     });
 

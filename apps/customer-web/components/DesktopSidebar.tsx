@@ -2,7 +2,22 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { formatNaira } from '@logistics/shared-types';
+import {
+  Menu,
+  Home,
+  Bike,
+  Plus,
+  Calendar,
+  Repeat,
+  Clock,
+  Bell,
+  MessageSquare,
+  LifeBuoy,
+  Settings,
+  FileSpreadsheet,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react';
 
 export interface DesktopSidebarProps {
   collapsed: boolean;
@@ -20,168 +35,350 @@ export function DesktopSidebar({
   onToggleCollapse,
   activeTab,
   onSelectTab,
-  walletBalanceKobo = 4520000, // ₦45,200.00 default enterprise balance
   activeDeliveriesCount = 2,
   onOpenSupport,
   onOpenDeliveries,
 }: DesktopSidebarProps) {
   const router = useRouter();
 
-  const navItems = [
-    { id: 'dashboard', label: 'Console Home', icon: '⚡' },
-    {
-      id: 'active_deliveries',
-      label: 'Active Deliveries',
-      icon: '🏍️',
-      badge: activeDeliveriesCount > 0 ? `${activeDeliveriesCount}` : undefined,
-      onClick: onOpenDeliveries,
-    },
-    { id: 'new_delivery', label: 'New Delivery', icon: '📦' },
-    {
-      id: 'vendor',
-      label: 'Vendor Bulk CSV',
-      icon: '📊',
-      onClick: () => router.push('/vendor'),
-    },
-    {
-      id: 'admin',
-      label: 'Command Center',
-      icon: '🛡️',
-      onClick: () => router.push('/admin'),
-    },
-    { id: 'schedule', label: 'Scheduled Fleet', icon: '📅' },
-    { id: 'repeat', label: 'Repeat Orders', icon: '🔄' },
-    { id: 'archive', label: 'Waybill Archive', icon: '📑' },
-    {
-      id: 'support',
-      label: '24/7 Priority Desk',
-      icon: '🎧',
-      onClick: onOpenSupport,
-    },
-  ];
+  const handleNav = (tabId: string, customAction?: () => void) => {
+    if (customAction) {
+      customAction();
+    } else {
+      onSelectTab(tabId);
+    }
+  };
 
   return (
     <aside
-      className={`hidden lg:flex flex-col flex-shrink-0 bg-bayniks-cardDark border-r border-slate-800/80 transition-all duration-300 ease-in-out relative z-30 select-none ${
+      id="desktopSidebar"
+      className={`hidden lg:flex flex-col justify-between shrink-0 bg-white text-neutral-900 border-r border-neutral-200/90 select-none z-30 transition-all duration-300 ease-in-out ${
         collapsed ? 'w-20' : 'w-[264px]'
       }`}
     >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800/80">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-bayniks-orange flex items-center justify-center font-mono font-bold text-white shadow-bolt-glow flex-shrink-0 text-lg">
-            ⚡
+      {/* Top Menu Toggle & Navigation Links */}
+      <div className="p-4 space-y-4 overflow-y-auto hide-scrollbar flex-1">
+        {/* Brand Header Row with Toggle Button */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center space-x-2.5 overflow-hidden">
+            <div className="w-10 h-10 rounded-xl bg-bayniks-orange flex items-center justify-center text-white shadow-bolt-glow shrink-0">
+              <Zap className="w-5 h-5 fill-white stroke-none" />
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="font-mono font-bold tracking-wider text-base text-neutral-900 leading-none">
+                  BAYNIKS
+                </span>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-bayniks-orange mt-1">
+                  Express Logistics
+                </span>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            className="w-8 h-8 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-900 flex items-center justify-center transition active:scale-95"
+          >
+            <Menu className="w-4 h-4 text-neutral-900 stroke-[2.2]" />
+          </button>
+        </div>
+
+        {/* OPERATIONS SECTION */}
+        <div className="space-y-1">
+          {!collapsed && (
+            <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block mb-1.5">
+              Operations
+            </span>
+          )}
+
+          {/* 1. Dashboard / Console Home */}
+          <button
+            type="button"
+            onClick={() => handleNav('dashboard')}
+            title="Dashboard"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'dashboard'
+                ? 'bg-neutral-100 font-extrabold text-neutral-900'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Home className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Dashboard</span>}
+              <span className="sr-only">Console Home</span>
+            </div>
+            {!collapsed && activeTab === 'dashboard' && (
+              <span className="w-2 h-2 rounded-full bg-neutral-900" />
+            )}
+          </button>
+
+          {/* 2. Active Deliveries */}
+          <button
+            type="button"
+            onClick={() => handleNav('active_deliveries')}
+            title="Active Deliveries"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'active_deliveries'
+                ? 'bg-neutral-100 font-extrabold text-neutral-900'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Bike className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Active Deliveries</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-[10px] font-mono font-bold">
+                {activeDeliveriesCount}
+              </span>
+            )}
+          </button>
+
+          {/* 3. + New Delivery */}
+          <button
+            type="button"
+            onClick={() => handleNav('new_delivery')}
+            title="New Delivery"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'new_delivery'
+                ? 'bg-bayniks-orange/10 text-bayniks-orange font-extrabold'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Plus className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span className="font-extrabold text-neutral-900">+ New Delivery</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-bayniks-orange text-white text-[10px] font-extrabold shadow-bolt-glow">
+                + Book
+              </span>
+            )}
+          </button>
+
+          {/* 4. Schedule Delivery */}
+          <button
+            type="button"
+            onClick={() => handleNav('schedule')}
+            title="Schedule Delivery"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'schedule'
+                ? 'bg-neutral-100 font-extrabold text-neutral-900'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Schedule Delivery</span>}
+            </div>
+          </button>
+
+          {/* 5. Repeat Delivery */}
+          <button
+            type="button"
+            onClick={() => handleNav('repeat')}
+            title="Repeat Delivery"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'repeat'
+                ? 'bg-neutral-100 font-extrabold text-neutral-900'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Repeat className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Repeat Delivery</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 text-[10px] font-mono font-bold">
+                4
+              </span>
+            )}
+          </button>
+
+          {/* 6. Delivery History */}
+          <button
+            type="button"
+            onClick={() => handleNav('archive')}
+            title="Delivery History"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } ${
+              activeTab === 'archive'
+                ? 'bg-neutral-100 font-extrabold text-neutral-900'
+                : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Clock className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Delivery History</span>}
+            </div>
+          </button>
+
+          {/* 7. Vendor Bulk CSV */}
+          <button
+            type="button"
+            onClick={() => router.push('/vendor')}
+            title="Vendor Bulk CSV"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <FileSpreadsheet className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Vendor Bulk CSV</span>}
+            </div>
+          </button>
+
+          {/* 8. Command Center */}
+          <button
+            type="button"
+            onClick={() => router.push('/admin')}
+            title="Command Center"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Command Center</span>}
+            </div>
+          </button>
+        </div>
+
+        {/* WORKSPACE SECTION */}
+        <div className="space-y-1 pt-3 border-t border-neutral-100">
+          {!collapsed && (
+            <span className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block mb-1.5">
+              Workspace
+            </span>
+          )}
+
+          {/* Notifications */}
+          <button
+            type="button"
+            onClick={() => handleNav('notifications')}
+            title="Notifications"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <Bell className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Notifications</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-bayniks-orange/10 text-bayniks-orange text-[10px] font-bold">
+                3 New
+              </span>
+            )}
+          </button>
+
+          {/* Rider Chat */}
+          <button
+            type="button"
+            onClick={() => handleNav('rider_chat')}
+            title="Rider Chat (Tariq)"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <MessageSquare className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Rider Chat (Tariq)</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
+              </span>
+            )}
+          </button>
+
+          {/* 24/7 Support Hub */}
+          <button
+            type="button"
+            onClick={() => handleNav('support', onOpenSupport)}
+            title="24/7 Support Hub"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <LifeBuoy className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>24/7 Support Hub</span>}
+            </div>
+            {!collapsed && (
+              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-bold">
+                24/7
+              </span>
+            )}
+          </button>
+
+          {/* Profile & Settings */}
+          <button
+            type="button"
+            onClick={() => handleNav('profile')}
+            title="Profile & Settings"
+            className={`w-full rounded-2xl flex items-center transition ${
+              collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between text-xs'
+            } text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 font-bold`}
+          >
+            <div className="flex items-center space-x-3">
+              <Settings className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+              {!collapsed && <span>Profile & Settings</span>}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* User Profile Pill at Bottom (Matches bayniks_edition.html) */}
+      <div className="p-4 border-t border-neutral-100 flex items-center justify-between bg-neutral-50/70">
+        <div
+          onClick={() => handleNav('profile')}
+          className="flex items-center space-x-2.5 cursor-pointer group min-w-0"
+        >
+          <div className="relative shrink-0">
+            <div className="w-9 h-9 rounded-full bg-bayniks-orange text-white font-bold flex items-center justify-center text-xs border-2 border-white shadow-xs">
+              KS
+            </div>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-mono font-bold tracking-wider text-base text-white leading-none">
-                BAYNIKS
-              </span>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-bayniks-orange mt-1">
-                Express Logistics
+            <div className="min-w-0">
+              <h4 className="text-xs font-extrabold text-neutral-900 truncate group-hover:text-bayniks-orange transition">
+                Kainul Stevano
+              </h4>
+              <span className="text-[10px] text-neutral-400 truncate block">
+                Verified Sender • Lagos
               </span>
             </div>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-bayniks-surfaceDark transition-colors"
-        >
-          {collapsed ? '▶' : '◀'}
-        </button>
-      </div>
-
-      {/* Navigation Links */}
-      <div className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                if (item.onClick) {
-                  item.onClick();
-                } else {
-                  onSelectTab(item.id);
-                }
-              }}
-              className={`w-full flex items-center rounded-xl transition-all duration-150 group relative ${
-                collapsed ? 'justify-center p-3' : 'px-3.5 py-2.5 justify-between'
-              } ${
-                isActive
-                  ? 'bg-bayniks-orange text-white font-semibold shadow-bolt-glow'
-                  : 'text-slate-300 hover:text-white hover:bg-bayniks-surfaceDark'
-              }`}
-            >
-              <div className="flex items-center space-x-3 overflow-hidden">
-                <span className="text-lg flex-shrink-0">{item.icon}</span>
-                {!collapsed && (
-                  <span className="text-xs truncate tracking-wide">{item.label}</span>
-                )}
-              </div>
-
-              {!collapsed && item.badge && (
-                <span
-                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                    isActive
-                      ? 'bg-white text-bayniks-orange'
-                      : 'bg-bayniks-orange/20 text-bayniks-orange border border-bayniks-orange/40'
-                  }`}
-                >
-                  {item.badge}
-                </span>
-              )}
-
-              {/* Tooltip on collapsed state */}
-              {collapsed && (
-                <div className="absolute left-full ml-2 px-2.5 py-1 bg-bayniks-black text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity border border-slate-800 shadow-xl z-50">
-                  {item.label}
-                </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Verified User Identity & Wallet Balance Card */}
-      <div className="p-3 border-t border-slate-800/80 bg-bayniks-black/60">
-        {!collapsed ? (
-          <div className="p-3 rounded-xl bg-bayniks-surfaceDark/70 border border-slate-800/80 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300">
-                  AB
-                </div>
-                <div className="truncate">
-                  <div className="text-xs font-semibold text-white truncate">Adeola Balogun</div>
-                  <div className="text-[10px] font-mono text-emerald-400 flex items-center space-x-1">
-                    <span>✓</span>
-                    <span>VERIFIED ENTERPRISE</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase text-slate-400">Escrow Balance</span>
-              <span className="text-xs font-mono font-bold text-bayniks-orange">
-                {formatNaira(walletBalanceKobo)}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center" title={`Escrow Balance: ${formatNaira(walletBalanceKobo)}`}>
-            <div className="w-10 h-10 rounded-xl bg-bayniks-surfaceDark border border-slate-800 flex items-center justify-center text-bayniks-orange font-mono font-bold text-xs">
-              ₦
-            </div>
-          </div>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={() => handleNav('profile')}
+            className="w-8 h-8 rounded-xl bg-white hover:bg-neutral-200 text-neutral-900 border border-neutral-200/90 flex items-center justify-center transition active:scale-95 shadow-2xs"
+            title="Settings"
+          >
+            <Settings className="w-3.5 h-3.5 text-neutral-900 stroke-[2.2]" />
+          </button>
         )}
       </div>
     </aside>
   );
 }
-

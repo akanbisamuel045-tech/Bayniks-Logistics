@@ -138,7 +138,7 @@ describe('Bayniks UI Alignment Migration: Design System, Tokens & Business Invar
       expect(screen.queryByText('DROP-OFF STOP 2')).not.toBeInTheDocument();
 
       // Add another stop
-      const addStopBtn = screen.getByText('+ Add Another Drop-off Stop');
+      const addStopBtn = screen.getByRole('button', { name: /Add Another Drop-off Stop/i });
       fireEvent.click(addStopBtn);
 
       // Now 2 stops
