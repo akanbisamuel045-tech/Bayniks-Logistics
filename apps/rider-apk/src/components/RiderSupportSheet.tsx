@@ -21,8 +21,9 @@ interface RiderSupportSheetProps {
 }
 
 export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, onClose }) => {
-  const { plateNumber, activeOrder } = useRiderStore();
+  const { plateNumber, activeOrder, triggerEmergencySos, reportRoadIncident } = useRiderStore();
   const [reportedIncident, setReportedIncident] = useState<string | null>(null);
+  const [sosTicket, setSosTicket] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -53,11 +54,20 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
     },
   ];
 
-  const handleReportIncident = (title: string) => {
+  const handleReportIncident = async (id: string, title: string) => {
     setReportedIncident(title);
+    await reportRoadIncident(id, `Reported by courier: ${title}`);
     setTimeout(() => {
       setReportedIncident(null);
     }, 4000);
+  };
+
+  const handleTriggerSos = async () => {
+    const res = await triggerEmergencySos();
+    if (res.sosTicket) {
+      setSosTicket(res.sosTicket);
+      setTimeout(() => setSosTicket(null), 6000);
+    }
   };
 
   return (
@@ -98,6 +108,19 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
             </div>
           )}
 
+          {/* SOS Confirmation Banner */}
+          {sosTicket && (
+            <div className="p-3.5 rounded-2xl bg-red-950/90 border border-red-500 text-red-200 flex items-center gap-2.5 text-xs animate-in slide-in-from-top">
+              <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
+              <div>
+                <span className="font-bold">SOS Broadcast Active! Ref: {sosTicket}</span>
+                <p className="text-[11px] text-red-300">
+                  Command Ops notified. Live GPS coordinates and telemetry transmitted.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* CRITICAL SOS PANIC BUTTON */}
           <div className="p-5 rounded-3xl bg-gradient-to-br from-red-950/80 to-zinc-950 border-2 border-red-600/80 shadow-2xl text-center space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-wider border border-red-500/40">
@@ -113,6 +136,7 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
             <div className="grid grid-cols-2 gap-3 pt-1">
               <a
                 href="tel:112"
+                onClick={handleTriggerSos}
                 className="py-3 px-3 rounded-2xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/40 transition-transform"
               >
                 <PhoneCall className="w-4 h-4" />
@@ -121,6 +145,7 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
 
               <a
                 href="tel:+2348002296457"
+                onClick={handleTriggerSos}
                 className="py-3 px-3 rounded-2xl bg-zinc-900 border border-red-500/60 hover:bg-zinc-800 active:scale-95 text-red-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg transition-transform"
               >
                 <ShieldAlert className="w-4 h-4 text-red-400" />
@@ -141,7 +166,7 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
                 return (
                   <button
                     key={inc.id}
-                    onClick={() => handleReportIncident(inc.title)}
+                    onClick={() => handleReportIncident(inc.id, inc.title)}
                     className="p-3.5 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 flex items-start gap-3 text-left transition-all active:scale-98"
                   >
                     <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0 text-black">
@@ -196,3 +221,4 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
     </div>
   );
 };
+

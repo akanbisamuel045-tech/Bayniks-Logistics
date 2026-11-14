@@ -23,34 +23,13 @@ interface ChatMessage {
 }
 
 export const RiderChatSheet: React.FC<RiderChatSheetProps> = ({ isOpen, onClose }) => {
-  const { activeOrder, tripPhase } = useRiderStore();
+  const { activeOrder, tripPhase, chatMessages, sendChatMessage } = useRiderStore();
 
   const recipientName =
     activeOrder?.stops[0]?.recipientName || activeOrder?.pickup.contactName || 'Kainul Stevano';
   const recipientPhone =
     activeOrder?.stops[0]?.recipientPhone || activeOrder?.pickup.contactPhone || '+2348021112233';
   const trackingCode = activeOrder?.trackingCode || '#473215090';
-
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'm1',
-      sender: 'customer',
-      text: 'Good day! Please drop package with security if I am not at the door.',
-      time: '11:02 AM',
-    },
-    {
-      id: 'm2',
-      sender: 'rider',
-      text: 'Noted sir! I am currently en route, ETA is around 12 minutes.',
-      time: '11:04 AM',
-    },
-    {
-      id: 'm3',
-      sender: 'customer',
-      text: 'Great, thanks! I will have the delivery PIN ready for you.',
-      time: '11:05 AM',
-    },
-  ]);
 
   const [inputVal, setInputVal] = useState('');
 
@@ -67,14 +46,7 @@ export const RiderChatSheet: React.FC<RiderChatSheetProps> = ({ isOpen, onClose 
     const text = textToSend || inputVal.trim();
     if (!text) return;
 
-    const newMsg: ChatMessage = {
-      id: 'm-' + Date.now(),
-      sender: 'rider',
-      text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setMessages((prev) => [...prev, newMsg]);
+    sendChatMessage(text);
     if (!textToSend) setInputVal('');
   };
 
@@ -123,7 +95,7 @@ export const RiderChatSheet: React.FC<RiderChatSheetProps> = ({ isOpen, onClose 
             </span>
           </div>
 
-          {messages.map((m) => {
+          {chatMessages.map((m) => {
             const isRider = m.sender === 'rider';
             return (
               <div
@@ -183,3 +155,4 @@ export const RiderChatSheet: React.FC<RiderChatSheetProps> = ({ isOpen, onClose 
     </div>
   );
 };
+

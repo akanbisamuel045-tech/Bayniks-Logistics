@@ -16,6 +16,8 @@ import { dispatchService } from '../services/dispatch.service';
 import { notificationService } from '../services/notification.service';
 import { createRedisRateLimiter } from '../middleware/rateLimiter.middleware';
 import { getNotificationsForOrder } from '../providers/termii.provider';
+import { emitChatMessageToOrder } from '../socket/socket.gateway';
+import mongoose from 'mongoose';
 
 export const orderRouter = Router();
 
@@ -386,4 +388,96 @@ orderRouter.get(
     }
   }
 );
+
+/**
+ * GET /api/v1/orders/:orderId/messages
+ * Retrieves in-app chat message thread for an order.
+ */
+orderRouter.get(
+  '/:orderId/messages',
+  requireAuth,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderId } = req.params;
+      const order = await Order.findOne({
+        $or: [
+          ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+          { trackingCode: orderId?.toUpperCase() },
+        ],
+      }).lean();
+
+      if (!order) {
+        res.status(404).json({ error: 'Order not found' });
+        return;
+      }
+
+      res.status(200).json({
+        orderId: order._id,
+        trackingCode: order.trackingCode,
+        messages: order.messages || [],
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/orders/:orderId/messages
+ * Sends a message in the order chat thread and broadcasts in real-time.
+ */
+orderRouter.post(
+  '/:orderId/messages',
+  requireAuth,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderId } = req.params;
+      const { text, senderName } = req.body;
+
+      if (!text || typeof text !== 'string' || !text.trim()) {
+        res.status(400).json({ error: 'Message text is required' });
+        return;
+      }
+
+      const order = await Order.findOne({
+        $or: [
+          ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+          { trackingCode: orderId?.toUpperCase() },
+        ],
+      });
+
+      if (!order) {
+        res.status(404).json({ error: 'Order not found' });
+        return;
+      }
+
+      const role = req.user?.role === 'rider' ? 'rider' : 'customer';
+      const name = senderName || req.user?.phone || (role === 'rider' ? 'Courier' : 'Customer');
+
+      const messageDoc = {
+        senderId: new mongoose.Types.ObjectId(req.user!.id),
+        senderRole: role as 'rider' | 'customer',
+        senderName: name,
+        text: text.trim(),
+        createdAt: new Date(),
+      };
+
+      order.messages.push(messageDoc as any);
+      await order.save();
+
+      const createdMsg = order.messages[order.messages.length - 1];
+
+      // Broadcast to socket rooms
+      emitChatMessageToOrder(order._id.toString(), order.trackingCode, createdMsg);
+
+      res.status(201).json({
+        message: 'Message delivered',
+        chatMessage: createdMsg,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 

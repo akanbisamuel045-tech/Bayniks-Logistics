@@ -12,6 +12,10 @@ export const SOCKET_EVENTS = {
   TRACK_SNAPSHOT: 'tracking:snapshot',
   ROOM_JOIN_PRIVATE: 'room:join_private',
   ORDER_STATUS_UPDATE: 'order:status_update',
+  CHAT_SEND_MESSAGE: 'chat:send_message',
+  CHAT_MESSAGE_RECEIVED: 'chat:message_received',
+  RIDER_EMERGENCY_SOS: 'rider:emergency_sos',
+  RIDER_INCIDENT_REPORT: 'rider:incident_report',
 } as const;
 
 /**
@@ -139,3 +143,50 @@ export function getTrackingRoom(trackingCode: string): string {
 export function getAdminFleetRoom(): string {
   return 'admin:fleet';
 }
+
+export function getOrderRoom(orderId: string): string {
+  return `order:${orderId}`;
+}
+
+export function getEmergencySosRoom(): string {
+  return 'dispatch:sos';
+}
+
+/**
+ * Chat message schema for in-app rider <-> customer communication.
+ */
+export const ChatMessagePayloadSchema = z.object({
+  orderId: z.string(),
+  senderRole: z.enum(['rider', 'customer', 'system']),
+  senderName: z.string().min(1),
+  text: z.string().min(1).max(1000),
+  timestamp: z.number().int().positive(),
+});
+export type ChatMessagePayload = z.infer<typeof ChatMessagePayloadSchema>;
+
+/**
+ * Rider high-priority emergency SOS payload.
+ */
+export const RiderEmergencySosPayloadSchema = z.object({
+  orderId: z.string().optional(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  speed: z.number().min(0).optional(),
+  batteryLevel: z.number().min(0).max(100).optional(),
+  timestamp: z.number().int().positive(),
+});
+export type RiderEmergencySosPayload = z.infer<typeof RiderEmergencySosPayloadSchema>;
+
+/**
+ * Road incident report payload (e.g. bike breakdown, rain, unreachable).
+ */
+export const RiderIncidentReportPayloadSchema = z.object({
+  orderId: z.string().optional(),
+  incidentType: z.enum(['breakdown', 'severe_weather', 'customer_unreachable', 'traffic_gridlock', 'other']),
+  description: z.string().min(1).max(500),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  timestamp: z.number().int().positive(),
+});
+export type RiderIncidentReportPayload = z.infer<typeof RiderIncidentReportPayloadSchema>;
+

@@ -143,6 +143,17 @@ export function App() {
       receiveJobOffer(offer);
     });
 
+    socket.on(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVED, (msg: any) => {
+      useRiderStore.getState().receiveChatMessage({
+        id: msg._id || 'm-' + Date.now(),
+        sender: msg.senderRole === 'rider' ? 'rider' : 'customer',
+        text: msg.text,
+        time: msg.createdAt
+          ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Now',
+      });
+    });
+
     return () => {
       socket.disconnect();
     };

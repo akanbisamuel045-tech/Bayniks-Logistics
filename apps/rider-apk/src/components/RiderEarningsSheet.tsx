@@ -21,7 +21,14 @@ interface RiderEarningsSheetProps {
 }
 
 export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, onClose }) => {
-  const { todayEarningsKobo } = useRiderStore();
+  const {
+    todayEarningsKobo,
+    shiftSettledTrips,
+    tripsCompletedToday,
+    distanceCoveredKm,
+    onTimeSlaPercent,
+    requestInstantCashout,
+  } = useRiderStore();
   const [isCashoutSuccess, setIsCashoutSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -33,45 +40,16 @@ export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, 
     maximumFractionDigits: 2,
   })}`;
 
-  const handleInstantCashout = () => {
+  const handleInstantCashout = async () => {
     if (totalNaira <= 0 || isProcessing) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    const result = await requestInstantCashout(todayEarningsKobo);
+    setIsProcessing(false);
+    if (result.success) {
       setIsCashoutSuccess(true);
       setTimeout(() => setIsCashoutSuccess(false), 4000);
-    }, 1200);
+    }
   };
-
-  const sampleCompletedTrips = [
-    {
-      id: '#473215090',
-      time: '11:15 AM',
-      from: 'Otigba St, Computer Village, Ikeja',
-      to: 'Admiralty Way, Lekki Phase 1',
-      distance: '18.4 km',
-      fareKobo: 450000,
-      tipKobo: 50000,
-    },
-    {
-      id: '#928474948',
-      time: '09:40 AM',
-      from: 'Commercial Ave, Yaba',
-      to: 'Victoria Island Towers, Plot 4',
-      distance: '11.2 km',
-      fareKobo: 380000,
-      tipKobo: 0,
-    },
-    {
-      id: '#882410921',
-      time: '08:20 AM',
-      from: 'Ikeja Central Depot',
-      to: 'Marina Financial Hub, Lagos',
-      distance: '21.5 km',
-      fareKobo: 520000,
-      tipKobo: 100000,
-    },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -152,19 +130,19 @@ export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, 
           <div className="grid grid-cols-3 gap-2.5">
             <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
               <span className="text-[10px] font-bold uppercase text-zinc-500 block">Trips Today</span>
-              <span className="text-lg font-black text-white font-mono mt-0.5 block">18</span>
+              <span className="text-lg font-black text-white font-mono mt-0.5 block">{tripsCompletedToday}</span>
               <span className="text-[9px] text-emerald-400 font-bold">+4 this shift</span>
             </div>
 
             <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
               <span className="text-[10px] font-bold uppercase text-zinc-500 block">On-Time SLA</span>
-              <span className="text-lg font-black text-white font-mono mt-0.5 block">99.4%</span>
+              <span className="text-lg font-black text-white font-mono mt-0.5 block">{onTimeSlaPercent}%</span>
               <span className="text-[9px] text-[#FF6D1F] font-bold">Top 1% Tier</span>
             </div>
 
             <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-center">
               <span className="text-[10px] font-bold uppercase text-zinc-500 block">Distance</span>
-              <span className="text-lg font-black text-white font-mono mt-0.5 block">42.8 km</span>
+              <span className="text-lg font-black text-white font-mono mt-0.5 block">{distanceCoveredKm} km</span>
               <span className="text-[9px] text-zinc-400 font-bold">Lagos Metro</span>
             </div>
           </div>
@@ -173,10 +151,10 @@ export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-bold text-zinc-400">
               <span className="uppercase tracking-wider">Settled Shift Deliveries</span>
-              <span className="text-[11px] font-mono">{sampleCompletedTrips.length} Recorded</span>
+              <span className="text-[11px] font-mono">{shiftSettledTrips.length} Recorded</span>
             </div>
 
-            {sampleCompletedTrips.map((trip) => (
+            {shiftSettledTrips.map((trip) => (
               <div
                 key={trip.id}
                 className="p-3 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 space-y-2"
@@ -216,3 +194,4 @@ export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, 
     </div>
   );
 };
+

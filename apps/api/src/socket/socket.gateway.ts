@@ -2,6 +2,7 @@ import http from 'http';
 import { Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
+import mongoose from 'mongoose';
 import {
   SOCKET_EVENTS,
   TrackingUpdate,
@@ -9,15 +10,19 @@ import {
   RiderLocationPingSchema,
   TrackSubscribePayloadSchema,
   DispatchOfferRespondSchema,
+  ChatMessagePayloadSchema,
+  RiderEmergencySosPayloadSchema,
   getRiderRoom,
   getCustomerRoom,
   getVendorRoom,
   getTrackingRoom,
   getAdminFleetRoom,
+  getOrderRoom,
+  getEmergencySosRoom,
   fromGeoJsonPoint,
   UserRole,
 } from '@logistics/shared-types';
-import { DEFAULT_REDIS_URL } from '../config/redis';
+import { DEFAULT_REDIS_URL, getRedisClient } from '../config/redis';
 import { authService, AccessTokenPayload } from '../services/auth.service';
 import { Order } from '../models';
 import { telemetryService } from '../services/telemetry.service';
@@ -291,6 +296,99 @@ export function initSocketGateway(httpServer: http.Server): Server {
       }
     );
 
+    // EVENT: chat:send_message (Customer/Rider live message)
+    socket.on(
+      SOCKET_EVENTS.CHAT_SEND_MESSAGE,
+      async (
+        rawPayload: unknown,
+        callback?: (res: { ok: boolean; message?: any; error?: string }) => void
+      ) => {
+        const parsed = ChatMessagePayloadSchema.safeParse(rawPayload);
+        if (!parsed.success) {
+          callback?.({ ok: false, error: 'Invalid chat message payload' });
+          return;
+        }
+
+        try {
+          const { orderId, senderRole, senderName, text } = parsed.data;
+          const order = await Order.findById(orderId);
+          if (!order) {
+            callback?.({ ok: false, error: 'Order not found' });
+            return;
+          }
+
+          const msg = {
+            senderId: user ? new mongoose.Types.ObjectId(user.id) : undefined,
+            senderRole,
+            senderName,
+            text,
+            createdAt: new Date(),
+          };
+
+          order.messages.push(msg as any);
+          await order.save();
+
+          const broadcastPayload = {
+            _id: (order.messages[order.messages.length - 1] as any)?._id,
+            orderId,
+            senderRole,
+            senderName,
+            text,
+            createdAt: msg.createdAt,
+          };
+
+          io.to(getOrderRoom(orderId)).emit(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVED, broadcastPayload);
+          io.to(getTrackingRoom(order.trackingCode)).emit(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVED, broadcastPayload);
+
+          callback?.({ ok: true, message: broadcastPayload });
+        } catch (error: any) {
+          callback?.({ ok: false, error: error?.message || 'Failed to send message' });
+        }
+      }
+    );
+
+    // EVENT: rider:emergency_sos (High-priority SOS trigger)
+    socket.on(
+      SOCKET_EVENTS.RIDER_EMERGENCY_SOS,
+      async (
+        rawPayload: unknown,
+        callback?: (res: { ok: boolean; sosTicket?: string; error?: string }) => void
+      ) => {
+        const parsed = RiderEmergencySosPayloadSchema.safeParse(rawPayload);
+        if (!parsed.success) {
+          callback?.({ ok: false, error: 'Invalid SOS payload' });
+          return;
+        }
+
+        try {
+          const riderId = user?.id || 'unknown';
+          const sosTicket = `SOS-${Date.now().toString().slice(-6)}`;
+          const redis = getRedisClient();
+
+          await redis.set(
+            `rider:emergency:${riderId}`,
+            JSON.stringify({ ...parsed.data, riderId, sosTicket, timestamp: Date.now() }),
+            'EX',
+            86400
+          );
+
+          const alertPayload = {
+            sosTicket,
+            riderId,
+            riderPhone: user?.phone,
+            ...parsed.data,
+          };
+
+          io.to(getEmergencySosRoom()).emit(SOCKET_EVENTS.RIDER_EMERGENCY_SOS, alertPayload);
+          io.to(getAdminFleetRoom()).emit(SOCKET_EVENTS.RIDER_EMERGENCY_SOS, alertPayload);
+
+          callback?.({ ok: true, sosTicket });
+        } catch (error: any) {
+          callback?.({ ok: false, error: error?.message || 'Failed to log SOS alert' });
+        }
+      }
+    );
+
     socket.on('disconnect', () => {
       // Auto cleans up socket rooms
     });
@@ -340,6 +438,32 @@ export function emitJobOfferToRider(riderUserId: string, payload: JobNewOffer): 
 export function emitOrderStatusToCustomer(customerUserId: string, payload: unknown): void {
   const io = getIO();
   io.to(getCustomerRoom(customerUserId)).emit(SOCKET_EVENTS.ORDER_STATUS_UPDATE, payload);
+}
+
+/**
+ * Broadcasts in-app chat message to order and tracking rooms.
+ */
+export function emitChatMessageToOrder(orderId: string, trackingCode: string, payload: unknown): void {
+  try {
+    const io = getIO();
+    io.to(getOrderRoom(orderId)).emit(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVED, payload);
+    io.to(getTrackingRoom(trackingCode)).emit(SOCKET_EVENTS.CHAT_MESSAGE_RECEIVED, payload);
+  } catch {
+    // Non-fatal if gateway not active
+  }
+}
+
+/**
+ * Broadcasts emergency SOS alerts to dispatch ops room.
+ */
+export function emitEmergencySosAlert(payload: unknown): void {
+  try {
+    const io = getIO();
+    io.to(getEmergencySosRoom()).emit(SOCKET_EVENTS.RIDER_EMERGENCY_SOS, payload);
+    io.to(getAdminFleetRoom()).emit(SOCKET_EVENTS.RIDER_EMERGENCY_SOS, payload);
+  } catch {
+    // Non-fatal if gateway not active
+  }
 }
 
 /**

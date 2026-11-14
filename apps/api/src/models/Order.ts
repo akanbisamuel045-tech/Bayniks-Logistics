@@ -30,6 +30,23 @@ export interface IOrderStop {
   deliveredAt?: Date;
 }
 
+export interface IOrderMessage {
+  _id?: Types.ObjectId;
+  senderId?: Types.ObjectId;
+  senderRole: 'rider' | 'customer' | 'system';
+  senderName: string;
+  text: string;
+  createdAt: Date;
+}
+
+export interface IOrderIncident {
+  _id?: Types.ObjectId;
+  riderId: Types.ObjectId;
+  incidentType: 'breakdown' | 'severe_weather' | 'customer_unreachable' | 'traffic_gridlock' | 'other';
+  description: string;
+  loggedAt: Date;
+}
+
 export interface IOrder extends Document {
   trackingCode: string;
   senderId: Types.ObjectId;
@@ -58,6 +75,8 @@ export interface IOrder extends Document {
   deliveredAt?: Date;
   payoutStatus?: 'pending' | 'settled';
   settledAt?: Date;
+  messages: IOrderMessage[];
+  incidents: IOrderIncident[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -274,6 +293,39 @@ export const OrderSchema = new Schema<IOrder>(
     },
     settledAt: {
       type: Date,
+    },
+    messages: {
+      type: [
+        new Schema<IOrderMessage>(
+          {
+            senderId: { type: Schema.Types.ObjectId, ref: 'User' },
+            senderRole: { type: String, enum: ['rider', 'customer', 'system'], required: true },
+            senderName: { type: String, required: true },
+            text: { type: String, required: true, trim: true, maxlength: 1000 },
+            createdAt: { type: Date, default: Date.now },
+          },
+          { _id: true }
+        ),
+      ],
+      default: [],
+    },
+    incidents: {
+      type: [
+        new Schema<IOrderIncident>(
+          {
+            riderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+            incidentType: {
+              type: String,
+              enum: ['breakdown', 'severe_weather', 'customer_unreachable', 'traffic_gridlock', 'other'],
+              required: true,
+            },
+            description: { type: String, required: true, trim: true },
+            loggedAt: { type: Date, default: Date.now },
+          },
+          { _id: true }
+        ),
+      ],
+      default: [],
     },
   },
   {
