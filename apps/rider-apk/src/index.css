@@ -1,11 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-electric-green: #00E676;
-  --color-sunlight-amber: #FFB300;
-  --color-danger-crimson: #FF3D00;
+  --color-brand-orange: #FF6D1F;
+  --color-brand-dark: #0E1013;
+  --color-electric-green: #10B981;
 }
 
 html, body {
@@ -16,13 +18,13 @@ html, body {
   width: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background-color: #000000;
+  background-color: #0E1013;
   color: #FFFFFF;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 #root {
@@ -35,7 +37,7 @@ html, body {
 
 /* Safe Area Inset Support for Modern Android & iOS Devices */
 .safe-top {
-  padding-top: max(env(safe-area-inset-top), 12px);
+  padding-top: max(env(safe-area-inset-top), 10px);
 }
 
 .safe-bottom {
@@ -44,27 +46,30 @@ html, body {
 
 /* Big Gloved-Finger Tactile Buttons */
 .touch-target-large {
-  min-height: 56px;
+  min-height: 54px;
   touch-action: manipulation;
 }
 
-/* Radar Pulse Animations */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
+/* Custom Scrollbar for Drawer / Sheets */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glow Animation for Active Orders & Dispatches */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 109, 31, 0.6);
   }
   50% {
-    transform: scale(1.15);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 0.8;
+    transform: scale(1.03);
+    box-shadow: 0 0 0 10px rgba(255, 109, 31, 0);
   }
 }
-
-.animate-pulse-ring {
-  animation: pulse-ring 2.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+.pulse-brand {
+  animation: pulseGlow 2.5s infinite;
 }
-
