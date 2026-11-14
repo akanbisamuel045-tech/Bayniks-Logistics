@@ -53,19 +53,24 @@ export const TopTelemetryBar: React.FC = () => {
 
         {/* Center: GPS, Battery & Offline Sync Diagnostics */}
         <div className="flex items-center gap-1.5">
-          {isOfflineOrQueued ? (
+          {riderStatus === 'offline' ? (
+            <div className="px-2 py-1 rounded-md text-[10px] font-mono font-bold bg-zinc-900 text-zinc-400 border border-zinc-700 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+              <span>STANDBY • Offline</span>
+            </div>
+          ) : isOfflineOrQueued ? (
             <button
               onClick={() => syncOfflinePings()}
               className="px-2 py-1 rounded-md text-[11px] font-mono font-bold bg-amber-950/80 text-amber-300 border border-amber-500/80 flex items-center gap-1 shadow-lg shadow-amber-500/20 active:scale-95 transition-transform"
               title="Click to retry syncing queued pings"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-              <span>⚡ OFFLINE • {pendingOfflinePingsCount} Queued</span>
+              <span>⚡ NET LAG • {pendingOfflinePingsCount} Queued</span>
             </button>
           ) : (
             <div className="px-2 py-1 rounded-md text-[10px] font-mono font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800/80 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>ONLINE • Synced</span>
+              <span>DISPATCH • Synced</span>
             </div>
           )}
 

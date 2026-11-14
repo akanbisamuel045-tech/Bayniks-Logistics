@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { compressPodPhotoUnder300KB, CompressedPhotoResult } from '../services/imageCompressor.service';
 
 export interface PinVerificationModalProps {
@@ -28,6 +28,22 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
   const [compressedPhoto, setCompressedPhoto] = useState<CompressedPhotoResult | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+
+  // Reset PIN digits, photo, and error messages whenever modal opens or mode changes
+  useEffect(() => {
+    if (isOpen) {
+      setPinDigits([]);
+      setCompressedPhoto(null);
+      setPhotoError(null);
+    }
+  }, [isOpen, mode]);
+
+  const handleClose = () => {
+    setPinDigits([]);
+    setCompressedPhoto(null);
+    setPhotoError(null);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -75,6 +91,10 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
       }
       await onSubmitDeliveryPinAndPod(currentPin, compressedPhoto.dataUrl, compressedPhoto.byteSize);
     }
+    // Clean up internal state on submit
+    setPinDigits([]);
+    setCompressedPhoto(null);
+    setPhotoError(null);
   };
 
   const isSubmitDisabled =
@@ -97,9 +117,10 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isSubmitting}
-            className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center font-bold"
+            aria-label="Close verification modal"
+            className="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center font-bold text-base transition-colors active:scale-95"
           >
             ✕
           </button>

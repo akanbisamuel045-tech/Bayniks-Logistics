@@ -180,6 +180,7 @@ export const ActiveDeliverySheet: React.FC = () => {
 
       {/* Tactile 4-Digit PIN & POD Modal */}
       <PinVerificationModal
+        key={`pin-modal-${tripPhase}`}
         isOpen={isPinModalOpen}
         mode={tripPhase === 'at_pickup' ? 'pickup' : 'dropoff'}
         stopSequenceNumber={currentStop?.sequenceNumber || 1}

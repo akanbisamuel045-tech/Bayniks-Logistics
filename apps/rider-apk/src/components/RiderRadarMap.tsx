@@ -140,17 +140,17 @@ export const RiderRadarMap: React.FC = () => {
 
         {/* Target Destination Marker if active order present */}
         {activeDestination && (
-          <div className="absolute top-1/4 right-8 flex flex-col items-center animate-bounce">
+          <div className="absolute top-24 right-3 sm:right-6 flex flex-col items-center animate-bounce z-20">
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center shadow-lg font-black text-xs ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xl font-black text-xs border-2 border-white/20 ${
                 activeDestination.type === 'pickup'
                   ? 'bg-emerald-500 text-black shadow-emerald-500/50'
-                  : 'bg-red-500 text-white shadow-red-500/50'
+                  : 'bg-[#FF6D1F] text-white shadow-orange-500/50'
               }`}
             >
               {activeDestination.type === 'pickup' ? 'P' : 'D'}
             </div>
-            <div className="mt-1 px-2 py-0.5 bg-black/90 border border-zinc-800 rounded text-[10px] font-bold text-zinc-200 max-w-[130px] truncate text-center">
+            <div className="mt-1 px-2.5 py-1 bg-black/95 border border-zinc-700/80 rounded-xl text-[10px] font-mono font-bold text-white max-w-[170px] sm:max-w-[210px] text-center leading-tight shadow-xl">
               {activeDestination.label}
             </div>
           </div>

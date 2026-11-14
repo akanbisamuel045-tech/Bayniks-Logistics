@@ -91,14 +91,14 @@ export function App() {
 
         {/* Idle Mode Dispatcher Waiting Indicator */}
         {tripPhase === 'idle' && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-            <div className="px-3.5 py-1.5 rounded-full bg-black/85 border border-zinc-800 text-xs font-mono font-bold text-zinc-300 backdrop-blur-md shadow-xl flex items-center gap-2">
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-full max-w-xs px-2 flex justify-center">
+            <div className="px-3.5 py-1.5 rounded-full bg-black/90 border border-zinc-800 text-[11px] font-mono font-bold text-zinc-300 backdrop-blur-md shadow-2xl flex items-center gap-2 text-center">
               <span
-                className={`w-2 h-2 rounded-full ${
+                className={`w-2 h-2 rounded-full shrink-0 ${
                   riderStatus === 'available' ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'
                 }`}
               />
-              <span>
+              <span className="truncate">
                 {riderStatus === 'available'
                   ? 'Listening for nearby Lagos orders...'
                   : 'You are offline (Tap status to go online)'}
