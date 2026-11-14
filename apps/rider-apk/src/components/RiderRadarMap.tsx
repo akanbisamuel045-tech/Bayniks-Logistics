@@ -58,43 +58,43 @@ export const RiderRadarMap: React.FC = () => {
   };
 
   return (
-    <div className="relative flex-1 w-full bg-zinc-950 overflow-hidden flex flex-col justify-between p-3 select-none">
-      {/* Radar Background Visual Grid */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
+    <div className="relative flex-1 w-full bg-[#F1F4F8] overflow-hidden flex flex-col justify-between p-3 select-none">
+      {/* Radar Background Visual Grid (Light Mode) */}
+      <div className="absolute inset-0 pointer-events-none opacity-40">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <radialGradient id="radar-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#00E676" stopOpacity="0.15" />
-              <stop offset="70%" stopColor="#00E676" stopOpacity="0.03" />
-              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="0%" stopColor="#10B981" stopOpacity="0.12" />
+              <stop offset="70%" stopColor="#0284C7" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
             </radialGradient>
           </defs>
           <rect width="100%" height="100%" fill="url(#radar-glow)" />
           {/* Concentric distance rings */}
-          <circle cx="50%" cy="50%" r="20%" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="3 3" />
-          <circle cx="50%" cy="50%" r="38%" fill="none" stroke="#00E676" strokeWidth="1" strokeDasharray="4 4" />
-          <circle cx="50%" cy="50%" r="56%" fill="none" stroke="#00E676" strokeWidth="1" opacity="0.5" />
+          <circle cx="50%" cy="50%" r="20%" fill="none" stroke="#94A3B8" strokeWidth="1" strokeDasharray="3 3" />
+          <circle cx="50%" cy="50%" r="38%" fill="none" stroke="#94A3B8" strokeWidth="1" strokeDasharray="4 4" />
+          <circle cx="50%" cy="50%" r="56%" fill="none" stroke="#10B981" strokeWidth="1" opacity="0.4" />
           {/* Crosshairs */}
-          <line x1="50%" y1="0%" x2="50%" y2="100%" stroke="#00E676" strokeWidth="0.8" opacity="0.3" />
-          <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="#00E676" strokeWidth="0.8" opacity="0.3" />
+          <line x1="50%" y1="0%" x2="50%" y2="100%" stroke="#94A3B8" strokeWidth="0.8" opacity="0.35" />
+          <line x1="0%" y1="50%" x2="100%" y2="50%" stroke="#94A3B8" strokeWidth="0.8" opacity="0.35" />
         </svg>
       </div>
 
       {/* Top Floating Overlay: Speedometer & Telemetry Status */}
       <div className="relative z-10 flex items-start justify-between">
         {/* Speedometer Gauge */}
-        <div className="bg-black/85 border border-zinc-800 rounded-2xl px-4 py-2.5 backdrop-blur-md shadow-2xl flex items-baseline gap-1.5">
-          <span className="text-3xl font-black text-amber-400 font-mono tracking-tighter">
+        <div className="bg-white/95 border border-zinc-200 rounded-2xl px-4 py-2.5 backdrop-blur-md shadow-md flex items-baseline gap-1.5">
+          <span className="text-3xl font-black text-zinc-900 font-mono tracking-tighter">
             {Math.round(currentSpeed)}
           </span>
-          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">KM/H</span>
+          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">KM/H</span>
         </div>
 
         {/* Live Redis Telemetry Status */}
         <div className="flex flex-col items-end gap-1.5">
-          <div className="bg-black/85 border border-zinc-800 rounded-xl px-2.5 py-1 backdrop-blur-md flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">
+          <div className="bg-white/95 border border-emerald-200 rounded-xl px-2.5 py-1 backdrop-blur-md flex items-center gap-2 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-[10px] font-mono font-bold text-emerald-700 uppercase">
               5s Redis RAM Stream
             </span>
           </div>
@@ -102,7 +102,7 @@ export const RiderRadarMap: React.FC = () => {
           {activeDestination && (
             <button
               onClick={launchGoogleMapsNavigation}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/30 flex items-center gap-1.5 transition-transform active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-[#FF6D1F] hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-orange-500/20 flex items-center gap-1.5 transition-transform active:scale-95"
             >
               <span>Google Maps</span>
               <span className="text-sm">↗</span>
@@ -116,15 +116,15 @@ export const RiderRadarMap: React.FC = () => {
         {/* Center: Rider Vehicle Indicator */}
         <div className="relative flex flex-col items-center justify-center">
           {/* Pulse Ripple */}
-          <div className="absolute w-28 h-28 rounded-full border border-emerald-500/40 animate-pulse-ring" />
+          <div className="absolute w-28 h-28 rounded-full border-2 border-emerald-500/30 animate-pulse-ring" />
 
           {/* Directional Motorcycle Indicator */}
           <div
-            className="w-14 h-14 rounded-full bg-zinc-900 border-2 border-emerald-400 shadow-xl shadow-emerald-500/40 flex items-center justify-center transition-transform duration-300"
+            className="w-14 h-14 rounded-full bg-white border-2 border-emerald-500 shadow-xl shadow-emerald-500/20 flex items-center justify-center transition-transform duration-300"
             style={{ transform: `rotate(${currentBearing}deg)` }}
           >
             <svg
-              className="w-7 h-7 text-emerald-400"
+              className="w-7 h-7 text-emerald-600"
               viewBox="0 0 24 24"
               fill="currentColor"
             >
@@ -133,7 +133,7 @@ export const RiderRadarMap: React.FC = () => {
             </svg>
           </div>
 
-          <span className="mt-1.5 px-2 py-0.5 rounded-md bg-black/80 text-[10px] font-mono font-bold text-zinc-300 border border-zinc-800">
+          <span className="mt-1.5 px-2 py-0.5 rounded-md bg-white/95 text-[10px] font-mono font-bold text-zinc-700 border border-zinc-200 shadow-sm">
             {currentBearing}° • {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
           </span>
         </div>
@@ -142,15 +142,15 @@ export const RiderRadarMap: React.FC = () => {
         {activeDestination && (
           <div className="absolute top-24 right-3 sm:right-6 flex flex-col items-center animate-bounce z-20">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xl font-black text-xs border-2 border-white/20 ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-xl font-black text-xs border-2 border-white ${
                 activeDestination.type === 'pickup'
-                  ? 'bg-emerald-500 text-black shadow-emerald-500/50'
-                  : 'bg-[#FF6D1F] text-white shadow-orange-500/50'
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/30'
+                  : 'bg-[#FF6D1F] text-white shadow-orange-500/30'
               }`}
             >
               {activeDestination.type === 'pickup' ? 'P' : 'D'}
             </div>
-            <div className="mt-1 px-2.5 py-1 bg-black/95 border border-zinc-700/80 rounded-xl text-[10px] font-mono font-bold text-white max-w-[170px] sm:max-w-[210px] text-center leading-tight shadow-xl">
+            <div className="mt-1 px-2.5 py-1 bg-white border border-zinc-200 rounded-xl text-[10px] font-mono font-bold text-zinc-900 max-w-[170px] sm:max-w-[210px] text-center leading-tight shadow-md">
               {activeDestination.label}
             </div>
           </div>
@@ -159,32 +159,32 @@ export const RiderRadarMap: React.FC = () => {
 
       {/* Simulation GPS Control Pad (Useful for browser testing & field demo) */}
       {simulationMode && (
-        <div className="relative z-10 bg-black/75 border border-zinc-800/80 rounded-xl p-2 max-w-xs mx-auto mb-1">
-          <div className="text-[10px] uppercase font-bold text-zinc-400 text-center mb-1">
+        <div className="relative z-10 bg-white/95 border border-zinc-200 shadow-md rounded-xl p-2 max-w-xs mx-auto mb-1">
+          <div className="text-[10px] uppercase font-bold text-zinc-500 text-center mb-1">
             🎮 GPS Simulation Pad
           </div>
           <div className="flex items-center justify-center gap-1.5">
             <button
               onClick={() => simulateGpsMove(0.0015, 0, 0)}
-              className="px-2 py-1 bg-zinc-800 active:bg-zinc-700 text-xs rounded font-bold"
+              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 text-xs rounded font-bold transition-colors"
             >
               ↑ North
             </button>
             <button
               onClick={() => simulateGpsMove(0, 0.0015, 90)}
-              className="px-2 py-1 bg-zinc-800 active:bg-zinc-700 text-xs rounded font-bold"
+              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 text-xs rounded font-bold transition-colors"
             >
               → East
             </button>
             <button
               onClick={() => simulateGpsMove(-0.0015, 0, 180)}
-              className="px-2 py-1 bg-zinc-800 active:bg-zinc-700 text-xs rounded font-bold"
+              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 text-xs rounded font-bold transition-colors"
             >
               ↓ South
             </button>
             <button
               onClick={() => simulateGpsMove(0, -0.0015, 270)}
-              className="px-2 py-1 bg-zinc-800 active:bg-zinc-700 text-xs rounded font-bold"
+              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 text-xs rounded font-bold transition-colors"
             >
               ← West
             </button>

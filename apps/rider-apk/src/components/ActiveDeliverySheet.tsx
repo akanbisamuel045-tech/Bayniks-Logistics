@@ -132,37 +132,37 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
 
   return (
     <>
-      <div className="safe-bottom bg-[#0E1013] border-t-2 border-zinc-800/90 px-3 pt-3 pb-4 shadow-2xl z-20">
+      <div className="safe-bottom bg-white border-t border-zinc-200 px-3 pt-3 pb-4 shadow-2xl z-20">
         <div className="max-w-lg mx-auto flex flex-col gap-3">
           {/* Main Delivery Card (Exact Customer Page Style) */}
-          <div className="rounded-2xl border-2 border-[#FF6D1F]/50 bg-[#16181D] p-4 shadow-xl space-y-3">
+          <div className="rounded-2xl border-2 border-[#FF6D1F] bg-white p-4 shadow-md space-y-3">
             {/* Top Row: Waybill, Item Description & Status Pill */}
-            <div className="flex items-center justify-between gap-2 border-b border-zinc-800 pb-2.5">
+            <div className="flex items-center justify-between gap-2 border-b border-zinc-200 pb-2.5">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-black">
+                <div className="w-9 h-9 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-black">
                   <Package className="w-5 h-5 text-black" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-xs text-white">
+                    <span className="font-mono font-bold text-xs text-zinc-900">
                       {activeOrder.trackingCode}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono font-bold text-amber-400">
+                    <span className="px-1.5 py-0.5 rounded bg-zinc-100 text-[10px] font-mono font-bold text-zinc-800 border border-zinc-200">
                       OTP: 4829
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                  <p className="text-[11px] text-zinc-600 mt-0.5">
                     {currentStop?.packageDescription || 'Business Documents • Express Bike'}
                   </p>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-[#FF6D1F] border border-orange-500/30 inline-flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-[#FF6D1F] border border-orange-200 inline-flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FF6D1F] animate-pulse" />
                   <span>{details.statusBadge}</span>
                 </span>
-                <div className="text-[10px] font-mono font-bold text-emerald-400 mt-1">
+                <div className="text-[10px] font-mono font-bold text-emerald-600 mt-1">
                   Payout: ₦{koboToNaira(activeOrder.riderEarningKobo).toLocaleString('en-NG')}
                 </div>
               </div>
@@ -172,7 +172,7 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[11px] font-mono">
                 <span className="font-bold text-[#FF6D1F]">{details.stepTitle}</span>
-                <span className="text-zinc-400 font-bold">{details.eta}</span>
+                <span className="text-zinc-600 font-bold">{details.eta}</span>
               </div>
 
               {/* 4 Horizontal Progress Bars */}
@@ -183,7 +183,7 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
                     <div
                       key={stepIdx}
                       className={`h-1.5 rounded-full transition-all duration-300 ${
-                        isCompleted ? 'bg-[#FF6D1F]' : 'bg-zinc-800'
+                        isCompleted ? 'bg-[#FF6D1F]' : 'bg-zinc-200'
                       }`}
                     />
                   );
@@ -204,30 +204,30 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
               <div
                 className={`p-2.5 rounded-xl border transition-colors ${
                   details.activeTarget === 'pickup'
-                    ? 'bg-zinc-900 border-[#FF6D1F]/60 shadow-sm'
-                    : 'bg-zinc-950/60 border-zinc-800/80 opacity-75'
+                    ? 'bg-orange-50/50 border-orange-300 shadow-sm'
+                    : 'bg-zinc-50 border-zinc-200 opacity-80'
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-black border-2 border-white mt-1 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                         PICKUP POINT • {activeOrder.pickup.contactName}
                       </span>
                       {details.activeTarget !== 'pickup' && (
-                        <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           <span>Collected</span>
                         </span>
                       )}
                     </div>
-                    <div className="font-bold text-white text-xs mt-0.5 truncate">
+                    <div className="font-bold text-zinc-900 text-xs mt-0.5 truncate">
                       {activeOrder.pickup.address}
                     </div>
                     {activeOrder.pickup.landmark && (
-                      <div className="text-[11px] font-medium text-amber-300 mt-0.5 flex items-center gap-1">
-                        <Flag className="w-3 h-3 text-amber-400 shrink-0" />
+                      <div className="text-[11px] font-medium text-amber-800 mt-0.5 flex items-center gap-1">
+                        <Flag className="w-3 h-3 text-amber-600 shrink-0" />
                         <span className="truncate">Landmark: {activeOrder.pickup.landmark}</span>
                       </div>
                     )}
@@ -239,27 +239,27 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
               <div
                 className={`p-2.5 rounded-xl border transition-colors ${
                   details.activeTarget === 'dropoff'
-                    ? 'bg-zinc-900 border-[#FF6D1F]/60 shadow-sm'
-                    : 'bg-zinc-950/60 border-zinc-800/80 opacity-75'
+                    ? 'bg-orange-50/50 border-orange-300 shadow-sm'
+                    : 'bg-zinc-50 border-zinc-200 opacity-80'
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#FF6D1F] border-2 border-white mt-1 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
                         DROP-OFF DESTINATION • {currentStop?.recipientName || 'Recipient'}
                       </span>
-                      <span className="text-[10px] font-mono text-zinc-400">
+                      <span className="text-[10px] font-mono text-zinc-500">
                         {activeOrder.estimatedDistanceKm || 4.2} km route
                       </span>
                     </div>
-                    <div className="font-bold text-white text-xs mt-0.5 truncate">
+                    <div className="font-bold text-zinc-900 text-xs mt-0.5 truncate">
                       {currentStop?.dropoffAddress || 'Customer Destination Address'}
                     </div>
                     {currentStop?.dropoffLandmark && (
-                      <div className="text-[11px] font-medium text-amber-300 mt-0.5 flex items-center gap-1">
-                        <Flag className="w-3 h-3 text-amber-400 shrink-0" />
+                      <div className="text-[11px] font-medium text-amber-800 mt-0.5 flex items-center gap-1">
+                        <Flag className="w-3 h-3 text-amber-600 shrink-0" />
                         <span className="truncate">Landmark: {currentStop.dropoffLandmark}</span>
                       </div>
                     )}
@@ -268,8 +268,8 @@ export const ActiveDeliverySheet: React.FC<ActiveDeliverySheetProps> = ({
               </div>
             </div>
 
-            {/* Customer Contact & In-Transit Actions Bar (Customer Page Bar Style) */}
-            <div className="bg-black/90 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            {/* Customer Contact & In-Transit Actions Bar (Matching Tariq Bar in Customer Page) */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-sm">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-[#FF6D1F] flex items-center justify-center font-black text-white text-xs shrink-0">
                   {currentContactName.slice(0, 2).toUpperCase()}

@@ -18,8 +18,8 @@ html, body {
   width: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background-color: #0E1013;
-  color: #FFFFFF;
+  background-color: #F8F9FA;
+  color: #111827;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;

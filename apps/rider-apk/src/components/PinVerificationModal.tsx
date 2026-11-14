@@ -119,15 +119,15 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
     isCompressing;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-[#16181D] border-t-2 sm:border-2 border-zinc-800 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-white">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-zinc-900">
         {/* Header Bar */}
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6D1F]">
               {mode === 'pickup' ? 'ANTI-FRAUD PICKUP VERIFICATION' : `STOP #${stopSequenceNumber} PROOF OF DELIVERY`}
             </span>
-            <h2 className="text-lg font-black text-white">
+            <h2 className="text-lg font-black text-zinc-900">
               {mode === 'pickup' ? 'Enter 4-Digit Sender PIN' : `Verify PIN & Photo for ${recipientName}`}
             </h2>
           </div>
@@ -135,37 +135,37 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             onClick={handleClose}
             disabled={isSubmitting}
             aria-label="Close verification modal"
-            className="w-10 h-10 rounded-full bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center font-bold text-base transition-colors active:scale-95"
+            className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 flex items-center justify-center font-bold text-base transition-colors active:scale-95 shadow-sm"
           >
-            <X className="w-5 h-5 text-black bg-white rounded-full p-0.5" />
+            <X className="w-5 h-5 text-black" />
           </button>
         </div>
 
         {/* Error Banner */}
         {(errorMessage || photoError) && (
-          <div className="bg-red-950/80 border border-red-500/80 p-3 rounded-xl flex items-start gap-2 text-xs text-red-200">
-            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <div className="bg-red-50 border border-red-200 p-3 rounded-xl flex items-start gap-2 text-xs text-red-700">
+            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
             <span className="font-semibold">{errorMessage || photoError}</span>
           </div>
         )}
 
         {/* Dropoff Photo POD Upload Section */}
         {mode === 'dropoff' && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 space-y-2.5">
+          <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3.5 space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-zinc-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <span className="font-bold text-zinc-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                 <Camera className="w-4 h-4 text-[#FF6D1F]" />
                 <span>Proof of Delivery Photo (&lt;300KB)</span>
               </span>
               {compressedPhoto && (
-                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
                   Compressed: {Math.round(compressedPhoto.byteSize / 1024)} KB ✓
                 </span>
               )}
             </div>
 
             {compressedPhoto ? (
-              <div className="relative rounded-xl overflow-hidden border border-zinc-700 h-28 bg-black flex items-center justify-center">
+              <div className="relative rounded-xl overflow-hidden border border-zinc-300 h-28 bg-zinc-100 flex items-center justify-center">
                 <img
                   src={compressedPhoto.dataUrl}
                   alt="POD Preview"
@@ -181,7 +181,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="border-2 border-dashed border-zinc-700 hover:border-[#FF6D1F] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-zinc-950/60 transition-colors">
+              <label className="border-2 border-dashed border-zinc-300 hover:border-[#FF6D1F] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-white transition-colors">
                 <input
                   type="file"
                   accept="image/*"
@@ -212,8 +212,8 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                 key={idx}
                 className={`w-14 h-16 rounded-2xl border-2 flex items-center justify-center text-2xl font-mono font-black transition-all ${
                   isFilled
-                    ? 'border-[#FF6D1F] bg-orange-950/40 text-[#FF6D1F] shadow-lg shadow-orange-500/10 scale-105'
-                    : 'border-zinc-800 bg-zinc-900/80 text-zinc-600'
+                    ? 'border-[#FF6D1F] bg-orange-50 text-[#FF6D1F] shadow-md shadow-orange-500/10 scale-105'
+                    : 'border-zinc-200 bg-zinc-100 text-zinc-400'
                 }`}
               >
                 {digit || '•'}
@@ -230,7 +230,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
               type="button"
               onClick={() => handleKeyPress(digit)}
               disabled={isSubmitting || pinDigits.length >= 4}
-              className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-mono font-black text-xl hover:bg-zinc-800 active:bg-[#FF6D1F] active:text-black transition-all active:scale-95 shadow-md flex items-center justify-center select-none"
+              className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900 font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#FF6D1F] active:text-white transition-all active:scale-95 shadow-sm flex items-center justify-center select-none"
             >
               {digit}
             </button>
@@ -241,7 +241,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             type="button"
             onClick={handleClear}
             disabled={isSubmitting || pinDigits.length === 0}
-            className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold text-xs uppercase hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center select-none"
+            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-600 font-bold text-xs uppercase hover:bg-zinc-200 active:scale-95 transition-all flex items-center justify-center select-none"
           >
             Clear
           </button>
@@ -251,7 +251,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             type="button"
             onClick={() => handleKeyPress('0')}
             disabled={isSubmitting || pinDigits.length >= 4}
-            className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-mono font-black text-xl hover:bg-zinc-800 active:bg-[#FF6D1F] active:text-black transition-all active:scale-95 shadow-md flex items-center justify-center select-none"
+            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900 font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#FF6D1F] active:text-white transition-all active:scale-95 shadow-sm flex items-center justify-center select-none"
           >
             0
           </button>
@@ -261,7 +261,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             type="button"
             onClick={handleBackspace}
             disabled={isSubmitting || pinDigits.length === 0}
-            className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-[#FF6D1F] font-black text-lg hover:bg-zinc-800 active:scale-95 transition-all flex items-center justify-center select-none"
+            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-[#FF6D1F] font-black text-lg hover:bg-zinc-200 active:scale-95 transition-all flex items-center justify-center select-none"
           >
             ⌫
           </button>
@@ -272,12 +272,12 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
-          className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider transition-all flex items-center justify-center shadow-xl ${
+          className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider transition-all flex items-center justify-center shadow-lg ${
             isSubmitDisabled
-              ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+              ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
               : mode === 'pickup'
-              ? 'bg-[#FF6D1F] hover:bg-orange-600 text-white shadow-orange-500/30 active:scale-98'
-              : 'bg-emerald-400 hover:bg-emerald-300 text-black shadow-emerald-500/30 active:scale-98'
+              ? 'bg-[#FF6D1F] hover:bg-orange-600 text-white shadow-orange-500/25 active:scale-98'
+              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 active:scale-98'
           }`}
         >
           {isSubmitting

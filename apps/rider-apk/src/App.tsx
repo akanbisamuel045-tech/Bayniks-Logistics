@@ -160,11 +160,7 @@ export function App() {
   }, [authToken, receiveJobOffer]);
 
   return (
-    <div
-      className={`relative flex flex-col h-full h-[100dvh] w-full overflow-hidden select-none transition-colors duration-200 ${
-        isSunlightMode ? 'bg-zinc-900 text-white font-semibold' : 'bg-[#0E1013] text-white'
-      }`}
-    >
+    <div className="relative flex flex-col h-full h-[100dvh] w-full overflow-hidden select-none transition-colors duration-200 bg-[#F8F9FA] text-[#111827]">
       {/* Top Floating Telemetry & Status Bar */}
       <TopTelemetryBar
         onOpenDrawer={() => setIsDrawerOpen(true)}
@@ -178,10 +174,10 @@ export function App() {
         {/* Idle Mode Dispatcher Waiting Indicator */}
         {tripPhase === 'idle' && (
           <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none w-full max-w-xs px-2 flex justify-center">
-            <div className="px-3.5 py-1.5 rounded-full bg-[#0E1013]/95 border border-zinc-800 text-[11px] font-mono font-bold text-zinc-300 backdrop-blur-md shadow-2xl flex items-center gap-2 text-center">
+            <div className="px-3.5 py-1.5 rounded-full bg-white/95 border border-zinc-200 text-[11px] font-mono font-bold text-zinc-700 backdrop-blur-md shadow-md flex items-center gap-2 text-center">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  riderStatus === 'available' ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'
+                  riderStatus === 'available' ? 'bg-emerald-500 animate-ping' : 'bg-zinc-400'
                 }`}
               />
               <span className="truncate">
@@ -198,7 +194,7 @@ export function App() {
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
             <button
               onClick={triggerDemoOffer}
-              className="px-4 py-2.5 rounded-2xl bg-[#FF6D1F] hover:bg-orange-600 active:scale-95 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-orange-500/30 border border-orange-400 flex items-center gap-2 transition-transform"
+              className="px-4 py-2.5 rounded-2xl bg-[#FF6D1F] hover:bg-orange-600 active:scale-95 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-orange-500/25 border border-orange-400 flex items-center gap-2 transition-transform"
             >
               <Zap className="w-4 h-4 text-white" />
               <span>Trigger Test Dispatch Offer (30s)</span>
