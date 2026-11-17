@@ -1,19 +1,18 @@
 import React from 'react';
 import {
   X,
-  Zap,
-  PackageCheck,
+  Home,
+  Clock,
   ShieldCheck,
   Wallet,
   Building2,
   Bike,
-  ShieldAlert,
+  LifeBuoy,
   MessageSquare,
   LogOut,
   User,
   ChevronRight,
   Sun,
-  FileCheck2,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime } from '../utils/audioChimes';
@@ -93,7 +92,7 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
       />
 
       {/* Drawer Container (Sliding from Left) */}
-      <div className="relative w-[82%] max-w-[340px] h-full bg-[#FAFAF9] shadow-2xl flex flex-col z-10 border-r border-zinc-200 animate-slideRight">
+      <div className="relative w-[82%] max-w-[340px] h-full bg-white shadow-2xl flex flex-col z-10 border-r border-neutral-200 animate-slideRight">
         {/* Header Profile Card */}
         <div className="bg-gradient-to-br from-[#1E1C1A] to-[#2B2724] p-5 text-white">
           <div className="flex items-center justify-between mb-4">
@@ -138,149 +137,137 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Navigation Options */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Scrollable Navigation Options with Black Lucide Icons */}
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
           {/* Group 1: Main Operations */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-zinc-400 px-3 mb-1">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 px-3.5 mb-1.5">
               Operations
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <button
                 type="button"
                 onClick={() => handleNavClick('home')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className={`w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs transition ${
+                  activeView === 'radar' || activeView === 'home'
+                    ? 'bg-neutral-100 text-neutral-900 font-extrabold'
+                    : 'text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 font-bold'
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-orange-100 text-[#FF5722] flex items-center justify-center">
-                    <Zap size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div>Radar Dispatch Map</div>
-                    <div className="text-[10px] text-zinc-400 font-medium">Cockpit & Mission Radar</div>
+                <div className="flex items-center space-x-3 text-left min-w-0">
+                  <Home className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <div className="min-w-0">
+                    <div className="font-extrabold text-neutral-900 truncate">Radar Dispatch Map</div>
+                    <div className="text-[10px] text-neutral-400 font-medium truncate">Cockpit & Mission Radar</div>
                   </div>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNavClick('history')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                    <PackageCheck size={16} />
-                  </div>
-                  <span>Delivery History & Waybills</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Clock className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">Delivery History & Waybills</span>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNavClick('kyc')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                    <FileCheck2 size={16} />
-                  </div>
-                  <span>KYC & Regulatory Compliance</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">KYC & Regulatory Compliance</span>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
             </div>
           </div>
 
           {/* Group 2: Finances */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-zinc-400 px-3 mb-1">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 px-3.5 mb-1.5">
               Wallet & Settlements
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <button
                 type="button"
                 onClick={() => handleNavClick('earnings')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
-                    <Wallet size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div className="leading-tight">Shift Earnings & Payouts</div>
-                    <div className="text-[10px] text-zinc-400 font-semibold">Earnings & Wallet • ₦92,300.00 Balance</div>
+                <div className="flex items-center space-x-3 text-left min-w-0">
+                  <Wallet className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <div className="min-w-0">
+                    <div className="font-extrabold text-neutral-900 truncate">Shift Earnings & Payouts</div>
+                    <div className="text-[10px] text-neutral-400 font-medium truncate">Earnings & Wallet • ₦92,300.00 Balance</div>
                   </div>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNavClick('bank')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-zinc-200 text-zinc-800 flex items-center justify-center">
-                    <Building2 size={16} />
-                  </div>
-                  <span>Payout Bank Account</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Building2 className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">Payout Bank Account</span>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
             </div>
           </div>
 
           {/* Group 3: Safety & Fleet */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-wider text-zinc-400 px-3 mb-1">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 px-3.5 mb-1.5">
               Safety & Fleet
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <button
                 type="button"
                 onClick={() => handleNavClick('vehicle')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
-                    <Bike size={16} />
-                  </div>
-                  <span>Rider Profile & Vehicle</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Bike className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">Rider Profile & Vehicle</span>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNavClick('support_sos')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                    <ShieldAlert size={16} />
-                  </div>
-                  <div className="text-left">
-                    <div>24/7 Safety & SOS Support</div>
-                    <div className="text-[10px] text-zinc-400 font-medium">Roadside Emergency SOS</div>
+                <div className="flex items-center space-x-3 text-left min-w-0">
+                  <LifeBuoy className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <div className="min-w-0">
+                    <div className="font-extrabold text-neutral-900 truncate">24/7 Safety & SOS Support</div>
+                    <div className="text-[10px] text-neutral-400 font-medium truncate">Roadside Emergency SOS</div>
                   </div>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
 
               <button
                 type="button"
                 onClick={() => handleNavClick('chat')}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                    <MessageSquare size={16} />
-                  </div>
-                  <span>Customer Live Chat</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <MessageSquare className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">Customer Live Chat</span>
                 </div>
-                <ChevronRight size={14} className="text-zinc-400" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
             </div>
           </div>
@@ -294,70 +281,69 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
                   playKeypadChime();
                   onToggleSunlightMode();
                 }}
-                className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors border border-amber-200 bg-amber-50/50"
+                className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center">
-                    <Sun size={16} />
-                  </div>
-                  <span>Sunlight High-Contrast Mode</span>
+                <div className="flex items-center space-x-3 min-w-0">
+                  <Sun className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                  <span className="font-extrabold text-neutral-900 truncate">Sunlight High-Contrast Mode</span>
                 </div>
-                <ChevronRight size={14} className="text-amber-500" />
+                <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
               </button>
             </div>
           )}
 
           {/* Group 4: Account Actions */}
-          <div className="pt-2 border-t border-zinc-200 space-y-1">
+          <div className="pt-2 border-t border-neutral-200/80 space-y-0.5">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 px-3.5 mb-1.5">
+              Account
+            </div>
             <button
               type="button"
               onClick={() => handleNavClick('auth')}
-              className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-white text-zinc-800 font-bold text-xs transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-zinc-200 text-zinc-700 flex items-center justify-center">
-                  <User size={16} />
-                </div>
-                <span>Switch / Re-Login Account</span>
+              <div className="flex items-center space-x-3 min-w-0">
+                <User className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2]" />
+                <span className="font-extrabold text-neutral-900 truncate">Switch / Re-Login Account</span>
               </div>
-              <ChevronRight size={14} className="text-zinc-400" />
+              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />
             </button>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full flex items-center justify-between p-2.5 rounded-2xl hover:bg-red-50 text-red-600 font-bold text-xs transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold text-neutral-700 hover:bg-red-50 hover:text-red-600 transition group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                  <LogOut size={16} />
-                </div>
-                <span>Sign Out of Rider App</span>
+              <div className="flex items-center space-x-3 min-w-0">
+                <LogOut className="w-4 h-4 shrink-0 text-neutral-900 stroke-[2.2] group-hover:text-red-600 transition-colors" />
+                <span className="font-extrabold text-neutral-900 group-hover:text-red-600 truncate transition-colors">
+                  Sign Out of Rider App
+                </span>
               </div>
-              <ChevronRight size={14} className="text-red-400" />
+              <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2] group-hover:text-red-400" />
             </button>
           </div>
         </div>
 
         {/* Footer Shift Status Bar */}
-        <div className="p-4 bg-white border-t border-zinc-200">
+        <div className="p-4 bg-white border-t border-neutral-200">
           <button
             type="button"
             onClick={toggleOnlineStatus}
             className={`w-full py-2.5 px-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
               isOnline
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
-                : 'bg-zinc-100 text-zinc-600 border border-zinc-300'
+                : 'bg-neutral-100 text-neutral-600 border border-neutral-300'
             }`}
           >
             <span
               className={`w-2.5 h-2.5 rounded-full ${
-                isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'
+                isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-neutral-400'
               }`}
             />
             <span>{isOnline ? 'ONLINE • ACCEPTING JOBS' : 'OFFLINE • TAP TO START'}</span>
           </button>
-          <div className="text-[10px] text-zinc-400 text-center mt-2 font-medium">
+          <div className="text-[10px] text-neutral-400 text-center mt-2 font-medium">
             Bayniks Logistics v2.4.1 (Lagos Build 2026)
           </div>
         </div>
