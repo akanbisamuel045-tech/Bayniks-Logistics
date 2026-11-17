@@ -411,6 +411,16 @@ orderRouter.get(
         return;
       }
 
+      // BOLA Guard: only the customer who booked, the assigned rider, or admin can read messages
+      const isSender = order.senderId.toString() === req.user!.id;
+      const isAssignedRider = order.riderId && order.riderId.toString() === req.user!.id;
+      const isAdmin = req.user!.role === 'admin';
+
+      if (!isSender && !isAssignedRider && !isAdmin) {
+        res.status(403).json({ error: 'Unauthorized to view messages for this order', code: 'FORBIDDEN' });
+        return;
+      }
+
       res.status(200).json({
         orderId: order._id,
         trackingCode: order.trackingCode,
@@ -448,6 +458,16 @@ orderRouter.post(
 
       if (!order) {
         res.status(404).json({ error: 'Order not found' });
+        return;
+      }
+
+      // BOLA Guard: only the customer who booked, the assigned rider, or admin can send messages
+      const isSender = order.senderId.toString() === req.user!.id;
+      const isAssignedRider = order.riderId && order.riderId.toString() === req.user!.id;
+      const isAdmin = req.user!.role === 'admin';
+
+      if (!isSender && !isAssignedRider && !isAdmin) {
+        res.status(403).json({ error: 'Unauthorized to post messages to this order', code: 'FORBIDDEN' });
         return;
       }
 

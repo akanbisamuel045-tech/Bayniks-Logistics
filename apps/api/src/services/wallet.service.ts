@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { MAX_CASH_DEBT_LIMIT_KOBO } from '@logistics/shared-types';
 import { Wallet, WalletTransaction, Order, User, IWallet, IOrder } from '../models';
 import { getPaystackProvider } from '../providers/paystack.provider';
 
@@ -150,6 +151,12 @@ export class WalletService {
         { $inc: { balanceKobo: params.amountKobo } },
         { new: true, session }
       );
+
+      // Automatic Offset: if wallet was debt locked and balance now clears threshold, unlock
+      if (updatedWallet && updatedWallet.isDebtLocked && updatedWallet.balanceKobo > -MAX_CASH_DEBT_LIMIT_KOBO) {
+        updatedWallet.isDebtLocked = false;
+        await updatedWallet.save({ session });
+      }
 
       // 4. Record successful WalletTransaction
       await WalletTransaction.create(

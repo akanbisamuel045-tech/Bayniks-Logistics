@@ -14,7 +14,9 @@ import {
   RiderIncidentReportPayloadSchema,
   toGeoJsonPoint,
   normalizeNigerianPhone,
+  MAX_CASH_DEBT_LIMIT_KOBO,
 } from '@logistics/shared-types';
+
 
 export const riderRouter = Router();
 export const fleetRouter = Router();
@@ -194,8 +196,21 @@ riderRouter.patch(
       const redis = getRedisClient();
 
       if (status === 'available') {
+        // Debt Circuit Breaker Guard: Riders with excess debt cannot go online
+        const wallet = await Wallet.findOne({ userId: req.user!.id });
+        if (wallet && (wallet.isDebtLocked || wallet.balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO)) {
+          res.status(403).json({
+            error: 'Cash debt limit reached (₦5,000 threshold). You cannot go online until debt is cleared.',
+            code: 'DEBT_LOCKED',
+            balanceKobo: wallet.balanceKobo,
+            isDebtLocked: true,
+          });
+          return;
+        }
+
         // KYC Approval Guard: Riders cannot go online without approval
         if (profile.kycStatus !== 'approved') {
+
           res.status(403).json({
             error: 'KYC not approved. You cannot go online until your documents are verified.',
             code: 'KYC_NOT_APPROVED',

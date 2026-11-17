@@ -10,6 +10,7 @@ export interface IWallet extends Document {
   userId: Types.ObjectId;
   balanceKobo: number;
   escrowLockedKobo: number;
+  isDebtLocked: boolean;
   paystackDedicatedAccountNumber?: string;
   paystackBankName?: string;
   createdAt: Date;
@@ -28,7 +29,6 @@ export const WalletSchema = new Schema<IWallet>(
     balanceKobo: {
       type: Number,
       default: 0,
-      min: [0, 'Balance cannot be negative'],
       required: true,
       validate: {
         validator: Number.isInteger,
@@ -44,6 +44,11 @@ export const WalletSchema = new Schema<IWallet>(
         validator: Number.isInteger,
         message: 'escrowLockedKobo must be an integer',
       },
+    },
+    isDebtLocked: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     paystackDedicatedAccountNumber: {
       type: String,

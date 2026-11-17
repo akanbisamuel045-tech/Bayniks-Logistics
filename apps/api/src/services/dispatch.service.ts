@@ -8,9 +8,11 @@ import {
   JobNewOffer,
   TrackingUpdate,
   encodeGooglePolyline,
+  MAX_CASH_DEBT_LIMIT_KOBO,
 } from '@logistics/shared-types';
 import { getRedisClient } from '../config/redis';
-import { Order, RiderProfile, User, IOrder } from '../models';
+import { Order, RiderProfile, User, Wallet, IOrder } from '../models';
+
 import {
   emitJobOfferToRider,
   emitToTrackingRoom,
@@ -86,7 +88,26 @@ export class DispatchService {
           vehicleType,
         }).lean();
 
-        const validUserIdsSet = new Set(validProfiles.map((p) => p.userId.toString()));
+        // Debt Circuit Breaker: exclude riders who are locked due to cash commission debt
+        const lockedWallets = await Wallet.find({
+          userId: { $in: objectIds },
+          $or: [
+            { isDebtLocked: true },
+            { balanceKobo: { $lte: -MAX_CASH_DEBT_LIMIT_KOBO } },
+          ],
+        }).lean();
+        const lockedUserIdsSet = new Set(lockedWallets.map((w) => w.userId.toString()));
+
+        // Evict any debt-locked riders found in Redis pool
+        for (const lockedId of lockedUserIdsSet) {
+          redis.zrem('riders:available:locations', lockedId).catch(() => {});
+        }
+
+        const validUserIdsSet = new Set(
+          validProfiles
+            .map((p) => p.userId.toString())
+            .filter((id) => !lockedUserIdsSet.has(id))
+        );
         // Maintain proximity sort order from Redis GEOSEARCH
         const matched = candidateIds.filter((id) => validUserIdsSet.has(id));
         if (matched.length > 0) {
@@ -100,11 +121,19 @@ export class DispatchService {
       .filter((id) => mongoose.isValidObjectId(id))
       .map((id) => new mongoose.Types.ObjectId(id));
 
+    const lockedFallbackWallets = await Wallet.find({
+      $or: [
+        { isDebtLocked: true },
+        { balanceKobo: { $lte: -MAX_CASH_DEBT_LIMIT_KOBO } },
+      ],
+    }).lean();
+    const lockedFallbackIds = lockedFallbackWallets.map((w) => w.userId);
+
     const fallbackProfiles = await RiderProfile.find({
       kycStatus: 'approved',
       status: 'available',
       vehicleType,
-      userId: { $nin: excludedObjectIds },
+      userId: { $nin: [...excludedObjectIds, ...lockedFallbackIds] },
       lastLocation: {
         $nearSphere: {
           $geometry: toGeoJsonPoint(pickupLatLng),
@@ -486,6 +515,10 @@ export class DispatchService {
     });
 
     if (!order) {
+      const existingOrder = await Order.findById(orderId);
+      if (existingOrder && existingOrder.riderId && existingOrder.riderId.toString() !== riderUserId) {
+        throw new DispatchError('Unauthorized: Order is assigned to another rider', 403, 'FORBIDDEN');
+      }
       throw new DispatchError('Active order not found for this rider', 404, 'ORDER_NOT_FOUND');
     }
 
@@ -622,6 +655,10 @@ export class DispatchService {
     });
 
     if (!order) {
+      const existingOrder = await Order.findById(orderId);
+      if (existingOrder && existingOrder.riderId && existingOrder.riderId.toString() !== riderUserId) {
+        throw new DispatchError('Unauthorized: Order is assigned to another rider', 403, 'FORBIDDEN');
+      }
       throw new DispatchError('Active order not found for this rider', 404, 'ORDER_NOT_FOUND');
     }
 
@@ -752,6 +789,10 @@ export class DispatchService {
     });
 
     if (!order) {
+      const existingOrder = await Order.findById(params.orderId);
+      if (existingOrder && existingOrder.riderId && existingOrder.riderId.toString() !== riderUserId) {
+        throw new DispatchError('Unauthorized: Order is assigned to another rider', 403, 'FORBIDDEN');
+      }
       throw new DispatchError('Active order not found for this rider', 404, 'ORDER_NOT_FOUND');
     }
 
@@ -861,29 +902,52 @@ export class DispatchService {
     } else if (order.paymentMethod === 'pay_on_pickup' || order.paymentMethod === 'pay_on_delivery') {
       order.paymentStatus = 'paid';
       await order.save();
+      try {
+        await payoutService.processCashOrderCommissionDeduction(order._id.toString());
+      } catch (err) {
+        console.error('[DispatchService] Error executing cash order commission deduction:', err);
+      }
     }
 
-    // 3. Rider Return to Available Pool
+    // 3. Rider Return to Available Pool (subject to Debt Circuit Breaker)
     const finalStop = order.stops[order.stops.length - 1]!;
     const finalLoc = fromGeoJsonPoint(finalStop.dropoffLocation as any);
 
-    await RiderProfile.findOneAndUpdate(
-      { userId: order.riderId },
-      {
-        status: 'available',
-        lastLocation: finalStop.dropoffLocation,
-        lastSeenAt: new Date(),
-      }
-    );
+    const riderWallet = await Wallet.findOne({ userId: order.riderId });
+    const isDebtLocked = riderWallet
+      ? (riderWallet.isDebtLocked || riderWallet.balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO)
+      : false;
 
     const redis = getRedisClient();
-    // Golden Rule 4: [lng, lat]
-    await redis.geoadd(
-      'riders:available:locations',
-      finalLoc.lng,
-      finalLoc.lat,
-      riderUserId
-    );
+
+    if (!isDebtLocked) {
+      await RiderProfile.findOneAndUpdate(
+        { userId: order.riderId },
+        {
+          status: 'available',
+          lastLocation: finalStop.dropoffLocation,
+          lastSeenAt: new Date(),
+        }
+      );
+
+      // Golden Rule 4: [lng, lat]
+      await redis.geoadd(
+        'riders:available:locations',
+        finalLoc.lng,
+        finalLoc.lat,
+        riderUserId
+      );
+    } else {
+      await RiderProfile.findOneAndUpdate(
+        { userId: order.riderId },
+        {
+          status: 'offline',
+          lastLocation: finalStop.dropoffLocation,
+          lastSeenAt: new Date(),
+        }
+      );
+      await redis.zrem('riders:available:locations', riderUserId);
+    }
 
     // Clean up temporary order Redis keys
     await redis.del(`order:route_points:${order._id}`);

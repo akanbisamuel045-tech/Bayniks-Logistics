@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import {
   OrderSplitSettlementResult,
   PayoutTransactionRecord,
+  MAX_CASH_DEBT_LIMIT_KOBO,
 } from '@logistics/shared-types';
 import {
   Order,
@@ -15,7 +16,9 @@ import {
   IPayoutTransaction,
 } from '../models';
 import { getPaystackProvider } from '../providers/paystack.provider';
+import { getRedisClient } from '../config/redis';
 import { InsufficientBalanceError } from './wallet.service';
+
 
 export class PayoutServiceError extends Error {
   statusCode: number;
@@ -158,11 +161,17 @@ export class PayoutService {
       }
 
       // Credit Rider Wallet
-      await Wallet.findOneAndUpdate(
+      const updatedRiderWallet = await Wallet.findOneAndUpdate(
         { userId: order.riderId },
         { $inc: { balanceKobo: riderEarningsKobo } },
         { session, upsert: true, new: true }
       );
+
+      // Automatic Offset: If balance now clears the cash debt limit, clear circuit breaker lock
+      if (updatedRiderWallet && updatedRiderWallet.isDebtLocked && updatedRiderWallet.balanceKobo > -MAX_CASH_DEBT_LIMIT_KOBO) {
+        updatedRiderWallet.isDebtLocked = false;
+        await updatedRiderWallet.save({ session });
+      }
 
       await WalletTransaction.create(
         [
@@ -214,6 +223,94 @@ export class PayoutService {
         fleetOwnerEarningsKobo,
         fleetOwnerId,
         settledAt: Date.now(),
+      };
+    });
+  }
+
+  /**
+   * Cash-on-Delivery (COD) Commission Deduction & Circuit Breaker.
+   * On cash orders (pay_on_pickup / pay_on_delivery), rider receives 100% fare in physical cash.
+   * Atomically deducts 20% platform commission (-platformCommissionKobo) from rider's wallet.
+   * If balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO (-500,000 Kobo / -₦5,000), locks rider (isDebtLocked = true)
+   * and evicts rider from Redis available dispatch pool.
+   */
+  async processCashOrderCommissionDeduction(orderId: string): Promise<{
+    orderId: string;
+    platformCommissionKobo: number;
+    riderBalanceKobo: number;
+    isDebtLocked: boolean;
+  }> {
+    const oid = new Types.ObjectId(orderId);
+    const order = await Order.findById(oid);
+    if (!order) {
+      throw new PayoutServiceError('Order not found for cash commission deduction', 404, 'ORDER_NOT_FOUND');
+    }
+    if (!order.riderId) {
+      throw new PayoutServiceError('Order does not have an assigned rider', 400, 'NO_RIDER_ASSIGNED');
+    }
+
+    const riderUserId = order.riderId.toString();
+    const riderObjectId = order.riderId;
+    const platformCommissionKobo = order.platformCommissionKobo || Math.round(order.totalFareKobo * 0.2);
+
+    return this.executeInTransaction(async (session) => {
+      const commissionRef = `COMMISSION-${order.trackingCode}`;
+      const existingTx = await WalletTransaction.findOne({ reference: commissionRef }).session(session);
+
+      if (existingTx) {
+        const wallet = await Wallet.findOne({ userId: riderObjectId }).session(session);
+        return {
+          orderId: order._id.toString(),
+          platformCommissionKobo,
+          riderBalanceKobo: wallet ? wallet.balanceKobo : 0,
+          isDebtLocked: wallet ? !!wallet.isDebtLocked : false,
+        };
+      }
+
+      // Atomically deduct 20% platform commission from rider's wallet
+      const updatedWallet = await Wallet.findOneAndUpdate(
+        { userId: riderObjectId },
+        { $inc: { balanceKobo: -platformCommissionKobo } },
+        { session, upsert: true, new: true }
+      );
+
+      // Check Circuit Breaker threshold
+      let isDebtLocked = false;
+      if (updatedWallet.balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO) {
+        isDebtLocked = true;
+        updatedWallet.isDebtLocked = true;
+        await updatedWallet.save({ session });
+      }
+
+      await WalletTransaction.create(
+        [
+          {
+            walletUserId: riderObjectId,
+            orderId: order._id,
+            type: 'debit',
+            amountKobo: platformCommissionKobo,
+            reference: commissionRef,
+            status: 'success',
+          },
+        ],
+        { session }
+      );
+
+      // If debt locked, evict from Redis available pool
+      if (isDebtLocked) {
+        try {
+          const redis = getRedisClient();
+          await redis.zrem('riders:available:locations', riderUserId);
+        } catch {
+          // Redis mock or error handling in tests
+        }
+      }
+
+      return {
+        orderId: order._id.toString(),
+        platformCommissionKobo,
+        riderBalanceKobo: updatedWallet.balanceKobo,
+        isDebtLocked,
       };
     });
   }
@@ -434,6 +531,16 @@ export class PayoutService {
 
     if (riderSharePercent + fleetOwnerSharePercent !== 100) {
       throw new PayoutServiceError('Rider and Fleet Owner share percentages must sum to 100%', 400);
+    }
+
+    // Tenant Isolation Guard: verify rider doesn't belong to a different fleet owner
+    const riderProfile = await RiderProfile.findOne({ userId: new Types.ObjectId(riderUserId) });
+    if (riderProfile && riderProfile.fleetOwnerId && riderProfile.fleetOwnerId.toString() !== fleetOwnerId) {
+      throw new PayoutServiceError(
+        'Unauthorized: Cannot manage split rules for a rider assigned to another fleet owner',
+        403,
+        'FORBIDDEN'
+      );
     }
 
     const rule = await FleetSplitRule.findOneAndUpdate(

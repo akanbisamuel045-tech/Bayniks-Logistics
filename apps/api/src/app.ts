@@ -35,13 +35,14 @@ export function createApp(): Express {
   app.use(cors());
   app.use(
     express.json({
-      limit: '5mb',
+      limit: '1mb',
       verify: (req: any, _res, buf) => {
         req.rawBody = buf;
       },
     })
   );
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
 
   // Mount Health Probes (Live & Deep Readiness)
   app.use('/api/v1/health', healthRouter);

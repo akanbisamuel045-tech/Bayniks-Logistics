@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { KoboAmountSchema } from './currency';
+import { KoboAmountSchema, SignedKoboAmountSchema } from './currency';
+
+/**
+ * Cash Debt Circuit Breaker Threshold: ₦5,000 = 500,000 Kobo
+ * If a rider accumulates negative cash commission debt exceeding this limit,
+ * they are immediately locked from going online and excluded from dispatch matching.
+ */
+export const MAX_CASH_DEBT_LIMIT_KOBO = 500_000;
 
 /**
  * Top-up initialization schema (minimum ₦500.00 = 50,000 kobo).
@@ -47,11 +54,13 @@ export type PaystackWebhookEvent = z.infer<typeof PaystackWebhookEventSchema>;
  * Wallet summary response schema.
  */
 export const WalletSummaryResponseSchema = z.object({
-  balanceKobo: KoboAmountSchema,
+  balanceKobo: SignedKoboAmountSchema,
   escrowLockedKobo: KoboAmountSchema,
+  isDebtLocked: z.boolean().default(false),
   paystackDedicatedAccountNumber: z.string().optional(),
   paystackBankName: z.string().optional(),
   recentTransactions: z.array(z.any()),
 });
 export type WalletSummaryResponse = z.infer<typeof WalletSummaryResponseSchema>;
+
 

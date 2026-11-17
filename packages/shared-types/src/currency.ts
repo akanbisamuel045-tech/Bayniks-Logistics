@@ -36,3 +36,5 @@ export function formatNaira(kobo: number): string {
 }
 
 export const KoboAmountSchema = z.number().int().nonnegative('Amount in kobo must be a non-negative integer');
+export const SignedKoboAmountSchema = z.number().int('Amount in kobo must be an integer');
+

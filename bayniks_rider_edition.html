@@ -1,0 +1,4122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>BAYNIKS Rider Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS & MULTI-TIER THEME SYSTEM (LIGHT DEFAULT / DARK MODE)
+       ========================================================================== */
+    :root {
+      --backdrop-outer: #E6E9EF;
+      --bg-canvas: #F5F6F8;
+      --bg-card: #FFFFFF;
+      --bg-subcard: #F8F9FA;
+      --bg-input: #F1F3F5;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+
+      --text-primary: #11151E;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+
+      --accent-orange: #FF6D1F;
+      --accent-orange-hover: #EA580C;
+      --accent-peach: #FFF1E8;
+      --accent-peach-border: rgba(255, 109, 31, 0.30);
+
+      --accent-emerald: #10B981;
+      --accent-emerald-bg: #ECFDF5;
+      --accent-emerald-text: #047857;
+
+      --accent-red: #EF4444;
+      --accent-red-bg: #FEF2F2;
+      --accent-red-text: #B91C1C;
+
+      --shadow-shell: 0 20px 60px rgba(17, 21, 30, 0.14);
+      --shadow-card: 0 4px 18px rgba(17, 21, 30, 0.045);
+      --shadow-orange: 0 8px 20px rgba(255, 109, 31, 0.30);
+
+      /* Full-View Map Surface Tokens (Light Mode) */
+      --map-land: #EEF1F5;
+      --map-water: #D4E6F6;
+      --map-park: #DCF2E5;
+      --map-road-minor: #FFFFFF;
+      --map-road-major: #CBD5E1;
+      --map-bridge: #94A3B8;
+      --map-label: #475569;
+      --map-glass: rgba(255, 255, 255, 0.90);
+
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Space Grotesk', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --radius-card: 24px;
+      --radius-subcard: 16px;
+      --radius-btn: 16px;
+      --radius-pill: 9999px;
+    }
+
+    [data-theme="dark"] {
+      --backdrop-outer: #070A0F;
+      /* Level 0: Obsidian Canvas */
+      --bg-canvas: #0F131A;
+      /* Level 1: Lifted Slate Cards */
+      --bg-card: #171E2B;
+      /* Level 2: Nested Subcards & Form Inputs */
+      --bg-subcard: #212B3E;
+      --bg-input: #212B3E;
+
+      --border-color: rgba(255, 255, 255, 0.09);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+
+      --accent-peach: rgba(255, 109, 31, 0.16);
+      --accent-peach-border: rgba(255, 109, 31, 0.38);
+
+      --accent-emerald-bg: rgba(16, 185, 129, 0.16);
+      --accent-emerald-text: #34D399;
+
+      --accent-red-bg: rgba(239, 68, 68, 0.18);
+      --accent-red-text: #F87171;
+
+      --shadow-shell: 0 24px 70px rgba(0, 0, 0, 0.72);
+      --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.32);
+
+      /* Full-View Map Surface Tokens (Dark Mode) */
+      --map-land: #0D121B;
+      --map-water: #0A1B2E;
+      --map-park: #0F231E;
+      --map-road-minor: #1B2436;
+      --map-road-major: #2B3750;
+      --map-bridge: #475569;
+      --map-label: #94A3B8;
+      --map-glass: rgba(23, 30, 43, 0.90);
+    }
+
+    /* ==========================================================================
+       2. RESET & STRICT MOBILE APP VIEWPORT SHELL (MAX-WIDTH: 430PX)
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      background-color: var(--backdrop-outer);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* Pure Mobile Viewport Shell */
+    .mobile-app-shell {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100dvh;
+      height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background-color: var(--bg-canvas);
+      box-shadow: var(--shadow-shell);
+      transition: background-color 0.25s ease;
+    }
+
+    @media (max-width: 430px) {
+      .mobile-app-shell {
+        max-width: 100vw;
+        box-shadow: none;
+      }
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+      border: none;
+      background: none;
+      outline: none;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       3. TYPOGRAPHY HELPERS
+       ========================================================================== */
+    .tabular-num {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .micro-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      display: block;
+    }
+
+    /* ==========================================================================
+       4. SCROLLABLE MOBILE VIEWPORT STAGE
+       ========================================================================== */
+    .mobile-scroll-stage {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 14px 16px 24px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-scroll-stage::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-screen {
+      display: none;
+      animation: screenFadeIn 0.22s ease forwards;
+    }
+
+    .tab-screen.active {
+      display: block;
+    }
+
+    @keyframes screenFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stack-14 {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stack-10 {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       5. SURFACE CARDS & SIGNATURE ATOMIC ORANGE BORDERS
+       ========================================================================== */
+    .surface-card {
+      background-color: var(--bg-card);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .surface-card.orange-frame {
+      border: 1.5px solid var(--accent-orange);
+    }
+
+    .sub-card {
+      background-color: var(--bg-subcard);
+      border-radius: var(--radius-subcard);
+      border: 1px solid var(--border-subtle);
+      padding: 12px;
+    }
+
+    /* ==========================================================================
+       6. ESPRESSO-CHARCOAL HERO CARD (#191615)
+       ========================================================================== */
+    .hero-espresso-card {
+      background: radial-gradient(circle at 90% 10%, rgba(255, 109, 31, 0.30) 0%, rgba(25, 22, 21, 0) 58%), #191615;
+      border-radius: 26px;
+      padding: 16px;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 109, 31, 0.32);
+      box-shadow: 0 12px 28px rgba(17, 21, 30, 0.18);
+    }
+
+    /* Top Control Strip inside Hero */
+    .hero-utility-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hero-brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+    }
+
+    .hero-brand-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-top-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-toggle-pill {
+      height: 30px;
+      padding: 0 9px;
+      border-radius: var(--radius-pill);
+      background-color: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #F8FAFC;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hero-status-pill {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .hero-status-pill.offline {
+      background-color: rgba(255, 255, 255, 0.09);
+      color: #CBD5E1;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .hero-status-pill.online {
+      background-color: rgba(16, 185, 129, 0.20);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #94A3B8;
+    }
+
+    .hero-status-pill.online .pulse-dot {
+      background-color: #10B981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+      animation: dotPulse 1.6s infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.7; }
+    }
+
+    .hero-bell-btn {
+      position: relative;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-bell-dot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      border: 1.5px solid #191615;
+    }
+
+    /* Rider Identity Row inside Hero */
+    .hero-rider-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .avatar-orange-ring {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF6D1F, #FB923C);
+      padding: 2px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-core {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: #241F1D;
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-greeting {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+
+    .pro-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      background-color: rgba(255, 109, 31, 0.24);
+      border: 1px solid rgba(255, 109, 31, 0.5);
+      color: #FB923C;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hero-subline {
+      font-size: 11px;
+      color: #A8A29E;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    /* Inner Translucent Earnings + QR Scan Bar */
+    .hero-earnings-glass {
+      margin-top: 14px;
+      background-color: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      border-radius: 18px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .hero-money {
+      font-family: var(--font-mono);
+      font-size: 23px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .hero-drops-sub {
+      font-size: 11px;
+      color: #D6D3D1;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    .hero-qr-action {
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 13px;
+      background-color: rgba(255, 109, 31, 0.24);
+      border: 1px solid rgba(255, 109, 31, 0.48);
+      color: #FB923C;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+
+    .hero-qr-action:active {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      transform: scale(0.96);
+    }
+
+    /* ==========================================================================
+       7. PROMINENT 56PX AVAILABILITY BAR
+       ========================================================================== */
+    .availability-bar {
+      height: 56px;
+      border-radius: 18px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1.5px solid var(--border-color);
+      background-color: var(--bg-card);
+      box-shadow: var(--shadow-card);
+      transition: all 0.22s ease;
+    }
+
+    .availability-bar.is-online {
+      background-color: var(--accent-peach);
+      border-color: var(--accent-orange);
+    }
+
+    .avail-switch-track {
+      width: 52px;
+      height: 30px;
+      border-radius: var(--radius-pill);
+      background-color: #CBD5E1;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.22s ease;
+      flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .avail-switch-track {
+      background-color: #334155;
+    }
+
+    .availability-bar.is-online .avail-switch-track {
+      background-color: var(--accent-orange);
+      justify-content: flex-end;
+    }
+
+    .avail-switch-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+    }
+
+    /* ==========================================================================
+       8. 4-COLUMN ROUNDED-SQUARE METRIC & QUICK ACTION TILES
+       ========================================================================== */
+    .kpi-4-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .kpi-tile {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 11px 6px;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: transform 0.14s ease, border-color 0.2s ease;
+    }
+
+    .kpi-tile.tappable:active {
+      transform: scale(0.96);
+      border-color: var(--accent-orange);
+    }
+
+    .kpi-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background-color: var(--accent-peach);
+      color: var(--accent-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      line-height: 1.15;
+    }
+
+    /* ==========================================================================
+       9. CHUNKY GLOVE-FRIENDLY MOBILE BUTTONS (54PX - 58PX)
+       ========================================================================== */
+    .btn-orange-xl {
+      width: 100%;
+      height: 54px;
+      padding: 0 18px;
+      border-radius: var(--radius-btn);
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: var(--shadow-orange);
+      transition: background-color 0.18s, transform 0.12s;
+    }
+
+    .btn-orange-xl:active {
+      background-color: var(--accent-orange-hover);
+      transform: scale(0.98);
+    }
+
+    .btn-neutral-xl {
+      width: 100%;
+      height: 54px;
+      padding: 0 16px;
+      border-radius: var(--radius-btn);
+      background-color: var(--bg-subcard);
+      border: 1.5px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: border-color 0.18s, transform 0.12s;
+    }
+
+    .btn-neutral-xl:active {
+      border-color: var(--accent-orange);
+      transform: scale(0.98);
+    }
+
+    .pill-peach-btn {
+      height: 32px;
+      padding: 0 11px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-peach);
+      border: 1px solid var(--accent-peach-border);
+      color: var(--accent-orange);
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill-peach-btn:active {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+    }
+
+    /* ==========================================================================
+       10. ACTIVE MISSION STEPPER & DUAL-COLUMN PICKUP / DROP-OFF
+       ========================================================================== */
+    .live-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-peach);
+      color: var(--accent-orange);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .live-chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      animation: dotPulse 1.5s infinite;
+    }
+
+    .stepper-4-track {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin: 10px 0 12px 0;
+    }
+
+    .step-bar-seg {
+      height: 5px;
+      border-radius: var(--radius-pill);
+      background-color: var(--border-color);
+      transition: background-color 0.25s ease;
+    }
+
+    .step-bar-seg.done {
+      background-color: var(--accent-orange);
+    }
+
+    .step-bar-seg.active {
+      background-color: var(--accent-orange);
+      box-shadow: 0 0 8px rgba(255, 109, 31, 0.5);
+    }
+
+    .dual-route-boxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .node-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 2px;
+    }
+
+    .node-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    .check-item-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .check-item-row input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent-orange);
+    }
+
+    /* ==========================================================================
+       11. NEARBY DELIVERY ZONES SURGE RADAR MAP
+       ========================================================================== */
+    .surge-radar-canvas {
+      position: relative;
+      width: 100%;
+      height: 175px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background-color: #EAECEF;
+      margin-top: 10px;
+    }
+
+    [data-theme="dark"] .surge-radar-canvas {
+      background-color: #121824;
+    }
+
+    .hub-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hub-pin.hot {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+    }
+
+    .hub-pin.warm {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1.5px solid var(--accent-orange);
+    }
+
+    .rider-gps-puck {
+      position: absolute;
+      left: 48%;
+      top: 58%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #11151E;
+      border: 2.5px solid var(--accent-orange);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 7px rgba(255, 109, 31, 0.24);
+    }
+
+    /* ==========================================================================
+       12. ANCHORED MOBILE BOTTOM NAVIGATION BAR (HEIGHT: 68PX)
+       ========================================================================== */
+    .mobile-bottom-nav {
+      height: 68px;
+      flex-shrink: 0;
+      width: 100%;
+      background-color: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      z-index: 40;
+      box-shadow: 0 -6px 22px rgba(17, 21, 30, 0.06);
+    }
+
+    .nav-tab-btn {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: var(--text-secondary);
+      font-size: 9.5px;
+      font-weight: 700;
+      transition: color 0.18s ease;
+    }
+
+    .nav-circle-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab-btn.active .nav-circle-wrap {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      box-shadow: 0 5px 14px rgba(255, 109, 31, 0.38);
+    }
+
+    .nav-tab-btn.active {
+      color: var(--accent-orange);
+      font-weight: 800;
+    }
+
+    /* Central Dark Charcoal (#22252A) QR / Radar Quick-Action Orb */
+    .nav-center-qr-orb {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #22252A;
+      color: #FFFFFF;
+      border: 2px solid var(--accent-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin: 0 2px;
+      box-shadow: 0 6px 16px rgba(17, 21, 30, 0.28);
+      transition: transform 0.14s ease;
+    }
+
+    .nav-center-qr-orb:active {
+      transform: scale(0.92);
+    }
+
+    /* ==========================================================================
+       13. MOBILE BOTTOM-SHEET MODALS, QR SCANNER & OTP KEYPAD
+       ========================================================================== */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background-color: rgba(11, 15, 23, 0.74);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      z-index: 60;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeOverlay 0.2s ease forwards;
+    }
+
+    @keyframes fadeOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .bottom-sheet-panel {
+      width: 100%;
+      max-height: 90dvh;
+      overflow-y: auto;
+      background-color: var(--bg-card);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      border-top: 1px solid var(--border-color);
+      padding: 18px 18px 26px 18px;
+      box-shadow: 0 -14px 36px rgba(0, 0, 0, 0.35);
+      animation: slideSheetUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .bottom-sheet-panel::-webkit-scrollbar {
+      display: none;
+    }
+
+    @keyframes slideSheetUp {
+      from { transform: translateY(28px); opacity: 0.75; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .sheet-drag-handle {
+      width: 38px;
+      height: 4px;
+      border-radius: var(--radius-pill);
+      background-color: var(--border-color);
+      margin: 0 auto 14px auto;
+    }
+
+    .timer-bar-bg {
+      width: 100%;
+      height: 6px;
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-subcard);
+      overflow: hidden;
+      margin: 10px 0 14px 0;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #FF6D1F, #FB923C);
+      transition: width 1s linear;
+    }
+
+    /* Segmented Tabs */
+    .seg-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 15px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+    }
+
+    .seg-tab {
+      height: 38px;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      transition: all 0.18s ease;
+    }
+
+    .seg-tab.active {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(255, 109, 31, 0.28);
+    }
+
+    /* QR Viewfinder & Invariant White Matrix */
+    .qr-scanner-frame {
+      position: relative;
+      width: 224px;
+      height: 224px;
+      margin: 14px auto;
+      border-radius: 22px;
+      background-color: #0D1117;
+      border: 2px solid rgba(255, 109, 31, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .qr-scanner-frame.torch-active {
+      background-color: #29221B;
+      box-shadow: 0 0 28px rgba(251, 191, 36, 0.38);
+    }
+
+    .reticle {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-color: var(--accent-orange);
+      border-style: solid;
+    }
+    .reticle.tl { top: 12px; left: 12px; border-width: 4px 0 0 4px; border-top-left-radius: 9px; }
+    .reticle.tr { top: 12px; right: 12px; border-width: 4px 4px 0 0; border-top-right-radius: 9px; }
+    .reticle.bl { bottom: 12px; left: 12px; border-width: 0 0 4px 4px; border-bottom-left-radius: 9px; }
+    .reticle.br { bottom: 12px; right: 12px; border-width: 0 4px 4px 0; border-bottom-right-radius: 9px; }
+
+    .scan-laser-beam {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background-color: var(--accent-orange);
+      box-shadow: 0 0 12px #FF6D1F;
+      animation: sweepBeam 2s ease-in-out infinite;
+    }
+
+    @keyframes sweepBeam {
+      0%, 100% { top: 22px; }
+      50% { top: 198px; }
+    }
+
+    .qr-white-invariant {
+      background-color: #FFFFFF !important;
+      padding: 10px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* OTP Keypad */
+    .otp-4-boxes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 260px;
+      margin: 14px auto;
+    }
+
+    .otp-digit-box {
+      height: 58px;
+      border-radius: 14px;
+      background-color: var(--bg-subcard);
+      border: 2px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .otp-digit-box.filled {
+      border-color: var(--accent-orange);
+      background-color: var(--accent-peach);
+      color: var(--accent-orange);
+    }
+
+    .keypad-3x4 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .pad-key {
+      height: 50px;
+      border-radius: 13px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pad-key:active {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+    }
+
+    /* Forms & Chat */
+    .field-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 13px;
+      border-radius: 13px;
+      background-color: var(--bg-input);
+      border: 1.5px solid var(--border-color);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .field-input:focus {
+      border-color: var(--accent-orange);
+    }
+
+    .chart-7-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      align-items: flex-end;
+      height: 118px;
+      padding-top: 14px;
+    }
+
+    .chart-bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 5px;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .chart-bar-pill {
+      width: 100%;
+      max-width: 26px;
+      border-radius: 8px 8px 4px 4px;
+      background-color: var(--accent-peach);
+      border: 1px solid var(--accent-peach-border);
+      transition: all 0.2s ease;
+    }
+
+    .chart-bar-col.active .chart-bar-pill {
+      background-color: var(--accent-orange);
+      border-color: var(--accent-orange);
+    }
+
+    .chat-box-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 210px;
+      overflow-y: auto;
+      padding: 10px;
+      border-radius: 15px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+    }
+
+    .msg-bubble {
+      max-width: 84%;
+      padding: 9px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      line-height: 1.38;
+    }
+
+    .msg-bubble.in {
+      align-self: flex-start;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+    }
+
+    .msg-bubble.out {
+      align-self: flex-end;
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .close-circle-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    /* Mobile Toast Pill */
+    .mobile-toast {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      z-index: 105;
+      background-color: #11151E;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 109, 31, 0.5);
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      transform: translateY(-160%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mobile-toast.visible {
+      transform: translateY(0);
+    }
+
+    /* ==========================================================================
+       14. EDGE-TO-EDGE FULL-VIEW MAP OVERLAY (#fullMapScreen, Z-INDEX: 95)
+       ========================================================================== */
+    .full-map-screen {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 95;
+      background-color: var(--map-land);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: screenFadeIn 0.22s ease forwards;
+    }
+
+    .full-map-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .full-map-viewport:active {
+      cursor: grabbing;
+    }
+
+    .full-map-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 820px;
+      height: 960px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    .full-map-topbar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      background-color: var(--map-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(17, 21, 30, 0.14);
+    }
+
+    .full-map-back-btn {
+      height: 36px;
+      padding: 0 11px;
+      border-radius: 12px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      transition: transform 0.12s ease, border-color 0.18s ease;
+    }
+
+    .full-map-back-btn:active {
+      transform: scale(0.95);
+      border-color: var(--accent-orange);
+    }
+
+    .full-map-gps-badge {
+      height: 28px;
+      padding: 0 9px;
+      border-radius: var(--radius-pill);
+      background-color: var(--accent-emerald-bg);
+      color: var(--accent-emerald-text);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .full-map-controls {
+      position: absolute;
+      right: 12px;
+      top: 72px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .full-map-fab {
+      width: 44px;
+      height: 44px;
+      border-radius: 15px;
+      background-color: var(--map-glass);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(17, 21, 30, 0.15);
+      transition: all 0.16s ease;
+    }
+
+    .full-map-fab:active {
+      transform: scale(0.93);
+    }
+
+    .full-map-fab.active-surge {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      border-color: var(--accent-orange);
+      box-shadow: var(--shadow-orange);
+    }
+
+    /* Rider Pulsing Atomic Orange Puck on Full Map */
+    .full-map-rider-puck {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 6;
+      transition: left 0.45s ease, top 0.45s ease;
+    }
+
+    .rider-puck-beacon {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      border: 3px solid #FFFFFF;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 10px rgba(255, 109, 31, 0.26), 0 8px 18px rgba(0, 0, 0, 0.28);
+    }
+
+    .rider-puck-tag {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background-color: #11151E;
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 109, 31, 0.65);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Interactive Surge Zone Markers on Full Map */
+    .full-map-surge-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 6px 11px;
+      border-radius: var(--radius-pill);
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1.5px solid var(--accent-orange);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(17, 21, 30, 0.20);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 5;
+      transition: transform 0.14s ease;
+    }
+
+    .full-map-surge-pin.hot {
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+    }
+
+    .full-map-surge-pin:active {
+      transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    /* Active Route Pins & Polyline Animation */
+    .full-map-route-pin {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .route-pin-pill {
+      padding: 4px 9px;
+      border-radius: 10px;
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1.5px solid var(--accent-orange);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+      margin-bottom: 3px;
+    }
+
+    .route-pin-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      border: 2.5px solid #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    @keyframes routeDashFlow {
+      to { stroke-dashoffset: -28; }
+    }
+
+    .route-dash-anim {
+      animation: routeDashFlow 1.1s linear infinite;
+    }
+
+    /* Collapsible Bottom Floating Status Card / Pill */
+    .full-map-bottom-card {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 14px;
+      z-index: 10;
+      background-color: var(--bg-card);
+      border: 1.5px solid var(--accent-orange);
+      border-radius: 22px;
+      padding: 13px 14px;
+      box-shadow: 0 14px 34px rgba(17, 21, 30, 0.24);
+      transition: all 0.22s ease;
+    }
+
+    .full-map-bottom-card.minimized {
+      padding: 10px 13px;
+      border-radius: 18px;
+    }
+
+    .chevron-pill-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       15. REGULAR MOBILE PROFILE PAGE (HEADER, STATS BAR & GROUPED MENU LISTS)
+       ========================================================================== */
+    .profile-top-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 20px 16px 16px 16px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+
+    .profile-avatar-lg {
+      position: relative;
+      width: 74px;
+      height: 74px;
+      margin: 0 auto 10px auto;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF6D1F, #FB923C);
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: #191615;
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-avatar-edit-badge {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background-color: var(--accent-orange);
+      color: #FFFFFF;
+      border: 2px solid var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .profile-stat-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .profile-stat-cell + .profile-stat-cell {
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .menu-section-heading {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .menu-group-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .menu-row-btn {
+      width: 100%;
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+      background-color: transparent;
+      transition: background-color 0.16s ease;
+    }
+
+    .menu-row-btn:active {
+      background-color: var(--bg-subcard);
+    }
+
+    .menu-row-btn + .menu-row-btn {
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .menu-row-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .menu-row-icon.orange {
+      background-color: var(--accent-peach);
+      border-color: var(--accent-peach-border);
+      color: var(--accent-orange);
+    }
+
+    .menu-row-icon.emerald {
+      background-color: var(--accent-emerald-bg);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: var(--accent-emerald-text);
+    }
+
+    .menu-row-icon.red {
+      background-color: var(--accent-red-bg);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: var(--accent-red-text);
+    }
+
+    .menu-row-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.25;
+    }
+
+    .menu-row-sub {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .menu-chevron {
+      color: var(--text-muted);
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STRICT MOBILE VIEWPORT SHELL (MAX-WIDTH: 430PX) -->
+  <div class="mobile-app-shell">
+
+    <!-- Floating In-App Toast Notification -->
+    <div id="mobileToast" class="mobile-toast" role="status" aria-live="polite">
+      <span style="width:8px;height:8px;border-radius:50%;background:#FF6D1F;flex-shrink:0;"></span>
+      <span id="mobileToastMsg">Ready</span>
+    </div>
+
+    <!-- ========================================================================
+         SCROLLABLE MOBILE VIEWPORT STAGE
+         ======================================================================== -->
+    <main class="mobile-scroll-stage">
+
+      <!-- ======================================================================
+           TAB 1: HOME (MOBILE RIDER COCKPIT)
+           ====================================================================== -->
+      <section id="screen-home" class="tab-screen active">
+        <div class="stack-14">
+
+          <!-- Espresso-Charcoal Hero Card (#191615) -->
+          <div class="hero-espresso-card">
+            <!-- Top Utility Strip: Brand + Theme Pill + Online Pill + Bell -->
+            <div class="hero-utility-strip">
+              <div class="hero-brand-tag">
+                <span class="hero-brand-dot">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                </span>
+                <span>BAYNIKS</span>
+              </div>
+
+              <div class="hero-top-controls">
+                <button type="button" id="themeToggleBtn" class="theme-toggle-pill" onclick="toggleTheme()" aria-label="Switch Theme">
+                  <span id="themeIcon">☀️</span>
+                  <span id="themeLabel">Light</span>
+                </button>
+
+                <button type="button" id="heroStatusPill" class="hero-status-pill offline" onclick="toggleRiderAvailability()">
+                  <span class="pulse-dot"></span>
+                  <span id="heroStatusText">OFFLINE</span>
+                </button>
+
+                <button type="button" class="hero-bell-btn" onclick="openNotificationsSheet()" aria-label="Notifications">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  <span id="heroBellDot" class="hero-bell-dot"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Rider Identity Row -->
+            <div class="hero-rider-row">
+              <div class="avatar-orange-ring">
+                <div class="avatar-core">JO</div>
+              </div>
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <h1 class="hero-greeting">Good morning, Joseph 👋</h1>
+                  <span class="pro-badge">PRO</span>
+                </div>
+                <div class="hero-subline">Express Bike • <span class="tabular-num" style="color:#FFFFFF;">BLT-4912</span></div>
+              </div>
+            </div>
+
+            <!-- Inner Translucent Earnings + QR Scan Bar -->
+            <div class="hero-earnings-glass">
+              <div>
+                <span class="micro-label" style="color:#A8A29E;">Today's earnings</span>
+                <div id="heroEarningsVal" class="hero-money">₦18,450</div>
+                <div id="heroCompletedText" class="hero-drops-sub">8 completed deliveries today</div>
+              </div>
+              <button type="button" class="hero-qr-action" onclick="openVerificationSheet('qr')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 19h2v2h-2z" />
+                </svg>
+                <span>QR Scan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prominent 56px Availability Switch Bar -->
+          <div id="availabilityBar" class="availability-bar" onclick="toggleRiderAvailability()" role="switch" aria-checked="false" tabindex="0">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <div class="kpi-icon-box" style="width:36px;height:36px;flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                  <line x1="12" y1="2" x2="12" y2="12" />
+                </svg>
+              </div>
+              <div style="min-width:0;">
+                <div id="availTitle" style="font-size:13px;font-weight:800;line-height:1.2;">You are Offline</div>
+                <div id="availSubtitle" style="font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Tap to go online for assignments</div>
+              </div>
+            </div>
+            <div class="avail-switch-track">
+              <div class="avail-switch-thumb"></div>
+            </div>
+          </div>
+
+          <!-- DYNAMIC CENTER CARD (1.5PX SOLID #FF6D1F, BORDER-RADIUS: 24PX) -->
+          <!-- State 1: Offline Standby Prompt -->
+          <div id="cardStateOffline" class="surface-card orange-frame">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="micro-label">SHIFT DISPATCH STANDBY</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text-muted);">Capacity 0/1</span>
+            </div>
+            <h2 style="font-size:16px;font-weight:800;letter-spacing:-0.02em;">Go Online to start earning</h2>
+            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;margin-bottom:14px;">
+              Switch online to receive instant delivery assignments in Yaba &amp; Victoria Island. Strict 1-delivery capacity lock active.
+            </p>
+            <button type="button" class="btn-orange-xl" onclick="toggleRiderAvailability()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                <line x1="12" y1="2" x2="12" y2="12" />
+              </svg>
+              <span>Go Online &amp; Find Deliveries</span>
+            </button>
+          </div>
+
+          <!-- State 2: Online Radar Scanning Card -->
+          <div id="cardStateScanning" class="surface-card orange-frame hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="live-chip"><span class="live-chip-dot"></span> ONLINE • SCANNING</span>
+              <span class="tabular-num" style="font-size:11px;color:var(--text-secondary);">Capacity: 0/1</span>
+            </div>
+            <h2 style="font-size:16px;font-weight:800;letter-spacing:-0.02em;">Scanning Yaba &amp; VI corridor...</h2>
+            <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;margin-bottom:14px;">
+              High demand detected (+₦1,250 surge). Incoming requests require acceptance within 30 seconds.
+            </p>
+            <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:8px;">
+              <button type="button" class="btn-orange-xl" style="height:48px;font-size:13px;" onclick="openIncomingDispatchSheet()">
+                <span>Simulate Dispatch ⚡</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:48px;font-size:13px;" onclick="toggleRiderAvailability()">
+                <span>Go Offline</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- State 3: Active Mission Card (N=1 Locked) -->
+          <div id="cardStateActiveMission" class="surface-card orange-frame hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div>
+                <span class="micro-label">ACTIVE MISSION (1/1 LOCKED)</span>
+                <div style="display:flex;align-items:center;gap:7px;margin-top:2px;">
+                  <span class="tabular-num" style="font-size:16px;font-weight:800;">#BF-48291</span>
+                  <span id="missionStatusChip" class="live-chip"><span class="live-chip-dot"></span> Live</span>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <span class="micro-label">GUARANTEED PAY</span>
+                <span class="tabular-num" style="font-size:16px;color:var(--accent-orange);">₦3,200</span>
+              </div>
+            </div>
+
+            <!-- 4-Step Progress Bar -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:11px;font-weight:800;color:var(--accent-orange);">
+              <span id="missionStepTitle">Step 1 of 4: En Route to Pickup</span>
+              <span id="missionEtaText" class="tabular-num">ETA 6 min</span>
+            </div>
+            <div class="stepper-4-track">
+              <div id="mSeg1" class="step-bar-seg active"></div>
+              <div id="mSeg2" class="step-bar-seg"></div>
+              <div id="mSeg3" class="step-bar-seg"></div>
+              <div id="mSeg4" class="step-bar-seg"></div>
+            </div>
+
+            <!-- Dual-Column Pickup & Destination Breakdown -->
+            <div class="dual-route-boxes">
+              <div class="sub-card">
+                <span class="micro-label">PICKUP</span>
+                <div class="node-title">Kuchi Empire</div>
+                <span class="micro-label" style="margin-top:6px;">FROM</span>
+                <div class="node-sub">14 Commercial Ave, Yaba</div>
+              </div>
+              <div class="sub-card">
+                <span class="micro-label">RECIPIENT</span>
+                <div class="node-title">Sarah Jenkins</div>
+                <span class="micro-label" style="margin-top:6px;">TO</span>
+                <div class="node-sub">Victoria Island Towers, Plot 4</div>
+              </div>
+            </div>
+
+            <!-- Package, Fragility & Goods Weight Summary -->
+            <div class="sub-card" style="margin-bottom:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <div style="min-width:0;">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span class="micro-label">GOODS TO DELIVER</span>
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--accent-red-bg);color:var(--accent-red-text);border:1px solid rgba(239,68,68,0.35);font-size:10px;font-weight:800;letter-spacing:0.04em;">⚠️ FRAGILE</span>
+                  </div>
+                  <div style="font-size:12px;font-weight:800;margin-top:4px;">Sealed Electronics &amp; Glassware (Medium Box)</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                  <span class="micro-label">WEIGHT</span>
+                  <span class="tabular-num" style="font-size:13px;color:var(--accent-orange);">4.5 kg</span>
+                </div>
+              </div>
+              <div style="margin-top:8px;padding-top:7px;border-top:1px solid var(--border-subtle);font-size:11px;font-weight:700;color:var(--accent-red-text);display:flex;align-items:center;gap:6px;">
+                <span>Handle with Care • Keep upright &amp; cushion inside 60L box</span>
+              </div>
+            </div>
+
+            <!-- Step 2 Parcel Inspection Checklist -->
+            <div id="step2ChecklistBox" class="stack-10 hidden" style="margin-bottom:12px;">
+              <label class="check-item-row">
+                <input type="checkbox" checked />
+                <span>Verify Waybill #BF-48291 &amp; Sender Seal</span>
+              </label>
+              <label class="check-item-row">
+                <input type="checkbox" checked />
+                <span>Confirm Fragile label &amp; upright cushioning in 60L box</span>
+              </label>
+            </div>
+
+            <!-- Step 3 Canned SMS Updates -->
+            <div id="step3SmsBox" class="hidden" style="margin-bottom:12px;">
+              <span class="micro-label" style="margin-bottom:6px;">QUICK RECIPIENT SMS</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button type="button" class="pill-peach-btn" onclick="sendCannedSms('I am 5 minutes away from Victoria Island Towers')">🛵 5 mins away</button>
+                <button type="button" class="pill-peach-btn" onclick="sendCannedSms('I have arrived at the security gate')">🏢 At security gate</button>
+                <button type="button" class="pill-peach-btn" onclick="sendCannedSms('Please come down with your 4-digit OTP')">🔢 Ready for OTP</button>
+              </div>
+            </div>
+
+            <!-- Call Contact & Full Map Row -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+              <button type="button" class="btn-neutral-xl" style="height:46px;font-size:12px;" onclick="callActiveParty()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+                <span id="callPartyLabel">Call Sender</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:46px;font-size:12px;" onclick="openFullMapScreen()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                </svg>
+                <span>Full Map</span>
+              </button>
+            </div>
+
+            <!-- Step Progression CTA (Steps 1 to 3) -->
+            <div id="stepAdvanceWrap">
+              <button type="button" class="btn-orange-xl" onclick="advanceMissionStep()">
+                <span id="stepAdvanceBtnLabel">Arrived at Pickup Location →</span>
+              </button>
+            </div>
+
+            <!-- Step 4 Dual Handover Verification Triggers -->
+            <div id="step4VerifyButtons" class="stack-10 hidden">
+              <button type="button" class="btn-orange-xl" onclick="openVerificationSheet('qr')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <path d="M14 14h3v3h-3zM18 18h3v3h-3z" />
+                </svg>
+                <span>Scan QR / OTP Handover →</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- NEARBY DELIVERY ZONES CARD (1.5PX SOLID #FF6D1F, BORDER-RADIUS: 24PX) -->
+          <div class="surface-card orange-frame">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div>
+                <span class="micro-label">NEARBY DELIVERY ZONES</span>
+                <div style="font-size:14px;font-weight:800;margin-top:2px;">Yaba Tech Hub • <span style="color:var(--accent-orange);">1.4x Active</span></div>
+              </div>
+              <button type="button" class="pill-peach-btn" onclick="openFullMapScreen()">
+                <span>View full map →</span>
+              </button>
+            </div>
+
+            <div class="surge-radar-canvas">
+              <svg width="100%" height="175" viewBox="0 0 360 175" preserveAspectRatio="none" style="display:block;">
+                <path d="M0 38 L360 64 M0 124 L360 102 M86 0 L114 175 M252 0 L220 175" stroke="rgba(148,163,184,0.34)" stroke-width="5" />
+                <path d="M22 158 Q 175 95, 325 28" stroke="#FF6D1F" stroke-width="3" stroke-dasharray="6 5" fill="none" />
+                <circle cx="102" cy="56" r="34" fill="rgba(255,109,31,0.18)" />
+                <circle cx="274" cy="126" r="38" fill="rgba(255,109,31,0.18)" />
+              </svg>
+
+              <button type="button" class="hub-pin hot" style="left:29%;top:32%;" onclick="triggerSurgeDispatch()">
+                <span>🔥 Yaba Tech • 1.4x</span>
+              </button>
+              <button type="button" class="hub-pin warm" style="left:72%;top:24%;" onclick="triggerSurgeDispatch()">
+                <span>Ikeja • 1.2x</span>
+              </button>
+              <button type="button" class="hub-pin hot" style="left:74%;top:74%;" onclick="triggerSurgeDispatch()">
+                <span>⚡ VI Towers • 1.5x</span>
+              </button>
+
+              <div class="rider-gps-puck" title="Your Current Position">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="12 2 19 21 12 17 5 21 12 2" />
+                </svg>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--text-secondary);font-weight:600;">
+              <span>📍 Commercial Ave, Yaba</span>
+              <span class="tabular-num" style="color:var(--accent-emerald-text);">GPS Locked</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ======================================================================
+           TAB 3: EARNINGS (WALLET, BREAKDOWN & GTBANK CASH-OUT)
+           ====================================================================== -->
+      <section id="screen-earnings" class="tab-screen">
+        <div class="stack-14">
+          <!-- Wallet Balance Hero -->
+          <div class="hero-espresso-card">
+            <span class="micro-label" style="color:#A8A29E;">TOTAL WALLET BALANCE</span>
+            <div id="walletTotalDisplay" class="hero-money" style="font-size:28px;margin-top:5px;">₦92,300.00</div>
+            <div id="walletTodaySub" class="hero-drops-sub">Today's net earnings: ₦18,450 (8 drops)</div>
+            <div style="margin-top:14px;">
+              <button type="button" class="btn-orange-xl" style="height:50px;" onclick="openCashoutSheet()">
+                <span>Instant GTBank Cash-Out ⚡</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 7-Day Bar Chart -->
+          <div class="surface-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span class="micro-label">WEEKLY EARNINGS VELOCITY</span>
+                <div style="font-size:14px;font-weight:800;margin-top:2px;">Mon – Sun Shift Chart</div>
+              </div>
+              <span class="live-chip">Pro +5%</span>
+            </div>
+            <div id="earningsChartGrid" class="chart-7-grid"></div>
+            <div id="earningsChartCaption" style="text-align:center;font-size:11px;font-weight:700;color:var(--text-secondary);margin-top:8px;">
+              Tap a day bar • Saturday (Today): ₦18,450
+            </div>
+          </div>
+
+          <!-- Today's Itemized Breakdown -->
+          <div class="surface-card">
+            <span class="micro-label" style="margin-bottom:8px;">TODAY'S ITEMIZED BREAKDOWN</span>
+            <div class="stack-10">
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;">Base Delivery Fares</span>
+                <span id="earnBaseVal" class="tabular-num" style="font-size:13px;">₦11,200</span>
+              </div>
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;">Distance Pay (38.4 km)</span>
+                <span id="earnDistVal" class="tabular-num" style="font-size:13px;">₦4,150</span>
+              </div>
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:var(--accent-orange);">Peak Surge Multipliers</span>
+                <span id="earnSurgeVal" class="tabular-num" style="font-size:13px;color:var(--accent-orange);">+₦2,300</span>
+              </div>
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:var(--accent-emerald-text);">Customer Tips</span>
+                <span class="tabular-num" style="font-size:13px;color:var(--accent-emerald-text);">+₦800</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Payouts -->
+          <div class="surface-card">
+            <span class="micro-label" style="margin-bottom:8px;">RECENT PAYOUTS</span>
+            <div class="stack-10">
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:12px;font-weight:800;">GTBank •••• 8291</div>
+                  <div style="font-size:10px;color:var(--text-secondary);">Nov 12, 2026 • Instant Settlement</div>
+                </div>
+                <span class="tabular-num" style="font-size:13px;color:var(--accent-emerald-text);">₦45,000 ✓</span>
+              </div>
+              <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-size:12px;font-weight:800;">GTBank •••• 8291</div>
+                  <div style="font-size:10px;color:var(--text-secondary);">Nov 08, 2026 • Instant Settlement</div>
+                </div>
+                <span class="tabular-num" style="font-size:13px;color:var(--accent-emerald-text);">₦38,500 ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================================
+           TAB 4: SUPPORT (ROADSIDE SOS & LIVE DISPATCH CHAT)
+           ====================================================================== -->
+      <section id="screen-support" class="tab-screen">
+        <div class="stack-14">
+          <!-- High-Priority Roadside Emergency SOS Broadcast Card -->
+          <div class="surface-card" style="border:2px solid var(--accent-red);background-color:var(--accent-red-bg);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:10px;font-weight:800;color:var(--accent-red-text);letter-spacing:0.06em;">🚨 24/7 RAPID RESPONSE</span>
+              <span class="tabular-num" style="font-size:10px;color:var(--accent-red-text);">6.5165° N, 3.3855° E</span>
+            </div>
+            <h2 style="font-size:16px;font-weight:800;">Roadside Emergency SOS</h2>
+            <p style="font-size:12px;color:var(--text-secondary);margin-top:3px;margin-bottom:12px;">
+              Broadcasts live GPS coordinates, bike plate (BLT-4912), and ₦500k GIT cargo status to BAYNIKS Safety Dispatch.
+            </p>
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;">
+              <button type="button" class="btn-orange-xl" style="height:48px;font-size:12px;background-color:var(--accent-red);box-shadow:0 8px 18px rgba(239,68,68,0.34);" onclick="triggerSosBroadcast()">
+                <span>🚨 Broadcast SOS</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:48px;font-size:12px;" onclick="showMobileToast('Dialing 0800-BAYNIKS Toll-Free Dispatch...')">
+                <span>📞 0800-BAYNIKS</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Live Dispatch Chat Drawer -->
+          <div class="surface-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div>
+                <span class="micro-label">LIVE OPERATIONS DESK</span>
+                <h3 style="font-size:15px;font-weight:800;">Live Dispatch Chat</h3>
+              </div>
+              <span class="live-chip"><span class="live-chip-dot"></span> Online</span>
+            </div>
+
+            <div id="dispatchChatFeed" class="chat-box-feed">
+              <div class="msg-bubble in">
+                <strong>BAYNIKS Dispatch:</strong> Hello Joseph! Yaba &amp; Victoria Island corridors are active at 1.4x surge. Let us know if you need gate clearance or OTP support.
+              </div>
+            </div>
+
+            <!-- Canned Quick Replies -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Recipient unreachable at gate')">📵 Unreachable</button>
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Bridge traffic delay (+8 mins)')">🚦 Traffic delay</button>
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Need OTP verification assistance')">🔑 OTP help</button>
+            </div>
+
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="dispatchChatInput" class="field-input" placeholder="Message dispatch..." onkeydown="if(event.key==='Enter') submitDispatchChat()" />
+              <button type="button" class="btn-orange-xl" style="width:74px;height:46px;font-size:12px;flex-shrink:0;" onclick="submitDispatchChat()">Send</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================================
+           TAB 3: PROFILE (REGULAR CLEAN MOBILE PROFILE & SETTINGS LIST)
+           ====================================================================== -->
+      <section id="screen-profile" class="tab-screen">
+        <div class="stack-14">
+
+          <!-- Page Title Bar -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0 2px;">
+            <h1 style="font-size:20px;font-weight:800;letter-spacing:-0.02em;">Profile</h1>
+            <button type="button" class="pill-peach-btn" onclick="copyToClipboard('#BN-8492', 'Rider ID #BN-8492')">
+              <span class="tabular-num">ID: #BN-8492</span>
+              <span>📋</span>
+            </button>
+          </div>
+
+          <!-- Centered Regular Mobile Profile Header Card -->
+          <div class="profile-top-card">
+            <div class="profile-avatar-lg" onclick="openEditProfileSheet()" style="cursor:pointer;" title="Edit Profile">
+              <div class="profile-avatar-inner">JO</div>
+              <span class="profile-avatar-edit-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </span>
+            </div>
+
+            <h2 style="font-size:18px;font-weight:800;letter-spacing:-0.02em;">Joseph Okon</h2>
+            <div style="font-size:12px;color:var(--text-secondary);font-weight:600;margin-top:2px;">
+              Express Bike • <span class="tabular-num" style="color:var(--text-primary);">BLT-4912</span>
+            </div>
+
+            <div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;">
+              <span style="padding:3px 9px;border-radius:999px;background:var(--accent-emerald-bg);color:var(--accent-emerald-text);font-size:10.5px;font-weight:800;">
+                KYC Level 2 Verified ✓
+              </span>
+              <span class="pro-badge" style="background:var(--accent-peach);color:var(--accent-orange);border-color:var(--accent-peach-border);">
+                PRO TIER
+              </span>
+            </div>
+
+            <!-- Clean 3-Column Career Stats Strip -->
+            <div class="profile-stats-row">
+              <div class="profile-stat-cell">
+                <span class="tabular-num" style="font-size:15px;">4.95 ★</span>
+                <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Rating</span>
+              </div>
+              <div class="profile-stat-cell">
+                <span id="profileCompletedStat" class="tabular-num" style="font-size:15px;">542</span>
+                <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Deliveries</span>
+              </div>
+              <div class="profile-stat-cell">
+                <span class="tabular-num" style="font-size:15px;">98.2%</span>
+                <span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Acceptance</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Group 1: Account & Payouts -->
+          <div>
+            <span class="menu-section-heading">Account &amp; Earnings</span>
+            <div class="menu-group-card">
+              <button type="button" class="menu-row-btn" onclick="openAccountDetailsSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Personal Information</div>
+                    <div id="profileMenuAccountSub" class="menu-row-sub">+234 803 421 8900 • Yaba Central</div>
+                  </div>
+                </div>
+                <span class="menu-chevron">›</span>
+              </button>
+
+              <button type="button" class="menu-row-btn" onclick="openProfileEarningsSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon orange">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Earnings &amp; Wallet</div>
+                    <div id="profileMenuWalletSub" class="menu-row-sub">Balance: ₦92,300.00 • Today: ₦18,450</div>
+                  </div>
+                </div>
+                <span class="menu-chevron">›</span>
+              </button>
+
+              <button type="button" class="menu-row-btn" onclick="openBankAccountSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon emerald">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="3" y1="22" x2="21" y2="22" />
+                      <line x1="6" y1="18" x2="6" y2="11" />
+                      <line x1="10" y1="18" x2="10" y2="11" />
+                      <line x1="14" y1="18" x2="14" y2="11" />
+                      <line x1="18" y1="18" x2="18" y2="11" />
+                      <polygon points="12 2 20 7 4 7" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Payout Bank Account</div>
+                    <div id="profileMenuBankSub" class="menu-row-sub">Guaranty Trust Bank •••• 8291</div>
+                  </div>
+                </div>
+                <span class="menu-chevron">›</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Group 2: Vehicle, Safety & Support -->
+          <div>
+            <span class="menu-section-heading">Vehicle, Safety &amp; Support</span>
+            <div class="menu-group-card">
+              <button type="button" class="menu-row-btn" onclick="openVehicleDocsSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <polyline points="9 15 11 17 15 13" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Vehicle &amp; Documents</div>
+                    <div class="menu-row-sub">Bajaj Boxer BM150 • 3 Verified Docs</div>
+                  </div>
+                </div>
+                <span style="font-size:10.5px;font-weight:800;color:var(--accent-emerald-text);background:var(--accent-emerald-bg);padding:3px 8px;border-radius:999px;">Active</span>
+                <span class="menu-chevron">›</span>
+              </button>
+
+              <button type="button" class="menu-row-btn" onclick="openSupportSosSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon red">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Help, Support &amp; Roadside SOS</div>
+                    <div class="menu-row-sub">24/7 Live Dispatch Chat &amp; Emergency SOS</div>
+                  </div>
+                </div>
+                <span class="menu-chevron">›</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Group 3: App Preferences -->
+          <div>
+            <span class="menu-section-heading">Preferences</span>
+            <div class="menu-group-card">
+              <button type="button" class="menu-row-btn" onclick="toggleTheme()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon">
+                    <span id="profileThemeRowIcon" style="font-size:16px;">☀️</span>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Appearance</div>
+                    <div id="profileThemeRowSub" class="menu-row-sub">Light Mode active • Tap to switch</div>
+                  </div>
+                </div>
+                <span id="profileThemeRowBadge" class="tabular-num" style="font-size:11px;font-weight:800;color:var(--accent-orange);">Light</span>
+                <span class="menu-chevron">›</span>
+              </button>
+
+              <button type="button" class="menu-row-btn" onclick="openNotificationsSheet()">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                  <div class="menu-row-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                  </div>
+                  <div style="min-width:0;flex:1;">
+                    <div class="menu-row-title">Notifications &amp; Surge Alerts</div>
+                    <div class="menu-row-sub">Audio dispatch chimes &amp; hub alerts enabled</div>
+                  </div>
+                </div>
+                <span class="menu-chevron">›</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- End Shift / Sign Out Row -->
+          <div class="menu-group-card">
+            <button type="button" class="menu-row-btn" onclick="handleProfileEndShift()">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+                <div class="menu-row-icon red">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </div>
+                <div style="min-width:0;flex:1;">
+                  <div class="menu-row-title" style="color:var(--accent-red-text);">End Shift &amp; Go Offline</div>
+                  <div class="menu-row-sub">Pause incoming delivery dispatches</div>
+                </div>
+              </div>
+              <span class="menu-chevron">›</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================================================
+         ANCHORED MOBILE BOTTOM NAVIGATION BAR (HEIGHT: 68PX)
+         Home, Central QR Scanner Orb & Profile (with Earnings + Support)
+         ======================================================================== -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile Rider Navigation">
+      <button type="button" class="nav-tab-btn active" data-screen="home" onclick="switchMobileTab('home')">
+        <span class="nav-circle-wrap">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </span>
+        <span>Home</span>
+      </button>
+
+      <!-- Central Dark Charcoal (#22252A) QR / Radar Quick-Action Orb -->
+      <button type="button" class="nav-center-qr-orb" onclick="openVerificationSheet('qr')" title="Quick QR & Handover Scanner" aria-label="Quick QR & Handover Scanner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 19h2v2h-2z" />
+        </svg>
+      </button>
+
+      <button type="button" class="nav-tab-btn" data-screen="profile" onclick="switchMobileTab('profile')">
+        <span class="nav-circle-wrap">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </span>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+    <!-- ========================================================================
+         BOTTOM SHEET 1: INCOMING DISPATCH REQUEST (30-SECOND EXPLICIT ACCEPTANCE GATE)
+         ======================================================================== -->
+    <div id="sheetDispatchOffer" class="sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="offerSheetTitle">
+      <div class="bottom-sheet-panel">
+        <div class="sheet-drag-handle"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <h3 id="offerSheetTitle" style="font-size:17px;font-weight:800;letter-spacing:-0.02em;">New delivery request</h3>
+            <span class="live-chip">New trip</span>
+          </div>
+          <span id="offerCountdownPill" class="tabular-num" style="padding:4px 10px;border-radius:999px;background:var(--accent-orange);color:#FFFFFF;font-size:12px;">
+            30s
+          </span>
+        </div>
+
+        <div class="timer-bar-bg">
+          <div id="offerCountdownBar" class="timer-bar-fill"></div>
+        </div>
+
+        <div class="stack-10" style="margin-bottom:12px;">
+          <div class="sub-card" style="display:flex;align-items:flex-start;gap:10px;">
+            <div class="kpi-icon-box" style="flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <circle cx="12" cy="10" r="3" />
+                <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z" />
+              </svg>
+            </div>
+            <div>
+              <span class="micro-label">PICKUP • YABA, LAGOS</span>
+              <div style="font-size:13px;font-weight:800;margin-top:2px;">Kuchi Empire</div>
+              <div style="font-size:11px;color:var(--text-secondary);">14 Commercial Ave, Yaba • 1.1 km away</div>
+            </div>
+          </div>
+
+          <div class="sub-card" style="display:flex;align-items:flex-start;gap:10px;">
+            <div class="kpi-icon-box" style="flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+            </div>
+            <div>
+              <span class="micro-label">DROP-OFF • VICTORIA ISLAND</span>
+              <div style="font-size:13px;font-weight:800;margin-top:2px;">Customer destination</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Victoria Island Towers, Lagos • Sarah Jenkins</div>
+            </div>
+          </div>
+
+          <!-- Goods Description & Weight Card -->
+          <div class="sub-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;min-width:0;">
+              <div class="kpi-icon-box" style="flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+              </div>
+              <div style="min-width:0;">
+                <span class="micro-label">GOODS TO DELIVER</span>
+                <div style="font-size:13px;font-weight:800;margin-top:2px;">Sealed Tech &amp; Fashion Parcel</div>
+                <div style="font-size:11px;color:var(--text-secondary);">Medium Box • Fits 60L Thermal Carrier</div>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;padding:6px 10px;border-radius:12px;background:var(--accent-peach);border:1px solid var(--accent-peach-border);">
+              <span class="micro-label" style="color:var(--accent-orange);">WEIGHT</span>
+              <div class="tabular-num" style="font-size:15px;color:var(--accent-orange);margin-top:1px;">4.5 kg</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-Column Route & Earnings Metrics -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+          <div class="sub-card" style="text-align:center;padding:9px 4px;">
+            <span class="micro-label">DISTANCE</span>
+            <div class="tabular-num" style="font-size:14px;margin-top:2px;">4.8 km</div>
+          </div>
+          <div class="sub-card" style="text-align:center;padding:9px 4px;">
+            <span class="micro-label">EST. TIME</span>
+            <div class="tabular-num" style="font-size:14px;margin-top:2px;">18 min</div>
+          </div>
+          <div class="sub-card" style="text-align:center;padding:9px 4px;background:var(--accent-peach);border-color:var(--accent-peach-border);">
+            <span class="micro-label" style="color:var(--accent-orange);">EARNINGS</span>
+            <div class="tabular-num" style="font-size:15px;color:var(--accent-orange);margin-top:2px;">₦3,200</div>
+          </div>
+        </div>
+
+        <!-- Chunky 54px Accept & Decline Buttons -->
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:8px;">
+          <button type="button" class="btn-orange-xl" onclick="acceptDeliveryOffer()">
+            <span>Accept trip ✓</span>
+          </button>
+          <button type="button" class="btn-neutral-xl" onclick="declineDeliveryOffer()">
+            <span>Decline</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         BOTTOM SHEET 2: MANDATORY DUAL HANDOVER VERIFICATION (QR & 4-DIGIT OTP)
+         ======================================================================== -->
+    <div id="sheetHandoverVerify" class="sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="verifySheetTitle">
+      <div class="bottom-sheet-panel">
+        <div class="sheet-drag-handle"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <span class="micro-label">PROOF OF DELIVERY</span>
+            <h3 id="verifySheetTitle" style="font-size:16px;font-weight:800;">Verify Package Handover</h3>
+          </div>
+          <button type="button" class="close-circle-btn" onclick="closeSheet('sheetHandoverVerify')" aria-label="Close">✕</button>
+        </div>
+
+        <div class="seg-bar" style="margin-bottom:12px;">
+          <button type="button" id="segQrBtn" class="seg-tab active" onclick="switchVerifyMode('qr')">📷 QR Code Scanner</button>
+          <button type="button" id="segOtpBtn" class="seg-tab" onclick="switchVerifyMode('otp')">🔢 4-Digit OTP</button>
+        </div>
+
+        <!-- Mode A: Camera QR Scanner -->
+        <div id="paneQrScanner">
+          <div id="qrCameraBox" class="qr-scanner-frame">
+            <div class="reticle tl"></div>
+            <div class="reticle tr"></div>
+            <div class="reticle bl"></div>
+            <div class="reticle br"></div>
+            <div class="scan-laser-beam"></div>
+
+            <!-- Invariant White QR Matrix for Camera Scanners -->
+            <div class="qr-white-invariant">
+              <svg width="104" height="104" viewBox="0 0 104 104" fill="none">
+                <rect x="6" y="6" width="26" height="26" rx="4" stroke="#11151E" stroke-width="5" />
+                <rect x="13" y="13" width="12" height="12" fill="#FF6D1F" />
+                <rect x="72" y="6" width="26" height="26" rx="4" stroke="#11151E" stroke-width="5" />
+                <rect x="79" y="13" width="12" height="12" fill="#FF6D1F" />
+                <rect x="6" y="72" width="26" height="26" rx="4" stroke="#11151E" stroke-width="5" />
+                <rect x="13" y="79" width="12" height="12" fill="#FF6D1F" />
+                <rect x="42" y="10" width="8" height="8" fill="#11151E" />
+                <rect x="54" y="18" width="8" height="8" fill="#11151E" />
+                <rect x="42" y="42" width="20" height="20" rx="4" fill="#FF6D1F" />
+                <rect x="12" y="46" width="14" height="8" fill="#11151E" />
+                <rect x="76" y="46" width="16" height="8" fill="#11151E" />
+                <rect x="46" y="74" width="10" height="18" fill="#11151E" />
+                <rect x="70" y="72" width="22" height="10" fill="#11151E" />
+              </svg>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center;margin-bottom:12px;">
+            <button type="button" id="torchBtn" class="pill-peach-btn" onclick="toggleCameraTorch()">
+              <span>🔦 Torch: OFF</span>
+            </button>
+          </div>
+
+          <button type="button" class="btn-orange-xl" onclick="finalizeVerifiedDelivery('QR Code Scanned ✓')">
+            <span>Verify &amp; Complete Handover ✓</span>
+          </button>
+        </div>
+
+        <!-- Mode B: 4-Digit Customer OTP Keypad -->
+        <div id="paneOtpKeypad" class="hidden">
+          <div style="text-align:center;">
+            <p style="font-size:12px;color:var(--text-secondary);">Enter recipient <strong>Sarah Jenkins'</strong> 4-digit PIN</p>
+            <span class="live-chip" style="margin-top:5px;">Recipient PIN Hint: 7482</span>
+          </div>
+
+          <div class="otp-4-boxes">
+            <div id="otpSlot0" class="otp-digit-box">•</div>
+            <div id="otpSlot1" class="otp-digit-box">•</div>
+            <div id="otpSlot2" class="otp-digit-box">•</div>
+            <div id="otpSlot3" class="otp-digit-box">•</div>
+          </div>
+
+          <div class="keypad-3x4">
+            <button type="button" class="pad-key" onclick="appendOtp('1')">1</button>
+            <button type="button" class="pad-key" onclick="appendOtp('2')">2</button>
+            <button type="button" class="pad-key" onclick="appendOtp('3')">3</button>
+            <button type="button" class="pad-key" onclick="appendOtp('4')">4</button>
+            <button type="button" class="pad-key" onclick="appendOtp('5')">5</button>
+            <button type="button" class="pad-key" onclick="appendOtp('6')">6</button>
+            <button type="button" class="pad-key" onclick="appendOtp('7')">7</button>
+            <button type="button" class="pad-key" onclick="appendOtp('8')">8</button>
+            <button type="button" class="pad-key" onclick="appendOtp('9')">9</button>
+            <button type="button" class="pad-key" style="font-size:12px;" onclick="resetOtp()">Clear</button>
+            <button type="button" class="pad-key" onclick="appendOtp('0')">0</button>
+            <button type="button" class="pad-key" onclick="popOtp()">⌫</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <button type="button" class="btn-orange-xl" onclick="submitOtpCode()">
+              <span>Confirm OTP &amp; Credit ₦3,200 ✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         BOTTOM SHEET 3: EDIT ACCOUNT DETAILS & PAYOUT BANK MODAL
+         ======================================================================== -->
+    <div id="sheetEditProfile" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="bottom-sheet-panel">
+        <div class="sheet-drag-handle"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <span class="micro-label">RIDER SETTINGS</span>
+            <h3 style="font-size:16px;font-weight:800;">Edit Account Details</h3>
+          </div>
+          <button type="button" class="close-circle-btn" onclick="closeSheet('sheetEditProfile')">✕</button>
+        </div>
+
+        <div class="stack-10" style="margin-bottom:14px;">
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">PHONE NUMBER</span>
+            <input type="tel" id="inpEditPhone" class="field-input tabular-num" value="+234 803 421 8900" />
+          </div>
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">EMAIL ADDRESS</span>
+            <input type="email" id="inpEditEmail" class="field-input" value="joseph.okon@bayniks.ng" />
+          </div>
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">HOME DEPOT</span>
+            <select id="inpEditDepot" class="field-input">
+              <option value="Yaba Central">Yaba Central</option>
+              <option value="Ikeja Commercial Hub">Ikeja Commercial Hub</option>
+              <option value="Victoria Island Station">Victoria Island Station</option>
+            </select>
+          </div>
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">PAYOUT BANK</span>
+            <select id="inpEditBank" class="field-input">
+              <option value="Guaranty Trust Bank">Guaranty Trust Bank</option>
+              <option value="Access Bank Plc">Access Bank Plc</option>
+              <option value="Zenith Bank Plc">Zenith Bank Plc</option>
+              <option value="First Bank of Nigeria">First Bank of Nigeria</option>
+            </select>
+          </div>
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">10-DIGIT ACCOUNT NUMBER</span>
+            <input type="text" id="inpEditAcct" class="field-input tabular-num" maxlength="10" value="0148298291" />
+          </div>
+        </div>
+
+        <button type="button" class="btn-orange-xl" onclick="saveProfileEdits()">
+          <span>Save Changes ✓</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         BOTTOM SHEET 4: DYNAMIC DETAIL SHEET (WAYBILL AUDIT / DOCS / MAP / CASHOUT)
+         ======================================================================== -->
+    <div id="sheetDynamicDetail" class="sheet-backdrop hidden" role="dialog" aria-modal="true">
+      <div class="bottom-sheet-panel">
+        <div class="sheet-drag-handle"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <span id="dynSheetKicker" class="micro-label">DETAILS</span>
+            <h3 id="dynSheetTitle" style="font-size:16px;font-weight:800;">Title</h3>
+          </div>
+          <button type="button" class="close-circle-btn" onclick="closeSheet('sheetDynamicDetail')">✕</button>
+        </div>
+        <div id="dynSheetBody"></div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+         EDGE-TO-EDGE FULL-VIEW INTERACTIVE LAGOS MAP (#fullMapScreen, Z-INDEX: 95)
+         Covers 100% of mobile viewport & hides bottom navigation bar while active
+         ======================================================================== -->
+    <div id="fullMapScreen" class="full-map-screen hidden" role="dialog" aria-modal="true" aria-label="Full View Lagos Radar Map">
+
+      <!-- Floating Translucent Top Bar -->
+      <div class="full-map-topbar">
+        <button type="button" class="full-map-back-btn" onclick="closeFullMapScreen()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          <span>Back</span>
+        </button>
+
+        <div style="text-align:center;min-width:0;flex:1;">
+          <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Yaba • Lagos Mainland</div>
+          <div style="font-size:10px;color:var(--text-secondary);font-weight:600;">4.0 km Corridor Radar</div>
+        </div>
+
+        <span class="full-map-gps-badge">
+          <span class="pulse-dot" style="background-color:#10B981;"></span>
+          <span>LIVE GPS</span>
+        </span>
+      </div>
+
+      <!-- Floating Right-Side Interactive Map Controls -->
+      <div class="full-map-controls" aria-label="Map Controls">
+        <button type="button" class="full-map-fab" onclick="zoomFullMap(0.22)" title="Zoom In" aria-label="Zoom In">+</button>
+        <button type="button" class="full-map-fab" onclick="zoomFullMap(-0.22)" title="Zoom Out" aria-label="Zoom Out">−</button>
+        <button type="button" class="full-map-fab" onclick="recenterFullMap()" title="Recenter GPS on Rider" aria-label="Recenter GPS">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <circle cx="12" cy="12" r="9" />
+            <circle cx="12" cy="12" r="3" />
+            <line x1="12" y1="1" x2="12" y2="4" />
+            <line x1="12" y1="20" x2="12" y2="23" />
+            <line x1="1" y1="12" x2="4" y2="12" />
+            <line x1="20" y1="12" x2="23" y2="12" />
+          </svg>
+        </button>
+        <button type="button" id="fabToggleSurge" class="full-map-fab active-surge" onclick="toggleFullMapSurge()" title="Toggle Surge Hotspots" aria-label="Toggle Surge Hotspots">🔥</button>
+      </div>
+
+      <!-- Interactive Drag-to-Pan & Zoom Canvas -->
+      <div id="fullMapViewport" class="full-map-viewport">
+        <div id="fullMapTransformLayer" class="full-map-layer">
+
+          <!-- Edge-to-Edge Lagos Geography SVG (Mainland, Lagoon, 3rd Mainland Bridge, VI, Lekki, Ikeja) -->
+          <svg width="820" height="960" viewBox="0 0 820 960" fill="none" style="display:block;">
+            <!-- Land Base -->
+            <rect x="0" y="0" width="820" height="960" fill="var(--map-land)" />
+
+            <!-- Park / Green Belt Accents (University of Lagos & Ikoyi Golf) -->
+            <path d="M350 310 Q 410 300 420 385 Q 375 415 340 375 Z" fill="var(--map-park)" />
+            <path d="M450 565 Q 525 555 535 615 Q 470 635 445 600 Z" fill="var(--map-park)" />
+
+            <!-- Lagos Lagoon & Five Cowrie Creek Water Bodies -->
+            <path d="M415 0 L 820 0 L 820 620 L 580 615 Q 505 535 425 540 Q 375 460 415 360 Q 430 200 415 0 Z" fill="var(--map-water)" />
+            <path d="M295 625 Q 465 620 645 645 L 820 665 L 820 715 L 635 685 Q 460 660 285 670 Z" fill="var(--map-water)" />
+            <path d="M0 785 Q 360 805 820 845 L 820 960 L 0 960 Z" fill="var(--map-water)" />
+
+            <!-- Secondary Street Grid (Mainland: Ikeja, Yaba, Surulere) -->
+            <g stroke="var(--map-road-minor)" stroke-width="6" stroke-linecap="round">
+              <path d="M60 150 L 380 175" />
+              <path d="M40 230 L 395 255" />
+              <path d="M70 330 L 390 355" />
+              <path d="M55 430 L 385 450" />
+              <path d="M80 530 L 380 545" />
+              <path d="M140 60 L 165 590" />
+              <path d="M235 50 L 255 600" />
+              <path d="M325 70 L 340 595" />
+              <!-- Island Street Grid (Ikoyi, VI, Lekki Phase 1) -->
+              <path d="M415 585 L 575 595" />
+              <path d="M365 705 L 775 735" />
+              <path d="M385 755 L 765 785" />
+              <path d="M465 665 L 485 795" />
+              <path d="M565 675 L 585 805" />
+              <path d="M675 680 L 695 815" />
+            </g>
+
+            <!-- Major Highways & Expressways -->
+            <g stroke="var(--map-road-major)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+              <!-- Ikorodu Road / Western Ave Corridor -->
+              <path d="M275 20 L 295 340 L 265 615" />
+              <!-- Herbert Macaulay / Yaba Commercial Ave -->
+              <path d="M335 190 L 350 475 L 315 620" />
+              <!-- Ozumba Mbadiwe / Lekki-Epe Expressway -->
+              <path d="M350 695 L 535 710 L 805 745" />
+            </g>
+
+            <!-- Third Mainland Bridge & Carter/Eko Bridges -->
+            <g stroke="var(--map-bridge)" stroke-width="10" stroke-linecap="round">
+              <path d="M355 340 Q 455 435 465 565" />
+              <path d="M285 575 Q 355 610 415 600" />
+              <!-- Lekki-Ikoyi Link Bridge -->
+              <path d="M565 605 L 625 695" />
+            </g>
+
+            <!-- Active Delivery Route Polyline (#BF-48291: Kuchi Empire Yaba -> VI Towers) -->
+            <g id="fullMapRouteGroup" class="hidden">
+              <path d="M322 355 L 355 340 Q 455 435 465 565 L 478 655 L 495 698" stroke="rgba(255, 109, 31, 0.28)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+              <path d="M322 355 L 355 340 Q 455 435 465 565 L 478 655 L 495 698" stroke="#FF6D1F" stroke-width="5" stroke-dasharray="9 6" stroke-linecap="round" stroke-linejoin="round" fill="none" class="route-dash-anim" />
+            </g>
+
+            <!-- Geographic District Labels -->
+            <g fill="var(--map-label)" font-family="Plus Jakarta Sans, sans-serif" font-weight="800" font-size="11" letter-spacing="1.4">
+              <text x="175" y="135">IKEJA HUB</text>
+              <text x="205" y="315">YABA CENTRAL HUB</text>
+              <text x="145" y="485">SURULERE</text>
+              <text x="530" y="295" opacity="0.72">LAGOS LAGOON</text>
+              <text x="415" y="455" transform="rotate(42 415 455)" font-size="9.5">THIRD MAINLAND BRIDGE</text>
+              <text x="468" y="578">IKOYI</text>
+              <text x="435" y="742">VICTORIA ISLAND TOWERS</text>
+              <text x="645" y="725">LEKKI PHASE 1</text>
+            </g>
+          </svg>
+
+          <!-- Active Delivery Pickup & Drop-off Pin Markers -->
+          <div id="fullMapRoutePins" class="hidden">
+            <div class="full-map-route-pin" style="left:322px;top:355px;">
+              <span class="route-pin-pill">Pickup: Kuchi Empire, Yaba</span>
+              <span class="route-pin-dot">P</span>
+            </div>
+            <div class="full-map-route-pin" style="left:495px;top:698px;">
+              <span class="route-pin-pill">Drop-off: Victoria Island Towers</span>
+              <span class="route-pin-dot" style="background:#11151E;border-color:#FF6D1F;">D</span>
+            </div>
+          </div>
+
+          <!-- Interactive Surge Hotspot Markers -->
+          <div id="fullMapSurgeLayer">
+            <button type="button" class="full-map-surge-pin hot" style="left:295px;top:270px;" onclick="selectMapSurgeHub('Yaba Tech Hub', '1.4x', '+₦1,250')">
+              <span>🔥 Yaba Tech Hub 1.4x • +₦1,250</span>
+            </button>
+            <button type="button" class="full-map-surge-pin hot" style="left:535px;top:665px;" onclick="selectMapSurgeHub('VI Towers', '1.5x', '+₦1,500')">
+              <span>⚡ VI Towers 1.5x • +₦1,500</span>
+            </button>
+            <button type="button" class="full-map-surge-pin" style="left:205px;top:165px;" onclick="selectMapSurgeHub('Ikeja Hub', '1.2x', '+₦850')">
+              <span>🔥 Ikeja Hub 1.2x • +₦850</span>
+            </button>
+          </div>
+
+          <!-- Pulsing Atomic Orange (#FF6D1F) Rider Location Puck -->
+          <div id="fullMapRiderPuck" class="full-map-rider-puck" style="left:336px;top:378px;">
+            <div class="rider-puck-beacon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 19 21 12 17 5 21 12 2" />
+              </svg>
+            </div>
+            <div class="rider-puck-tag">Joseph Okon • BLT-4912</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Collapsible Bottom Floating Status Pill / Card -->
+      <div id="fullMapBottomCard" class="full-map-bottom-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+            <span id="fmStatusChip" class="live-chip"><span class="live-chip-dot"></span> 1.4x Surge Active</span>
+            <span id="fmSummaryHeadline" style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Yaba Tech Hub • +₦1,250/drop</span>
+          </div>
+          <button type="button" id="fmCollapseBtn" class="chevron-pill-btn" onclick="toggleFullMapCard()" title="Minimize or Expand Card" aria-label="Minimize or Expand Card">
+            <svg id="fmChevronSvg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Expandable Card Details & Quick Actions -->
+        <div id="fmCardExpandedBody" style="margin-top:10px;">
+          <!-- Standby / Surge Info View -->
+          <div id="fmStandbyBody">
+            <p id="fmStandbyDesc" style="font-size:11.5px;color:var(--text-secondary);margin-bottom:10px;">
+              High courier demand across Yaba Central &amp; Third Mainland corridor. Go online or trigger a dispatch to start earning.
+            </p>
+            <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:8px;">
+              <button type="button" id="fmPrimaryStandbyBtn" class="btn-orange-xl" style="height:46px;font-size:12px;" onclick="handleFullMapStandbyCta()">
+                <span>Go Online &amp; Find Deliveries</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:46px;font-size:12px;" onclick="recenterFullMap()">
+                <span>◎ Recenter</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Delivery (#BF-48291) Telemetry View -->
+          <div id="fmActiveMissionBody" class="hidden">
+            <div class="sub-card" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;margin-bottom:10px;">
+              <div style="min-width:0;">
+                <span class="micro-label" id="fmMissionStepLabel">STEP 1 OF 4 • EN ROUTE TO PICKUP</span>
+                <div style="font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="fmMissionRouteLabel">Kuchi Empire → Victoria Island Towers</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <span class="tabular-num" style="font-size:13px;color:var(--accent-orange);" id="fmMissionEta">4.8 km • 18m</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:8px;">
+              <button type="button" class="btn-orange-xl" style="height:46px;font-size:12px;" onclick="handleFullMapMissionCta()">
+                <span id="fmMissionCtaText">Arrived at Pickup →</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:46px;font-size:12px;" onclick="callActiveParty()">
+                <span>📞 Call Contact</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       BAYNIKS RIDER MOBILE PORTAL — STATE & OPERATIONAL LOGIC
+       ========================================================================== */
+    const state = {
+      isOnline: false,
+      hasActiveDelivery: false,
+      missionStep: 1, // 1: En Route Pickup, 2: Pickup Checklist, 3: In Transit, 4: Handover Verification
+      todayEarnings: 18450,
+      walletBalance: 92300,
+      completedCount: 8,
+      basePay: 11200,
+      distPay: 4150,
+      surgePay: 2300,
+      torchActive: false,
+      otpInput: [],
+      countdownSec: 30,
+      countdownTimer: null,
+      fullMap: {
+        zoom: 0.92,
+        panX: -135,
+        panY: -145,
+        showSurge: true,
+        collapsed: false,
+        dragging: false,
+        startX: 0,
+        startY: 0
+      },
+      historyItems: [
+        { id: '#BF-48288', recipient: 'Tunde Bakare', route: 'Yaba Tech Hub → Lekki Phase 1', time: 'Today, 07:45 AM', fare: 3400, weight: '3.2 kg', fragile: true, proof: 'QR Code Verified ✓' },
+        { id: '#BF-48274', recipient: 'Amaka Eze', route: 'Surulere → Ikeja GRA', time: 'Today, 06:50 AM', fare: 2850, weight: '1.8 kg', fragile: false, proof: '4-Digit OTP Verified ✓' },
+        { id: '#BF-48261', recipient: 'David Osei', route: 'Commercial Ave → Ikoyi', time: 'Yesterday, 06:15 PM', fare: 3100, weight: '5.0 kg', fragile: true, proof: 'QR Code Verified ✓' },
+        { id: '#BF-48249', recipient: 'Chioma Nwosu', route: 'Maryland → Victoria Island', time: 'Yesterday, 04:30 PM', fare: 3600, weight: '2.4 kg', fragile: false, proof: '4-Digit OTP Verified ✓' }
+      ],
+      weekChart: [
+        { day: 'Mon', val: 12400, pct: 54 },
+        { day: 'Tue', val: 14800, pct: 66 },
+        { day: 'Wed', val: 11200, pct: 48 },
+        { day: 'Thu', val: 16500, pct: 76 },
+        { day: 'Fri', val: 18950, pct: 90 },
+        { day: 'Sat', val: 18450, pct: 86, active: true },
+        { day: 'Sun', val: 0, pct: 12 }
+      ],
+      profile: {
+        phone: '+234 803 421 8900',
+        email: 'joseph.okon@bayniks.ng',
+        depot: 'Yaba Central',
+        bank: 'Guaranty Trust Bank',
+        acct: '0148298291'
+      },
+      payoutHistory: [
+        { bank: 'GTBank •••• 8291', date: 'Nov 12, 2026 • Instant Settlement', amount: 45000 },
+        { bank: 'GTBank •••• 8291', date: 'Nov 08, 2026 • Instant Settlement', amount: 38500 }
+      ],
+      chatMessages: [
+        { sender: 'in', text: 'Hello Joseph! Yaba & Victoria Island corridors are active at 1.4x surge. Let us know if you need gate clearance or OTP support.' }
+      ]
+    };
+
+    /* ==========================================================================
+       1. INITIALIZATION & SAFE LOCALSTORAGE THEME PERSISTENCE
+       ========================================================================== */
+    function bootApp() {
+      let theme = 'light';
+      try {
+        const saved = localStorage.getItem('bayniks_mobile_rider_theme');
+        if (saved === 'dark' || saved === 'light') theme = saved;
+      } catch (err) {
+        theme = 'light';
+      }
+      setThemeMode(theme);
+      initFullMapPanGestures();
+      refreshAllViews();
+    }
+
+    function setThemeMode(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (icon && label) {
+        icon.textContent = mode === 'dark' ? '🌙' : '☀️';
+        label.textContent = mode === 'dark' ? 'Dark' : 'Light';
+      }
+      const pIcon = document.getElementById('profileThemeRowIcon');
+      const pSub = document.getElementById('profileThemeRowSub');
+      const pBadge = document.getElementById('profileThemeRowBadge');
+      if (pIcon) pIcon.textContent = mode === 'dark' ? '🌙' : '☀️';
+      if (pSub) pSub.textContent = mode === 'dark' ? 'Dark Mode active • Tap to switch' : 'Light Mode active • Tap to switch';
+      if (pBadge) pBadge.textContent = mode === 'dark' ? 'Dark' : 'Light';
+      try {
+        localStorage.setItem('bayniks_mobile_rider_theme', mode);
+      } catch (err) {}
+    }
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = cur === 'light' ? 'dark' : 'light';
+      setThemeMode(next);
+      showMobileToast(next === 'dark' ? 'Dark Mode enabled' : 'Light Mode enabled');
+    }
+
+    /* ==========================================================================
+       2. WEB AUDIO FEEDBACK CHIMES
+       ========================================================================== */
+    function playChime(freq, dur, wave) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = wave || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.11, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch (err) {}
+    }
+
+    /* ==========================================================================
+       3. MOBILE BOTTOM NAVIGATION & PROFILE MENU DETAIL SHEETS
+       ========================================================================== */
+    function switchMobileTab(screenKey) {
+      let targetKey = screenKey;
+      if (screenKey === 'earnings' || screenKey === 'support') {
+        targetKey = 'profile';
+      }
+
+      document.querySelectorAll('.tab-screen').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('screen-' + targetKey);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-screen') === targetKey);
+      });
+
+      const scrollStage = document.querySelector('.mobile-scroll-stage');
+      if (scrollStage) scrollStage.scrollTop = 0;
+
+      if (screenKey === 'earnings') {
+        openProfileEarningsSheet();
+      } else if (screenKey === 'support') {
+        openSupportSosSheet();
+      }
+    }
+
+    function handleProfileEndShift() {
+      if (state.hasActiveDelivery) {
+        showMobileToast('Capacity locked (1/1): Complete active delivery first');
+        return;
+      }
+      if (state.isOnline) {
+        toggleRiderAvailability();
+      } else {
+        showMobileToast('You are already Offline');
+      }
+    }
+
+    function scrollToProfileSection(sectionId) {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    /* ==========================================================================
+       4. STRICT N=1 CAPACITY LOCK & ONLINE / OFFLINE AVAILABILITY
+       ========================================================================== */
+    function toggleRiderAvailability() {
+      // Strict Rule: Cannot go offline while an active delivery is in progress
+      if (state.isOnline && state.hasActiveDelivery) {
+        showMobileToast('Capacity locked (1/1): Complete active delivery first');
+        return;
+      }
+
+      state.isOnline = !state.isOnline;
+      refreshAllViews();
+
+      if (state.isOnline) {
+        showMobileToast('You are ONLINE • Scanning Yaba corridor');
+        setTimeout(() => {
+          if (state.isOnline && !state.hasActiveDelivery) {
+            openIncomingDispatchSheet();
+          }
+        }, 500);
+      } else {
+        closeOfferSheet();
+        showMobileToast('You are now OFFLINE');
+      }
+    }
+
+    function triggerSurgeDispatch() {
+      if (state.hasActiveDelivery) {
+        showMobileToast('Capacity locked (1/1): Complete current delivery first');
+        return;
+      }
+      if (!state.isOnline) {
+        state.isOnline = true;
+        refreshAllViews();
+      }
+      openIncomingDispatchSheet();
+    }
+
+    /* ==========================================================================
+       5. EXPLICIT ACCEPTANCE GATE (30-SECOND DISPATCH OFFER POP-UP)
+       ========================================================================== */
+    function openIncomingDispatchSheet() {
+      if (state.hasActiveDelivery) {
+        showMobileToast('Only 1 active delivery allowed at a time');
+        return;
+      }
+
+      clearInterval(state.countdownTimer);
+      state.countdownSec = 30;
+
+      const pill = document.getElementById('offerCountdownPill');
+      const bar = document.getElementById('offerCountdownBar');
+      pill.textContent = '30s';
+      bar.style.width = '100%';
+
+      document.getElementById('sheetDispatchOffer').classList.remove('hidden');
+      playChime(780, 0.24, 'triangle');
+
+      state.countdownTimer = setInterval(() => {
+        state.countdownSec -= 1;
+        pill.textContent = state.countdownSec + 's';
+        bar.style.width = Math.max(0, (state.countdownSec / 30) * 100) + '%';
+
+        if (state.countdownSec <= 0) {
+          closeOfferSheet();
+          showMobileToast('Dispatch request expired (30s)');
+        }
+      }, 1000);
+    }
+
+    function closeOfferSheet() {
+      clearInterval(state.countdownTimer);
+      document.getElementById('sheetDispatchOffer').classList.add('hidden');
+    }
+
+    function declineDeliveryOffer() {
+      closeOfferSheet();
+      showMobileToast('Delivery request declined • Scanning for next trip');
+    }
+
+    function acceptDeliveryOffer() {
+      if (state.hasActiveDelivery) {
+        showMobileToast('Capacity locked (1/1): Complete current delivery first');
+        return;
+      }
+      closeOfferSheet();
+      state.hasActiveDelivery = true;
+      state.missionStep = 1;
+      refreshAllViews();
+      playChime(960, 0.22, 'sine');
+      showMobileToast('Trip #BF-48291 Accepted! Head to Kuchi Empire');
+    }
+
+    /* ==========================================================================
+       6. 4-STEP ACTIVE DELIVERY PROGRESSION
+       ========================================================================== */
+    function advanceMissionStep() {
+      if (!state.hasActiveDelivery) return;
+
+      if (state.missionStep === 1) {
+        state.missionStep = 2;
+        showMobileToast('Arrived at Pickup • Inspect parcel & seal');
+      } else if (state.missionStep === 2) {
+        state.missionStep = 3;
+        showMobileToast('Parcel collected! In transit to Sarah Jenkins');
+      } else if (state.missionStep === 3) {
+        state.missionStep = 4;
+        showMobileToast('Arrived at Drop-off • Verify QR or 4-digit OTP');
+      }
+      refreshAllViews();
+    }
+
+    function callActiveParty() {
+      if (state.missionStep <= 2) {
+        showMobileToast('Calling Sender: Kuchi Empire (+234 802 555 0192)...');
+      } else {
+        showMobileToast('Calling Recipient: Sarah Jenkins (+234 809 334 8821)...');
+      }
+    }
+
+    function sendCannedSms(msg) {
+      showMobileToast('Sent to Sarah Jenkins: "' + msg + '"');
+    }
+
+    /* ==========================================================================
+       7. MANDATORY DUAL HANDOVER VERIFICATION (QR SCANNER & 4-DIGIT OTP)
+       ========================================================================== */
+    function openVerificationSheet(mode) {
+      state.otpInput = [];
+      updateOtpSlots();
+      switchVerifyMode(mode || 'qr');
+      document.getElementById('sheetHandoverVerify').classList.remove('hidden');
+    }
+
+    function switchVerifyMode(mode) {
+      const qrTab = document.getElementById('segQrBtn');
+      const otpTab = document.getElementById('segOtpBtn');
+      const qrPane = document.getElementById('paneQrScanner');
+      const otpPane = document.getElementById('paneOtpKeypad');
+
+      if (mode === 'qr') {
+        qrTab.classList.add('active');
+        otpTab.classList.remove('active');
+        qrPane.classList.remove('hidden');
+        otpPane.classList.add('hidden');
+      } else {
+        otpTab.classList.add('active');
+        qrTab.classList.remove('active');
+        otpPane.classList.remove('hidden');
+        qrPane.classList.add('hidden');
+      }
+    }
+
+    function toggleCameraTorch() {
+      state.torchActive = !state.torchActive;
+      const box = document.getElementById('qrCameraBox');
+      const btn = document.getElementById('torchBtn');
+      box.classList.toggle('torch-active', state.torchActive);
+      btn.innerHTML = state.torchActive ? '<span>🔦 Torch: ON</span>' : '<span>🔦 Torch: OFF</span>';
+    }
+
+    function appendOtp(digit) {
+      if (state.otpInput.length >= 4) return;
+      state.otpInput.push(digit);
+      updateOtpSlots();
+      playChime(650, 0.07, 'sine');
+    }
+
+    function popOtp() {
+      state.otpInput.pop();
+      updateOtpSlots();
+    }
+
+    function resetOtp() {
+      state.otpInput = [];
+      updateOtpSlots();
+    }
+
+    function updateOtpSlots() {
+      for (let i = 0; i < 4; i++) {
+        const slot = document.getElementById('otpSlot' + i);
+        if (!slot) continue;
+        if (state.otpInput[i] !== undefined) {
+          slot.textContent = state.otpInput[i];
+          slot.classList.add('filled');
+        } else {
+          slot.textContent = '•';
+          slot.classList.remove('filled');
+        }
+      }
+    }
+
+    function submitOtpCode() {
+      const code = state.otpInput.join('');
+      if (code.length < 4) {
+        showMobileToast('Enter all 4 digits of recipient PIN (7482)');
+        return;
+      }
+      if (code !== '7482') {
+        playChime(230, 0.25, 'sawtooth');
+        showMobileToast('Incorrect PIN • Ask recipient for 7482');
+        resetOtp();
+        return;
+      }
+      finalizeVerifiedDelivery('4-Digit OTP Verified ✓');
+    }
+
+    function finalizeVerifiedDelivery(proofLabel) {
+      closeSheet('sheetHandoverVerify');
+      playChime(1040, 0.26, 'sine');
+
+      if (state.hasActiveDelivery) {
+        const fare = 3200;
+        state.todayEarnings += fare;
+        state.walletBalance += fare;
+        state.completedCount += 1;
+        state.basePay += 1800;
+        state.distPay += 850;
+        state.surgePay += 550;
+
+        state.weekChart[5].val = state.todayEarnings;
+        state.weekChart[5].pct = Math.min(100, Math.round((state.todayEarnings / 22000) * 100));
+
+        state.historyItems.unshift({
+          id: '#BF-48291',
+          recipient: 'Sarah Jenkins',
+          route: 'Kuchi Empire (Yaba) → Victoria Island',
+          time: 'Just now',
+          fare: fare,
+          weight: '4.5 kg',
+          fragile: true,
+          proof: proofLabel
+        });
+
+        state.hasActiveDelivery = false;
+        state.missionStep = 1;
+        refreshAllViews();
+        renderEarningsChart();
+        showMobileToast('Delivery Verified! +₦3,200 credited • Capacity 0/1');
+      } else {
+        showMobileToast('QR Pass Verified ✓');
+      }
+    }
+
+    /* ==========================================================================
+       8. UI STATE SYNCHRONIZATION
+       ========================================================================== */
+    function refreshAllViews() {
+      // Hero Status Pill & Availability Bar
+      const pill = document.getElementById('heroStatusPill');
+      const pillText = document.getElementById('heroStatusText');
+      const bar = document.getElementById('availabilityBar');
+      const availTitle = document.getElementById('availTitle');
+      const availSub = document.getElementById('availSubtitle');
+
+      if (state.isOnline) {
+        pill.classList.remove('offline');
+        pill.classList.add('online');
+        pillText.textContent = 'ONLINE';
+        bar.classList.add('is-online');
+        bar.setAttribute('aria-checked', 'true');
+        availTitle.textContent = state.hasActiveDelivery ? 'Online • Active Mission (1/1)' : 'You are Online';
+        availSub.textContent = state.hasActiveDelivery ? 'Locked until delivery completes' : 'Ready for Yaba & VI assignments';
+      } else {
+        pill.classList.remove('online');
+        pill.classList.add('offline');
+        pillText.textContent = 'OFFLINE';
+        bar.classList.remove('is-online');
+        bar.setAttribute('aria-checked', 'false');
+        availTitle.textContent = 'You are Offline';
+        availSub.textContent = 'Tap to go online for assignments';
+      }
+
+      // Dynamic Center Card on Home Tab
+      const cOff = document.getElementById('cardStateOffline');
+      const cScan = document.getElementById('cardStateScanning');
+      const cAct = document.getElementById('cardStateActiveMission');
+
+      cOff.classList.add('hidden');
+      cScan.classList.add('hidden');
+      cAct.classList.add('hidden');
+
+      if (state.hasActiveDelivery) {
+        cAct.classList.remove('hidden');
+        syncMissionStepperUI();
+      } else if (state.isOnline) {
+        cScan.classList.remove('hidden');
+      } else {
+        cOff.classList.remove('hidden');
+      }
+
+      // Earnings & KPI Numbers
+      const fmtToday = '₦' + state.todayEarnings.toLocaleString();
+      const fmtWallet = '₦' + state.walletBalance.toLocaleString() + '.00';
+      document.getElementById('heroEarningsVal').textContent = fmtToday;
+      document.getElementById('heroCompletedText').textContent = state.completedCount + ' completed deliveries today';
+
+      const profCareerDrops = document.getElementById('profileCompletedStat');
+      if (profCareerDrops) profCareerDrops.textContent = String(534 + state.completedCount);
+
+      const menuWalletSub = document.getElementById('profileMenuWalletSub');
+      if (menuWalletSub) menuWalletSub.textContent = `Balance: ${fmtWallet} • Today: ${fmtToday}`;
+
+      const menuAcctSub = document.getElementById('profileMenuAccountSub');
+      if (menuAcctSub) menuAcctSub.textContent = `${state.profile.phone} • ${state.profile.depot}`;
+
+      const menuBankSub = document.getElementById('profileMenuBankSub');
+      if (menuBankSub) menuBankSub.textContent = `${state.profile.bank} •••• ${state.profile.acct.slice(-4)}`;
+
+      const wTotal = document.getElementById('walletTotalDisplay');
+      const wToday = document.getElementById('walletTodaySub');
+      const eBase = document.getElementById('earnBaseVal');
+      const eDist = document.getElementById('earnDistVal');
+      const eSurge = document.getElementById('earnSurgeVal');
+      if (wTotal) wTotal.textContent = fmtWallet;
+      if (wToday) wToday.textContent = "Today's net earnings: " + fmtToday + ' (' + state.completedCount + ' drops)';
+      if (eBase) eBase.textContent = '₦' + state.basePay.toLocaleString();
+      if (eDist) eDist.textContent = '₦' + state.distPay.toLocaleString();
+      if (eSurge) eSurge.textContent = '+₦' + state.surgePay.toLocaleString();
+
+      // Sync Full-View Map if open
+      syncFullMapState();
+    }
+
+    function syncMissionStepperUI() {
+      const s = state.missionStep;
+      const title = document.getElementById('missionStepTitle');
+      const eta = document.getElementById('missionEtaText');
+      const chip = document.getElementById('missionStatusChip');
+      const callLbl = document.getElementById('callPartyLabel');
+      const advWrap = document.getElementById('stepAdvanceWrap');
+      const advLbl = document.getElementById('stepAdvanceBtnLabel');
+      const s2Box = document.getElementById('step2ChecklistBox');
+      const s3Box = document.getElementById('step3SmsBox');
+      const s4Btns = document.getElementById('step4VerifyButtons');
+
+      for (let i = 1; i <= 4; i++) {
+        const seg = document.getElementById('mSeg' + i);
+        seg.className = 'step-bar-seg';
+        if (i < s) seg.classList.add('done');
+        if (i === s) seg.classList.add('active');
+      }
+
+      s2Box.classList.add('hidden');
+      s3Box.classList.add('hidden');
+      s4Btns.classList.add('hidden');
+      advWrap.classList.remove('hidden');
+
+      if (s === 1) {
+        title.textContent = 'Step 1 of 4: En Route to Pickup';
+        eta.textContent = 'ETA 6 min';
+        chip.innerHTML = '<span class="live-chip-dot"></span> To Pickup';
+        callLbl.textContent = 'Call Sender';
+        advLbl.textContent = 'Arrived at Pickup Location →';
+      } else if (s === 2) {
+        title.textContent = 'Step 2 of 4: Parcel Collection';
+        eta.textContent = 'At Kuchi Empire';
+        chip.innerHTML = '<span class="live-chip-dot"></span> At Pickup';
+        callLbl.textContent = 'Call Sender';
+        s2Box.classList.remove('hidden');
+        advLbl.textContent = 'Confirm Package Collected →';
+      } else if (s === 3) {
+        title.textContent = 'Step 3 of 4: In Transit to Drop-Off';
+        eta.textContent = 'ETA 12 min';
+        chip.innerHTML = '<span class="live-chip-dot"></span> In Transit';
+        callLbl.textContent = 'Call Recipient';
+        s3Box.classList.remove('hidden');
+        advLbl.textContent = 'Arrived at Destination →';
+      } else if (s === 4) {
+        title.textContent = 'Step 4 of 4: Handover Verification';
+        eta.textContent = 'At VI Towers';
+        chip.innerHTML = '<span class="live-chip-dot"></span> Handover';
+        callLbl.textContent = 'Call Recipient';
+        advWrap.classList.add('hidden');
+        s4Btns.classList.remove('hidden');
+      }
+    }
+
+    /* ==========================================================================
+       9. HISTORY LEDGER & WAYBILL AUDIT SHEET
+       ========================================================================== */
+    function renderHistoryLedger() {
+      const box = document.getElementById('historyLedgerContainer');
+      if (!box) return;
+      const q = (document.getElementById('tripSearchBox')?.value || '').toLowerCase().trim();
+
+      const rows = state.historyItems.filter(h =>
+        h.id.toLowerCase().includes(q) ||
+        h.recipient.toLowerCase().includes(q) ||
+        h.route.toLowerCase().includes(q)
+      );
+
+      if (!rows.length) {
+        box.innerHTML = '<div class="surface-card" style="text-align:center;color:var(--text-secondary);">No matching deliveries found.</div>';
+        return;
+      }
+
+      box.innerHTML = rows.map((item, i) => `
+        <div class="surface-card" style="cursor:pointer;" onclick="openWaybillSheet(${i})">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="tabular-num" style="font-size:14px;">${item.id}</span>
+              ${item.fragile
+                ? '<span style="padding:2px 7px;border-radius:999px;background:var(--accent-red-bg);color:var(--accent-red-text);font-size:9.5px;font-weight:800;">⚠️ Fragile</span>'
+                : '<span style="padding:2px 7px;border-radius:999px;background:var(--bg-subcard);color:var(--text-secondary);border:1px solid var(--border-color);font-size:9.5px;font-weight:700;">📦 Standard</span>'}
+            </div>
+            <span class="tabular-num" style="font-size:14px;color:var(--accent-orange);">+₦${item.fare.toLocaleString()}</span>
+          </div>
+          <div style="font-size:13px;font-weight:700;">Recipient: ${item.recipient}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">${item.route}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px;padding-top:8px;border-top:1px solid var(--border-subtle);font-size:10px;">
+            <span style="color:var(--text-muted);">${item.time} • ${item.weight || '4.5 kg'}</span>
+            <span style="color:var(--accent-emerald-text);font-weight:800;">${item.proof}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openWaybillSheet(idx) {
+      const item = state.historyItems[idx];
+      if (!item) return;
+      document.getElementById('dynSheetKicker').textContent = 'WAYBILL RECEIPT & ROUTE AUDIT';
+      document.getElementById('dynSheetTitle').textContent = item.id + ' • Verified';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card">
+            <span class="micro-label">RECIPIENT &amp; CORRIDOR</span>
+            <div style="font-size:14px;font-weight:800;margin-top:2px;">${item.recipient}</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">${item.route}</div>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Handling Classification</span>
+            ${item.fragile
+              ? '<span style="font-size:12px;font-weight:800;color:var(--accent-red-text);">⚠️ Fragile • Handle with Care</span>'
+              : '<span style="font-size:12px;font-weight:700;color:var(--text-secondary);">📦 Standard Parcel</span>'}
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Goods Weight</span>
+            <span class="tabular-num" style="font-size:13px;">${item.weight || '4.5 kg'}</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Handover Proof</span>
+            <span style="font-size:12px;font-weight:800;color:var(--accent-emerald-text);">${item.proof}</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Net Payout</span>
+            <span class="tabular-num" style="font-size:15px;color:var(--accent-orange);">₦${item.fare.toLocaleString()}.00</span>
+          </div>
+          <button type="button" class="btn-orange-xl" style="height:48px;" onclick="closeSheet('sheetDynamicDetail')">Done</button>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    /* ==========================================================================
+       10. PROFILE SUB-SHEETS (EARNINGS, ACCOUNT, BANK, VEHICLE, SUPPORT & SOS)
+       ========================================================================== */
+    function openProfileEarningsSheet() {
+      const fmtToday = '₦' + state.todayEarnings.toLocaleString();
+      const fmtWallet = '₦' + state.walletBalance.toLocaleString() + '.00';
+      document.getElementById('dynSheetKicker').textContent = 'RIDER WALLET & LEDGER';
+      document.getElementById('dynSheetTitle').textContent = 'Earnings & Wallet';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="border:1.5px solid var(--accent-orange);background:var(--accent-peach);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="micro-label" style="color:var(--accent-orange);">AVAILABLE WALLET BALANCE</span>
+              <span class="live-chip">Pro +5%</span>
+            </div>
+            <div id="walletTotalDisplay" class="tabular-num" style="font-size:25px;margin-top:3px;">${fmtWallet}</div>
+            <div id="walletTodaySub" style="font-size:11px;color:var(--text-secondary);font-weight:600;margin-top:2px;">Today's net earnings: ${fmtToday} (${state.completedCount} drops)</div>
+            <div style="margin-top:10px;">
+              <button type="button" class="btn-orange-xl" style="height:46px;font-size:13px;" onclick="openCashoutSheet()">
+                <span>Instant ${state.profile.bank.split(' ')[0]} Cash-Out ⚡</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="micro-label">WEEKLY EARNINGS VELOCITY</span>
+              <span class="tabular-num" style="font-size:11px;color:var(--accent-orange);">₦92,300/wk</span>
+            </div>
+            <div id="earningsChartGrid" class="chart-7-grid"></div>
+            <div id="earningsChartCaption" style="text-align:center;font-size:11px;font-weight:700;color:var(--text-secondary);margin-top:6px;">
+              Tap a day bar • Saturday (Today): ${fmtToday}
+            </div>
+          </div>
+
+          <div class="sub-card">
+            <span class="micro-label" style="margin-bottom:6px;">TODAY'S ITEMIZED BREAKDOWN</span>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;"><span>Base Delivery Fares</span><span id="earnBaseVal" class="tabular-num">₦${state.basePay.toLocaleString()}</span></div>
+              <div style="display:flex;justify-content:space-between;"><span>Distance Pay (38.4 km)</span><span id="earnDistVal" class="tabular-num">₦${state.distPay.toLocaleString()}</span></div>
+              <div style="display:flex;justify-content:space-between;color:var(--accent-orange);"><span>Peak Surge Multipliers</span><span id="earnSurgeVal" class="tabular-num">+₦${state.surgePay.toLocaleString()}</span></div>
+              <div style="display:flex;justify-content:space-between;color:var(--accent-emerald-text);"><span>Customer Tips</span><span class="tabular-num">+₦800</span></div>
+            </div>
+          </div>
+
+          <div class="sub-card">
+            <span class="micro-label" style="margin-bottom:6px;">RECENT PAYOUTS</span>
+            <div id="recentPayoutsList" style="display:flex;flex-direction:column;gap:8px;">
+              ${state.payoutHistory.map(p => `
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-size:12px;font-weight:800;">${p.bank}</div>
+                    <div style="font-size:10px;color:var(--text-secondary);">${p.date}</div>
+                  </div>
+                  <span class="tabular-num" style="font-size:13px;color:var(--accent-emerald-text);">₦${p.amount.toLocaleString()} ✓</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+      renderEarningsChart();
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function openAccountDetailsSheet() {
+      document.getElementById('dynSheetKicker').textContent = 'PERSONAL & HUB PROFILE';
+      document.getElementById('dynSheetTitle').textContent = 'Personal Information';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:600;">Full Name</span>
+            <span style="font-size:12px;font-weight:800;">Joseph Okon</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:600;">Courier ID</span>
+            <button type="button" class="pill-peach-btn" style="height:26px;font-size:11px;" onclick="copyToClipboard('#BN-8492', 'Rider ID')">
+              <span class="tabular-num">#BN-8492</span> <span>📋</span>
+            </button>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:600;">Phone</span>
+            <span class="tabular-num" style="font-size:12px;">${state.profile.phone}</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:600;">Email</span>
+            <span style="font-size:12px;font-weight:700;">${state.profile.email}</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--text-secondary);font-weight:600;">Home Depot</span>
+            <span style="font-size:12px;font-weight:700;">${state.profile.depot}</span>
+          </div>
+          <button type="button" class="btn-orange-xl" style="height:48px;" onclick="closeSheet('sheetDynamicDetail'); openEditProfileSheet();">
+            <span>Edit Personal Details</span>
+          </button>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function openBankAccountSheet() {
+      document.getElementById('dynSheetKicker').textContent = 'SETTLEMENT ACCOUNT';
+      document.getElementById('dynSheetTitle').textContent = 'Payout Bank Account';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="border:1.5px solid var(--accent-orange);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span class="micro-label">VERIFIED BANK</span>
+              <span class="live-chip">Instant ⚡</span>
+            </div>
+            <div style="font-size:15px;font-weight:800;">${state.profile.bank}</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Account Name: JOSEPH OKON</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
+              <span class="tabular-num" style="font-size:18px;letter-spacing:0.06em;">${state.profile.acct}</span>
+              <button type="button" class="pill-peach-btn" onclick="copyToClipboard('${state.profile.acct}', 'Account number')">
+                <span>📋 Copy</span>
+              </button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:8px;">
+            <button type="button" class="btn-orange-xl" style="height:48px;font-size:13px;" onclick="openCashoutSheet()">
+              <span>Cash Out ⚡</span>
+            </button>
+            <button type="button" class="btn-neutral-xl" style="height:48px;font-size:12px;" onclick="closeSheet('sheetDynamicDetail'); openEditProfileSheet();">
+              <span>Change Bank</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function openVehicleDocsSheet() {
+      document.getElementById('dynSheetKicker').textContent = 'FLEET & COMPLIANCE';
+      document.getElementById('dynSheetTitle').textContent = 'Vehicle & Documents';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span class="micro-label">ASSIGNED VEHICLE</span>
+              <div style="font-size:14px;font-weight:800;margin-top:2px;">Bajaj Boxer BM150</div>
+            </div>
+            <span class="tabular-num" style="padding:4px 9px;border-radius:10px;background:var(--bg-card);border:1px solid var(--border-color);font-size:12px;">BLT-4912</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <span class="micro-label">CARGO INSURANCE</span>
+              <div style="font-size:12.5px;font-weight:800;margin-top:2px;">₦500,000 Goods-In-Transit</div>
+            </div>
+            <span style="font-size:11px;font-weight:800;color:var(--accent-emerald-text);">Active ✓</span>
+          </div>
+          <button type="button" class="sub-card" style="width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;" onclick="openDocumentSheet('Driver\\'s License (Class A)', 'LAG-09482190-NG', 'Nov 2028')">
+            <span style="font-size:12.5px;font-weight:700;">🪪 Driver's License</span>
+            <span style="font-size:11px;font-weight:800;color:var(--accent-emerald-text);">Verified ›</span>
+          </button>
+          <button type="button" class="sub-card" style="width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;" onclick="openDocumentSheet('Vehicle Insurance Policy', 'AXA-MOT-884120', 'Aug 2027')">
+            <span style="font-size:12.5px;font-weight:700;">🛡️ Vehicle Insurance</span>
+            <span style="font-size:11px;font-weight:800;color:var(--accent-emerald-text);">Verified ›</span>
+          </button>
+          <button type="button" class="sub-card" style="width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;" onclick="openDocumentSheet('LASRRA Courier Permit', 'LSR-2026-4912', 'Dec 2027')">
+            <span style="font-size:12.5px;font-weight:700;">📋 LASRRA Permit</span>
+            <span style="font-size:11px;font-weight:800;color:var(--accent-emerald-text);">Verified ›</span>
+          </button>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function openSupportSosSheet() {
+      document.getElementById('dynSheetKicker').textContent = '24/7 RIDER ASSISTANCE';
+      document.getElementById('dynSheetTitle').textContent = 'Support & Roadside SOS';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="border:1.5px solid var(--accent-red);background:var(--accent-red-bg);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:10px;font-weight:800;color:var(--accent-red-text);letter-spacing:0.06em;">🚨 RAPID RESPONSE</span>
+              <span class="tabular-num" style="font-size:10px;color:var(--accent-red-text);">6.5165° N, 3.3855° E</span>
+            </div>
+            <div style="font-size:14px;font-weight:800;">Roadside Emergency SOS</div>
+            <p style="font-size:11.5px;color:var(--text-secondary);margin:3px 0 10px 0;">
+              Broadcasts live GPS, plate BLT-4912, and ₦500k GIT cargo status to BAYNIKS Safety Dispatch.
+            </p>
+            <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;">
+              <button type="button" class="btn-orange-xl" style="height:44px;font-size:12px;background-color:var(--accent-red);box-shadow:0 6px 14px rgba(239,68,68,0.32);" onclick="triggerSosBroadcast()">
+                <span>🚨 Broadcast SOS</span>
+              </button>
+              <button type="button" class="btn-neutral-xl" style="height:44px;font-size:12px;" onclick="showMobileToast('Dialing 0800-BAYNIKS Toll-Free Dispatch...')">
+                <span>📞 0800-BAYNIKS</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span class="micro-label">LIVE DISPATCH CHAT</span>
+              <span class="live-chip"><span class="live-chip-dot"></span> Online</span>
+            </div>
+            <div id="dispatchChatFeed" class="chat-box-feed" style="max-height:170px;">
+              ${state.chatMessages.map(m => `
+                <div class="msg-bubble ${m.sender}">
+                  ${m.sender === 'in' ? '<strong>BAYNIKS Dispatch:</strong> ' : ''}${m.text}
+                </div>
+              `).join('')}
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;">
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Recipient unreachable at gate')">📵 Unreachable</button>
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Bridge traffic delay (+8 mins)')">🚦 Traffic delay</button>
+              <button type="button" class="pill-peach-btn" onclick="sendDispatchMsg('Need OTP verification assistance')">🔑 OTP help</button>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="dispatchChatInput" class="field-input" placeholder="Message dispatch..." onkeydown="if(event.key==='Enter') submitDispatchChat()" />
+              <button type="button" class="btn-orange-xl" style="width:74px;height:46px;font-size:12px;flex-shrink:0;" onclick="submitDispatchChat()">Send</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function renderEarningsChart() {
+      const grid = document.getElementById('earningsChartGrid');
+      const caption = document.getElementById('earningsChartCaption');
+      if (!grid) return;
+
+      grid.innerHTML = state.weekChart.map((item, idx) => `
+        <div class="chart-bar-col ${item.active ? 'active' : ''}" onclick="selectChartDay(${idx})">
+          <div class="chart-bar-pill" style="height:${item.pct}%;"></div>
+          <span style="font-size:10px;font-weight:800;color:${item.active ? 'var(--accent-orange)' : 'var(--text-secondary)'};">${item.day}</span>
+        </div>
+      `).join('');
+
+      const activeItem = state.weekChart.find(d => d.active) || state.weekChart[5];
+      if (caption && activeItem) {
+        caption.textContent = `Tap a day bar • ${activeItem.day}: ₦${activeItem.val.toLocaleString()}`;
+      }
+    }
+
+    function selectChartDay(idx) {
+      state.weekChart.forEach((d, i) => { d.active = i === idx; });
+      renderEarningsChart();
+    }
+
+    function openCashoutSheet() {
+      const bankName = state.profile.bank;
+      const acctNum = state.profile.acct;
+      document.getElementById('dynSheetKicker').textContent = 'INSTANT BANK SETTLEMENT';
+      document.getElementById('dynSheetTitle').textContent = 'Cash Out Wallet';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card">
+            <span class="micro-label">AVAILABLE TO WITHDRAW</span>
+            <div class="tabular-num" style="font-size:22px;color:var(--accent-orange);margin-top:2px;">₦${state.walletBalance.toLocaleString()}.00</div>
+          </div>
+          <div class="sub-card">
+            <span class="micro-label">DESTINATION ACCOUNT</span>
+            <div style="font-size:13px;font-weight:800;margin-top:2px;">${bankName} • ${acctNum}</div>
+            <div style="font-size:11px;color:var(--text-secondary);">Joseph Okon • Zero Transfer Fee</div>
+          </div>
+          <div>
+            <span class="micro-label" style="margin-bottom:4px;">AMOUNT TO WITHDRAW (₦)</span>
+            <input type="number" id="inpCashoutAmt" class="field-input tabular-num" value="${Math.min(state.walletBalance, 25000)}" max="${state.walletBalance}" min="1000" />
+          </div>
+          <button type="button" class="btn-orange-xl" onclick="processInstantCashout()">
+            <span>Transfer Now ⚡</span>
+          </button>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function processInstantCashout() {
+      const inp = document.getElementById('inpCashoutAmt');
+      const amt = Number(inp ? inp.value : 0);
+      if (!amt || amt < 1000) {
+        showMobileToast('Minimum cash-out amount is ₦1,000');
+        return;
+      }
+      if (amt > state.walletBalance) {
+        showMobileToast('Amount exceeds available wallet balance');
+        return;
+      }
+
+      state.walletBalance -= amt;
+      const bankName = state.profile.bank;
+      const last4 = state.profile.acct.slice(-4);
+      state.payoutHistory.unshift({
+        bank: `${bankName} •••• ${last4}`,
+        date: 'Just now • Instant Settlement',
+        amount: amt
+      });
+
+      closeSheet('sheetDynamicDetail');
+      refreshAllViews();
+      playChime(980, 0.22, 'sine');
+      showMobileToast(`₦${amt.toLocaleString()} sent to ${bankName} (•••• ${last4}) ✓`);
+    }
+
+    function triggerSosBroadcast() {
+      playChime(620, 0.3, 'sawtooth');
+      showMobileToast('🚨 SOS Sent! Safety Dispatch alerted with live GPS (6.5165° N, 3.3855° E)');
+    }
+
+    function sendDispatchMsg(text) {
+      state.chatMessages.push({ sender: 'out', text: text });
+      const feed = document.getElementById('dispatchChatFeed');
+      if (feed) {
+        const out = document.createElement('div');
+        out.className = 'msg-bubble out';
+        out.textContent = text;
+        feed.appendChild(out);
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      setTimeout(() => {
+        const replyText = 'Copy that, Joseph. We have logged your update on Waybill #BF-48291 and notified the recipient.';
+        state.chatMessages.push({ sender: 'in', text: replyText });
+        const liveFeed = document.getElementById('dispatchChatFeed');
+        if (liveFeed) {
+          const reply = document.createElement('div');
+          reply.className = 'msg-bubble in';
+          reply.innerHTML = '<strong>BAYNIKS Dispatch:</strong> ' + replyText;
+          liveFeed.appendChild(reply);
+          liveFeed.scrollTop = liveFeed.scrollHeight;
+        }
+      }, 650);
+    }
+
+    function submitDispatchChat() {
+      const inp = document.getElementById('dispatchChatInput');
+      if (!inp) return;
+      const val = inp.value.trim();
+      if (!val) return;
+      inp.value = '';
+      sendDispatchMsg(val);
+    }
+
+    function copyToClipboard(text, label) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text.trim();
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showMobileToast((label || 'Text') + ' copied to clipboard ✓');
+      } catch (err) {
+        showMobileToast((label || 'Text') + ': ' + text);
+      }
+    }
+
+    function openDocumentSheet(docTitle, docNumber, expiryDate) {
+      document.getElementById('dynSheetKicker').textContent = 'COMPLIANCE CREDENTIAL';
+      document.getElementById('dynSheetTitle').textContent = docTitle;
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Document ID</span>
+            <span class="tabular-num" style="font-size:13px;">${docNumber}</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Verification Status</span>
+            <span style="font-size:12px;font-weight:800;color:var(--accent-emerald-text);">Approved &amp; Active ✓</span>
+          </div>
+          <div class="sub-card" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;">Valid Until</span>
+            <span class="tabular-num" style="font-size:13px;">${expiryDate}</span>
+          </div>
+          <button type="button" class="btn-orange-xl" style="height:48px;" onclick="closeSheet('sheetDynamicDetail')">Close</button>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function openEditProfileSheet() {
+      document.getElementById('inpEditPhone').value = state.profile.phone;
+      document.getElementById('inpEditEmail').value = state.profile.email;
+      document.getElementById('inpEditDepot').value = state.profile.depot;
+      document.getElementById('inpEditBank').value = state.profile.bank;
+      document.getElementById('inpEditAcct').value = state.profile.acct;
+      document.getElementById('sheetEditProfile').classList.remove('hidden');
+    }
+
+    function saveProfileEdits() {
+      const phone = document.getElementById('inpEditPhone').value.trim();
+      const email = document.getElementById('inpEditEmail').value.trim();
+      const depot = document.getElementById('inpEditDepot').value;
+      const bank = document.getElementById('inpEditBank').value;
+      const acct = document.getElementById('inpEditAcct').value.trim();
+
+      if (phone) state.profile.phone = phone;
+      if (email) state.profile.email = email;
+      if (depot) state.profile.depot = depot;
+      if (bank) state.profile.bank = bank;
+      if (acct && acct.length === 10) state.profile.acct = acct;
+
+      closeSheet('sheetEditProfile');
+      refreshAllViews();
+      showMobileToast('Account & payout details saved ✓');
+    }
+
+    /* ==========================================================================
+       13. EDGE-TO-EDGE FULL-VIEW INTERACTIVE LAGOS MAP (#fullMapScreen)
+       ========================================================================== */
+    function openFullMapScreen() {
+      const screen = document.getElementById('fullMapScreen');
+      if (!screen) return;
+      state.fullMap.collapsed = false;
+      syncFullMapState();
+      recenterFullMap(true);
+      screen.classList.remove('hidden');
+    }
+
+    function closeFullMapScreen() {
+      const screen = document.getElementById('fullMapScreen');
+      if (screen) screen.classList.add('hidden');
+    }
+
+    function applyFullMapTransform() {
+      const layer = document.getElementById('fullMapTransformLayer');
+      if (!layer) return;
+      const { panX, panY, zoom } = state.fullMap;
+      layer.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`;
+    }
+
+    function zoomFullMap(delta) {
+      const vp = document.getElementById('fullMapViewport');
+      const prevZoom = state.fullMap.zoom;
+      const nextZoom = Math.min(1.65, Math.max(0.55, +(prevZoom + delta).toFixed(2)));
+      if (nextZoom === prevZoom) return;
+
+      if (vp) {
+        const cx = vp.clientWidth / 2;
+        const cy = vp.clientHeight / 2;
+        const ratio = nextZoom / prevZoom;
+        state.fullMap.panX = cx - (cx - state.fullMap.panX) * ratio;
+        state.fullMap.panY = cy - (cy - state.fullMap.panY) * ratio;
+      }
+      state.fullMap.zoom = nextZoom;
+      applyFullMapTransform();
+    }
+
+    function recenterFullMap(silent) {
+      const vp = document.getElementById('fullMapViewport');
+      const vw = vp ? vp.clientWidth : 390;
+      const vh = vp ? vp.clientHeight : 780;
+
+      // Focus coordinates based on rider position or active mission midpoint
+      const focusX = state.hasActiveDelivery ? 410 : 336;
+      const focusY = state.hasActiveDelivery ? 510 : 378;
+      state.fullMap.zoom = state.hasActiveDelivery ? 0.86 : 0.96;
+      state.fullMap.panX = Math.round(vw / 2 - focusX * state.fullMap.zoom);
+      state.fullMap.panY = Math.round(vh / 2 - focusY * state.fullMap.zoom);
+      applyFullMapTransform();
+
+      if (!silent) {
+        showMobileToast('GPS centered on Joseph Okon (BLT-4912)');
+      }
+    }
+
+    function toggleFullMapSurge() {
+      state.fullMap.showSurge = !state.fullMap.showSurge;
+      const layer = document.getElementById('fullMapSurgeLayer');
+      const fab = document.getElementById('fabToggleSurge');
+      if (layer) layer.classList.toggle('hidden', !state.fullMap.showSurge);
+      if (fab) fab.classList.toggle('active-surge', state.fullMap.showSurge);
+      showMobileToast(state.fullMap.showSurge ? 'Surge hotspots visible' : 'Surge hotspots hidden');
+    }
+
+    function selectMapSurgeHub(hubName, mult, bonus) {
+      showMobileToast(`${hubName} (${mult} Surge • ${bonus} per drop)`);
+      if (!state.hasActiveDelivery) {
+        triggerSurgeDispatch();
+      }
+    }
+
+    function toggleFullMapCard() {
+      state.fullMap.collapsed = !state.fullMap.collapsed;
+      const card = document.getElementById('fullMapBottomCard');
+      const body = document.getElementById('fmCardExpandedBody');
+      const chev = document.getElementById('fmChevronSvg');
+      if (!card || !body || !chev) return;
+
+      card.classList.toggle('minimized', state.fullMap.collapsed);
+      body.classList.toggle('hidden', state.fullMap.collapsed);
+      chev.style.transform = state.fullMap.collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    function syncFullMapState() {
+      const routeGroup = document.getElementById('fullMapRouteGroup');
+      const routePins = document.getElementById('fullMapRoutePins');
+      const riderPuck = document.getElementById('fullMapRiderPuck');
+
+      const chip = document.getElementById('fmStatusChip');
+      const headline = document.getElementById('fmSummaryHeadline');
+      const standbyBody = document.getElementById('fmStandbyBody');
+      const missionBody = document.getElementById('fmActiveMissionBody');
+      const standbyBtn = document.getElementById('fmPrimaryStandbyBtn');
+
+      if (!routeGroup || !riderPuck) return;
+
+      if (state.hasActiveDelivery) {
+        routeGroup.classList.remove('hidden');
+        routePins.classList.remove('hidden');
+        standbyBody.classList.add('hidden');
+        missionBody.classList.remove('hidden');
+
+        chip.innerHTML = '<span class="live-chip-dot"></span> #BF-48291 Live';
+        headline.textContent = '4.8 km • 18 min • ₦3,200';
+
+        const stepLbl = document.getElementById('fmMissionStepLabel');
+        const etaLbl = document.getElementById('fmMissionEta');
+        const ctaTxt = document.getElementById('fmMissionCtaText');
+
+        if (state.missionStep === 1) {
+          riderPuck.style.left = '336px';
+          riderPuck.style.top = '378px';
+          stepLbl.textContent = 'STEP 1 OF 4 • EN ROUTE TO PICKUP';
+          etaLbl.textContent = '1.1 km • 6 min';
+          ctaTxt.textContent = 'Arrived at Pickup →';
+        } else if (state.missionStep === 2) {
+          riderPuck.style.left = '322px';
+          riderPuck.style.top = '355px';
+          stepLbl.textContent = 'STEP 2 OF 4 • AT KUCHI EMPIRE PICKUP';
+          etaLbl.textContent = 'At Pickup';
+          ctaTxt.textContent = 'Confirm Collected →';
+        } else if (state.missionStep === 3) {
+          riderPuck.style.left = '432px';
+          riderPuck.style.top = '485px';
+          stepLbl.textContent = 'STEP 3 OF 4 • IN TRANSIT (3RD MAINLAND)';
+          etaLbl.textContent = '3.2 km • 12 min';
+          ctaTxt.textContent = 'Arrived at VI Towers →';
+        } else {
+          riderPuck.style.left = '495px';
+          riderPuck.style.top = '698px';
+          stepLbl.textContent = 'STEP 4 OF 4 • HANDOVER VERIFICATION';
+          etaLbl.textContent = 'At Drop-off';
+          ctaTxt.textContent = 'Verify QR / OTP →';
+        }
+      } else {
+        routeGroup.classList.add('hidden');
+        routePins.classList.add('hidden');
+        missionBody.classList.add('hidden');
+        standbyBody.classList.remove('hidden');
+
+        riderPuck.style.left = '336px';
+        riderPuck.style.top = '378px';
+
+        chip.innerHTML = '<span class="live-chip-dot"></span> 1.4x Surge Active';
+        headline.textContent = 'Yaba Tech Hub • +₦1,250/drop';
+
+        if (standbyBtn) {
+          standbyBtn.innerHTML = state.isOnline
+            ? '<span>Simulate Dispatch ⚡</span>'
+            : '<span>Go Online &amp; Find Deliveries</span>';
+        }
+      }
+    }
+
+    function handleFullMapStandbyCta() {
+      if (!state.isOnline) {
+        toggleRiderAvailability();
+      } else {
+        openIncomingDispatchSheet();
+      }
+    }
+
+    function handleFullMapMissionCta() {
+      if (!state.hasActiveDelivery) return;
+      if (state.missionStep < 4) {
+        advanceMissionStep();
+      } else {
+        openVerificationSheet('qr');
+      }
+    }
+
+    function initFullMapPanGestures() {
+      const vp = document.getElementById('fullMapViewport');
+      if (!vp) return;
+
+      vp.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+        state.fullMap.dragging = true;
+        state.fullMap.startX = e.clientX - state.fullMap.panX;
+        state.fullMap.startY = e.clientY - state.fullMap.panY;
+        vp.setPointerCapture(e.pointerId);
+      });
+
+      vp.addEventListener('pointermove', (e) => {
+        if (!state.fullMap.dragging) return;
+        const nextX = e.clientX - state.fullMap.startX;
+        const nextY = e.clientY - state.fullMap.startY;
+        state.fullMap.panX = Math.min(120, Math.max(-520, nextX));
+        state.fullMap.panY = Math.min(120, Math.max(-560, nextY));
+        applyFullMapTransform();
+      });
+
+      const stopDrag = (e) => {
+        if (!state.fullMap.dragging) return;
+        state.fullMap.dragging = false;
+        try { vp.releasePointerCapture(e.pointerId); } catch (err) {}
+      };
+
+      vp.addEventListener('pointerup', stopDrag);
+      vp.addEventListener('pointercancel', stopDrag);
+    }
+
+    function openNotificationsSheet() {
+      const dot = document.getElementById('heroBellDot');
+      if (dot) dot.classList.add('hidden');
+      document.getElementById('dynSheetKicker').textContent = 'COURIER ALERTS';
+      document.getElementById('dynSheetTitle').textContent = 'Notifications';
+      document.getElementById('dynSheetBody').innerHTML = `
+        <div class="stack-10">
+          <div class="sub-card">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--accent-orange);font-weight:800;">
+              <span>🔥 SURGE ZONE ACTIVE</span>
+              <span>2m ago</span>
+            </div>
+            <div style="font-size:12px;font-weight:700;margin-top:3px;">Yaba Tech Hub is paying 1.4x (+₦1,250 bonus per drop).</div>
+          </div>
+          <div class="sub-card">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--accent-emerald-text);font-weight:800;">
+              <span>✓ PRO TIER BONUS</span>
+              <span>1h ago</span>
+            </div>
+            <div style="font-size:12px;font-weight:700;margin-top:3px;">Your 98.2% acceptance unlocked +5% Saturday payout boost.</div>
+          </div>
+        </div>
+      `;
+      document.getElementById('sheetDynamicDetail').classList.remove('hidden');
+    }
+
+    function closeSheet(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    let toastTimer = null;
+    function showMobileToast(text) {
+      const toast = document.getElementById('mobileToast');
+      const msg = document.getElementById('mobileToastMsg');
+      if (!toast || !msg) return;
+      msg.textContent = text;
+      toast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 2800);
+    }
+
+    window.addEventListener('DOMContentLoaded', bootApp);
+  </script>
+</body>
+</html>

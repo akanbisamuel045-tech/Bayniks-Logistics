@@ -40,6 +40,7 @@ walletRouter.get(
       res.status(200).json({
         balanceKobo: wallet.balanceKobo,
         escrowLockedKobo: wallet.escrowLockedKobo,
+        isDebtLocked: !!wallet.isDebtLocked,
         paystackDedicatedAccountNumber: wallet.paystackDedicatedAccountNumber,
         paystackBankName: wallet.paystackBankName,
         recentTransactions,

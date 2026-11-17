@@ -64,6 +64,7 @@ export class AuthService {
     };
 
     const accessToken = jwt.sign(accessPayload, JWT_ACCESS_SECRET, {
+      algorithm: 'HS256',
       expiresIn: ACCESS_TOKEN_TTL_SECONDS,
     });
 
@@ -73,6 +74,7 @@ export class AuthService {
     };
 
     const refreshToken = jwt.sign(refreshPayload, JWT_REFRESH_SECRET, {
+      algorithm: 'HS256',
       expiresIn: REFRESH_TOKEN_TTL_SECONDS,
     });
 
@@ -88,7 +90,7 @@ export class AuthService {
    */
   verifyAccessToken(token: string): AccessTokenPayload {
     try {
-      return jwt.verify(token, JWT_ACCESS_SECRET) as AccessTokenPayload;
+      return jwt.verify(token, JWT_ACCESS_SECRET, { algorithms: ['HS256'] }) as AccessTokenPayload;
     } catch {
       const error: any = new Error('Invalid or expired access token');
       error.statusCode = 401;
@@ -106,7 +108,7 @@ export class AuthService {
 
     let decoded: RefreshTokenPayload;
     try {
-      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as RefreshTokenPayload;
+      decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as RefreshTokenPayload;
     } catch {
       const error: any = new Error('Invalid or expired refresh token');
       error.statusCode = 401;
