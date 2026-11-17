@@ -42,8 +42,8 @@ export const IncomingJobModal: React.FC = () => {
   const progressPercent = Math.max(0, Math.min(100, (offerSecondsLeft / 30) * 100));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end p-3 sm:p-4 safe-bottom animate-in fade-in slide-in-from-bottom duration-200">
-      <div className="bg-white border-2 border-[#FF6D1F] rounded-3xl p-5 shadow-2xl flex flex-col gap-3.5 max-w-lg mx-auto w-full text-zinc-900">
+    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end p-3 safe-bottom animate-in fade-in slide-in-from-bottom duration-200">
+      <div className="bg-white border-2 border-[#FF6D1F] rounded-3xl p-5 shadow-2xl flex flex-col gap-3.5 max-w-[390px] mx-auto w-full text-zinc-900">
         {/* Header: Offer Title & 30s Countdown Ring */}
         <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
           <div className="flex items-center gap-2.5">

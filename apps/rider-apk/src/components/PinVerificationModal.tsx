@@ -119,8 +119,8 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
     isCompressing;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-zinc-900">
+    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-3 animate-in fade-in duration-200">
+      <div className="w-full max-w-[390px] bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-zinc-900">
         {/* Header Bar */}
         <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
           <div>

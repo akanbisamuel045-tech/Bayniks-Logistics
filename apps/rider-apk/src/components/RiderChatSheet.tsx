@@ -51,8 +51,8 @@ export const RiderChatSheet: React.FC<RiderChatSheetProps> = ({ isOpen, onClose 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl h-[88vh] flex flex-col shadow-2xl overflow-hidden safe-bottom text-zinc-900">
+    <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-[390px] bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl h-[88vh] flex flex-col shadow-2xl overflow-hidden safe-bottom text-zinc-900">
         {/* Header */}
         <div className="p-3.5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-2.5">

@@ -82,18 +82,18 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex animate-fadeIn"
+      className="absolute inset-0 z-[90] flex overflow-hidden animate-fadeIn"
       data-testid="rider-navigation-drawer"
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer Container (Sliding from Left) */}
-      <div className="relative w-4/5 max-w-xs h-full bg-[#FAFAF9] shadow-2xl flex flex-col z-10 border-r border-zinc-200 animate-slideRight">
+      <div className="relative w-[82%] max-w-[340px] h-full bg-[#FAFAF9] shadow-2xl flex flex-col z-10 border-r border-zinc-200 animate-slideRight">
         {/* Header Profile Card */}
         <div className="bg-gradient-to-br from-[#1E1C1A] to-[#2B2724] p-5 text-white">
           <div className="flex items-center justify-between mb-4">

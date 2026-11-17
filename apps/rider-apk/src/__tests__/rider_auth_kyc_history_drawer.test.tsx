@@ -31,6 +31,15 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
    * 1. Dispatch Rider Login & Account Creation
    * ----------------------------------------------------------- */
   describe('1. Rider Authentication (Login & Registration Flow)', () => {
+    it('is strictly contained within mobile-app-shell with absolute positioning', () => {
+      render(<RiderAuthModal isOpen={true} onClose={vi.fn()} initialMode="login" />);
+
+      const authModal = screen.getByTestId('rider-auth-modal');
+      expect(authModal.className).toContain('absolute');
+      expect(authModal.className).toContain('inset-0');
+      expect(authModal.className).not.toContain('fixed');
+    });
+
     it('renders login tab with phone and password inputs', () => {
       render(<RiderAuthModal isOpen={true} onClose={vi.fn()} initialMode="login" />);
 
@@ -169,6 +178,21 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
    * 4. Left Navigation Sidebar Drawer
    * ----------------------------------------------------------- */
   describe('4. Left Sidebar Navigation Drawer', () => {
+    it('is strictly contained within mobile-app-shell with absolute positioning', () => {
+      render(
+        <RiderNavigationDrawer
+          isOpen={true}
+          onClose={vi.fn()}
+          onNavigate={vi.fn()}
+        />
+      );
+
+      const drawer = screen.getByTestId('rider-navigation-drawer');
+      expect(drawer.className).toContain('absolute');
+      expect(drawer.className).toContain('inset-0');
+      expect(drawer.className).not.toContain('fixed');
+    });
+
     it('renders left drawer with rider profile header and categorized links', () => {
       render(
         <RiderNavigationDrawer

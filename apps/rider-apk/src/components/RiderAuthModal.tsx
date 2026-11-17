@@ -175,10 +175,10 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="absolute inset-0 z-[100] flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm animate-fadeIn"
       data-testid="rider-auth-modal"
     >
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-200">
+      <div className="relative w-full max-w-[390px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-zinc-200">
         {/* Header Ribbon */}
         <div className="bg-gradient-to-r from-[#1E1C1A] to-[#2B2724] px-6 pt-6 pb-5 text-white">
           <div className="flex items-center justify-between mb-3">
