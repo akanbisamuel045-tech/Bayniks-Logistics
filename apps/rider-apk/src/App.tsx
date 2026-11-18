@@ -18,6 +18,9 @@ import { RiderAuthModal } from './components/RiderAuthModal';
 import { RiderKycScreen } from './components/RiderKycScreen';
 import { DeliveryHistoryScreen } from './components/DeliveryHistoryScreen';
 import { RiderNavigationDrawer, DrawerNavTarget } from './components/RiderNavigationDrawer';
+import { VirtualDebtTopUpModal } from './components/sheets/VirtualDebtTopUpModal';
+import { MockLocationWarningModal } from './components/MockLocationWarningModal';
+import { batteryOptimizationService } from './services/batteryOptimization.service';
 
 export function App() {
   const {
@@ -37,10 +40,18 @@ export function App() {
     setDrawerOpen,
     isAuthModalOpen,
     setAuthModalOpen,
+    walletBalanceKobo,
+    isDebtLocked,
+    topUpWallet,
+    setBatteryStatus,
+    isMockLocationDetected,
+    mockLocationReason,
+    setMockLocation,
   } = useRiderStore();
 
   // Navigation and Sheet state
   const [isFullMapOpen, setIsFullMapOpen] = useState(false);
+  const [isDebtTopUpOpen, setIsDebtTopUpOpen] = useState(false);
   const [isHandoverVerifyOpen, setIsHandoverVerifyOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('view') === 'verify';
@@ -91,6 +102,10 @@ export function App() {
       setIsHandoverVerifyOpen(true);
     } else if (viewParam === 'offer') {
       triggerDemoOffer();
+    } else if (viewParam === 'debt') {
+      setIsDebtTopUpOpen(true);
+    } else if (viewParam === 'mock') {
+      setMockLocation(true, 'Android Fake GPS provider detected');
     }
 
     if (phaseParam) {
@@ -148,6 +163,22 @@ export function App() {
       },
     });
   }, [incomingOffer, declineOffer]);
+
+  // Initialize hardware battery monitoring and auto-throttling (Feature 7)
+  useEffect(() => {
+    batteryOptimizationService.initBatteryMonitoring().then((status) => {
+      setBatteryStatus(status.levelPercent, status.isCharging);
+    });
+    const unsubscribe = batteryOptimizationService.addListener((status) => {
+      setBatteryStatus(status.levelPercent, status.isCharging);
+      if (status.isLowBatteryThrottled) {
+        showToast('⚠️ Battery ≤ 15%: GPS tracking auto-throttled to 15s to conserve power');
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [setBatteryStatus, showToast]);
 
   // Socket.io real-time dispatch listener
   useEffect(() => {
@@ -365,6 +396,31 @@ export function App() {
         }}
         onOpenCashout={() => {
           setDetailSheetType('cashout');
+        }}
+        onOpenDebtTopUp={() => {
+          setIsDebtTopUpOpen(true);
+        }}
+      />
+
+      {/* Feature 2: In-App Paystack Virtual Debt Clearance Modal */}
+      <VirtualDebtTopUpModal
+        isOpen={isDebtTopUpOpen}
+        onClose={() => setIsDebtTopUpOpen(false)}
+        currentBalanceKobo={walletBalanceKobo}
+        onTopUpSuccess={async (amountKobo) => {
+          await topUpWallet(amountKobo);
+          showToast(`Paystack payment of ₦${Math.floor(amountKobo / 100).toLocaleString('en-NG')} confirmed. Account updated!`);
+        }}
+      />
+
+      {/* Feature 7: Anti-Cheat Mock Location (Fake GPS) Warning Modal */}
+      <MockLocationWarningModal
+        isOpen={isMockLocationDetected}
+        reason={mockLocationReason || undefined}
+        onDismiss={() => setMockLocation(false)}
+        onRecheckLocation={() => {
+          setMockLocation(false);
+          showToast('Rechecking GPS sensor telemetry...');
         }}
       />
     </MobileAppShell>

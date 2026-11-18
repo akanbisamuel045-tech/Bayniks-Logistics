@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRiderStore } from '../../store/riderStore';
 import { playMissionAcceptChime, playErrorChime } from '../../utils/audioChimes';
+import { VirtualDebtMeter } from '../VirtualDebtMeter';
 
 export type DynamicDetailSheetType =
   | 'personal'
@@ -17,6 +18,7 @@ export interface DynamicDetailSheetProps {
   onClose: () => void;
   onOpenEditProfile?: () => void;
   onOpenCashout?: () => void;
+  onOpenDebtTopUp?: () => void;
 }
 
 export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
@@ -25,6 +27,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
   onClose,
   onOpenEditProfile,
   onOpenCashout,
+  onOpenDebtTopUp,
 }) => {
   const {
     todayEarningsKobo,
@@ -32,6 +35,8 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
     chatMessages,
     sendChatMessage,
     showToast,
+    walletBalanceKobo,
+    isDebtLocked,
   } = useRiderStore();
 
   const [walletBalance, setWalletBalance] = useState(92300);
@@ -45,8 +50,12 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
 
   if (!isOpen) return null;
 
+  const currentWalletKobo = walletBalanceKobo !== undefined ? walletBalanceKobo : walletBalance * 100;
+  const isWalletNegative = currentWalletKobo < 0;
   const todayFormatted = `₦${(todayEarningsKobo / 100).toLocaleString()}`;
-  const walletFormatted = `₦${walletBalance.toLocaleString()}.00`;
+  const walletFormatted = isWalletNegative
+    ? `-₦${Math.floor(Math.abs(currentWalletKobo) / 100).toLocaleString('en-NG')}.00`
+    : `₦${Math.floor(currentWalletKobo / 100).toLocaleString('en-NG')}.00`;
 
   const weekChart = [
     { day: 'Mon', pct: 45, val: 14200 },
@@ -199,17 +208,54 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
         {/* View 2: Earnings & Wallet */}
         {viewType === 'earnings' && (
           <div className="stack-10" data-testid="view-earnings">
+            {/* Feature 2: Cash Debt Circuit Breaker Meter */}
+            <VirtualDebtMeter
+              walletBalanceKobo={currentWalletKobo}
+              isDebtLocked={isDebtLocked}
+              onOpenTopUp={() => {
+                if (onOpenDebtTopUp) onOpenDebtTopUp();
+              }}
+            />
+
             <div
               className="sub-card"
-              style={{ border: '1.5px solid var(--accent-orange)', background: 'var(--accent-peach)' }}
+              style={{
+                border: isDebtLocked
+                  ? '1.5px solid #EF4444'
+                  : isWalletNegative
+                  ? '1.5px solid #F59E0B'
+                  : '1.5px solid var(--accent-orange)',
+                background: isDebtLocked
+                  ? '#FEF2F2'
+                  : isWalletNegative
+                  ? '#FFFBEB'
+                  : 'var(--accent-peach)',
+              }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="micro-label" style={{ color: 'var(--accent-orange)' }}>
-                  AVAILABLE WALLET BALANCE
+                <span
+                  className="micro-label"
+                  style={{
+                    color: isDebtLocked
+                      ? '#DC2626'
+                      : isWalletNegative
+                      ? '#D97706'
+                      : 'var(--accent-orange)',
+                  }}
+                >
+                  {isWalletNegative ? 'COMMISSION DEBT BALANCE' : 'AVAILABLE WALLET BALANCE'}
                 </span>
-                <span className="live-chip">Pro +5%</span>
+                <span className="live-chip">{isDebtLocked ? 'LOCKED' : 'Pro +5%'}</span>
               </div>
-              <div id="walletTotalDisplay" className="tabular-num" style={{ fontSize: '25px', marginTop: '3px' }}>
+              <div
+                id="walletTotalDisplay"
+                className="tabular-num"
+                style={{
+                  fontSize: '25px',
+                  marginTop: '3px',
+                  color: isDebtLocked ? '#DC2626' : undefined,
+                }}
+              >
                 {walletFormatted}
               </div>
               <div
@@ -219,17 +265,31 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 Today&apos;s net earnings: {todayFormatted} ({tripsCompletedToday} drops)
               </div>
               <div style={{ marginTop: '10px' }}>
-                <button
-                  type="button"
-                  className="btn-orange-xl"
-                  style={{ height: '46px', fontSize: '13px' }}
-                  onClick={() => {
-                    if (onOpenCashout) onOpenCashout();
-                  }}
-                  data-testid="btn-trigger-cashout"
-                >
-                  <span>Instant GTBank Cash-Out ⚡</span>
-                </button>
+                {isWalletNegative ? (
+                  <button
+                    type="button"
+                    className="btn-orange-xl"
+                    style={{ height: '46px', fontSize: '13px', background: '#DC2626' }}
+                    onClick={() => {
+                      if (onOpenDebtTopUp) onOpenDebtTopUp();
+                    }}
+                    data-testid="btn-trigger-debt-topup"
+                  >
+                    <span>Clear Debt via Paystack ⚡</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-orange-xl"
+                    style={{ height: '46px', fontSize: '13px' }}
+                    onClick={() => {
+                      if (onOpenCashout) onOpenCashout();
+                    }}
+                    data-testid="btn-trigger-cashout"
+                  >
+                    <span>Instant GTBank Cash-Out ⚡</span>
+                  </button>
+                )}
               </div>
             </div>
 

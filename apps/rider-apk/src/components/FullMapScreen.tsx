@@ -8,6 +8,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
+import { openGoogleMapsNavigation } from '../utils/navigationDeepLink';
 
 export interface FullMapScreenProps {
   isOpen: boolean;
@@ -139,6 +140,23 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
         showToast('Scan QR / OTP Handover verification active');
       }
     }
+  };
+
+  const handleExternalNavigation = () => {
+    const isPickupPhase = tripPhase === 'arriving_pickup' || tripPhase === 'at_pickup';
+    const target = isPickupPhase
+      ? {
+          lat: activeOrder?.pickup?.location?.lat || 6.5158,
+          lng: activeOrder?.pickup?.location?.lng || 3.3718,
+          address: activeOrder?.pickup?.address || '14 Commercial Ave, Yaba',
+        }
+      : {
+          lat: activeOrder?.stops?.[0]?.dropoffLocation?.lat || 6.4281,
+          lng: activeOrder?.stops?.[0]?.dropoffLocation?.lng || 3.4219,
+          address: activeOrder?.stops?.[0]?.dropoffAddress || 'Victoria Island Towers, Plot 4',
+        };
+    openGoogleMapsNavigation(target.lat, target.lng, target.address);
+    showToast('Handing off turn-by-turn navigation to Google Maps...');
   };
 
   const handleCallParty = () => {
@@ -607,11 +625,11 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '6px' }}>
                   <button
                     type="button"
                     className="btn-orange-xl"
-                    style={{ height: '46px', fontSize: '12px' }}
+                    style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
                     onClick={handleMissionCta}
                     data-testid="full-map-mission-cta"
                   >
@@ -620,12 +638,22 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
                   <button
                     type="button"
                     className="btn-neutral-xl"
-                    style={{ height: '46px', fontSize: '12px' }}
+                    style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
+                    onClick={handleExternalNavigation}
+                    data-testid="full-map-external-nav-btn"
+                  >
+                    <Navigation size={13} className="inline mr-1" />
+                    <span>Navigate</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-neutral-xl"
+                    style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
                     onClick={handleCallParty}
                     data-testid="full-map-call-btn"
                   >
-                    <Phone size={14} className="inline mr-1" />
-                    <span>Call Contact</span>
+                    <Phone size={13} className="inline mr-1" />
+                    <span>Call</span>
                   </button>
                 </div>
               </div>

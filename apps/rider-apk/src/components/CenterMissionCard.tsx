@@ -1,8 +1,14 @@
-import React from 'react';
-import { Power, Phone, Navigation, QrCode } from 'lucide-react';
+import React, { useState } from 'react';
+import { Power, Phone, Navigation, QrCode, Banknote } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { MissionProgressBar } from './MissionProgressBar';
 import { playMissionAcceptChime, playKeypadChime } from '../utils/audioChimes';
+import { NavigationChooserModal } from './sheets/NavigationChooserModal';
+import { RiderContactModal } from './sheets/RiderContactModal';
+import { CashCollectionModal } from './sheets/CashCollectionModal';
+import { ProximityArrivalBanner } from './ProximityArrivalBanner';
+import { ContactPartyInfo } from '../utils/whatsappTemplates';
+import { NavigationTarget } from '../utils/navigationDeepLink';
 
 export interface CenterMissionCardProps {
   onOpenVerification?: (mode?: 'qr' | 'otp') => void;
@@ -27,7 +33,17 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
     advanceTripPhase,
     setQuickQrOpen,
     showToast,
+    isProximityArrivalPromptOpen,
+    proximityTargetName,
+    proximityDistanceMeters,
+    setProximityPrompt,
+    recordCashCollection,
   } = useRiderStore();
+
+  const [isNavChooserOpen, setIsNavChooserOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+  const [isCashCollected, setIsCashCollected] = useState(false);
 
   const isOnline = riderStatus === 'available';
   const hasActiveMission = Boolean(activeOrder && tripPhase !== 'idle');
@@ -79,6 +95,7 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
 
   const handleCallParty = () => {
     playKeypadChime();
+    setIsContactModalOpen(true);
     if (stepNumber <= 2) {
       const sender = activeOrder?.pickup?.contactName || 'Kuchi Empire';
       const phone = activeOrder?.pickup?.contactPhone || '+234 802 555 0192';
@@ -88,6 +105,17 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
       const phone = activeStop?.recipientPhone || '+234 809 334 8821';
       showToast(`Calling Recipient: ${recipient} (${phone})...`);
     }
+  };
+
+  const handleCashConfirmed = async (tenderedKobo: number, changeKobo: number) => {
+    setIsCashCollected(true);
+    const fareKobo = activeOrder?.totalFareKobo || 250000;
+    await recordCashCollection(
+      fareKobo,
+      `Tendered: ₦${Math.floor(tenderedKobo / 100).toLocaleString('en-NG')}, Change: ₦${Math.floor(
+        changeKobo / 100
+      ).toLocaleString('en-NG')}`
+    );
   };
 
   const handleOpenFullMap = () => {
@@ -178,11 +206,64 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
     );
   }
 
+  const contactParty: ContactPartyInfo =
+    stepNumber <= 2
+      ? {
+          name: activeOrder?.pickup?.contactName || 'Kuchi Empire',
+          phone: activeOrder?.pickup?.contactPhone || '+234 802 555 0192',
+          role: 'sender',
+          trackingCode: activeOrder?.trackingCode || '#BF-48291',
+          landmark: activeOrder?.pickup?.landmark || activeOrder?.pickup?.address || '14 Commercial Ave, Yaba',
+        }
+      : {
+          name: activeStop?.recipientName || 'Sarah Jenkins',
+          phone: activeStop?.recipientPhone || '+234 809 334 8821',
+          role: 'recipient',
+          trackingCode: activeOrder?.trackingCode || '#BF-48291',
+          landmark: activeStop?.dropoffLandmark || activeStop?.dropoffAddress || 'Victoria Island Towers, Plot 4',
+        };
+
+  const navTarget: NavigationTarget =
+    stepNumber <= 2
+      ? {
+          lat: activeOrder?.pickup?.location?.lat || 6.5158,
+          lng: activeOrder?.pickup?.location?.lng || 3.3718,
+          address: activeOrder?.pickup?.address || '14 Commercial Ave, Yaba',
+          landmark: activeOrder?.pickup?.landmark || 'Near Sabo Market',
+        }
+      : {
+          lat: activeStop?.dropoffLocation?.lat || 6.4281,
+          lng: activeStop?.dropoffLocation?.lng || 3.4219,
+          address: activeStop?.dropoffAddress || 'Victoria Island Towers, Plot 4',
+          landmark: activeStop?.dropoffLandmark || 'Beside Civic Centre',
+        };
+
   // --------------------------------------------------------------------------
   // STATE 3: Active Mission Card (N=1 Locked)
   // --------------------------------------------------------------------------
   return (
     <div id="cardStateActiveMission" className="surface-card orange-frame" data-testid="card-state-active-mission">
+      {/* Geofence Proximity Auto-Arrival Detection Banner (≤ 120m) */}
+      {isProximityArrivalPromptOpen && (
+        <div style={{ marginBottom: '10px' }}>
+          <ProximityArrivalBanner
+            isOpen={isProximityArrivalPromptOpen}
+            targetName={
+              proximityTargetName ||
+              (stepNumber <= 2
+                ? activeOrder?.pickup?.landmark || activeOrder?.pickup?.address || 'Pickup Depot'
+                : activeStop?.dropoffLandmark || activeStop?.dropoffAddress || 'Drop-off Destination')
+            }
+            distanceFormatted={`${Math.round(proximityDistanceMeters || 85)}m`}
+            onConfirmArrival={() => {
+              setProximityPrompt(false);
+              handleAdvanceStep();
+            }}
+            onDismiss={() => setProximityPrompt(false)}
+          />
+        </div>
+      )}
+
       {/* Header: Tracking Code + Guaranteed Pay */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         <div>
@@ -297,29 +378,68 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
         </div>
       )}
 
-      {/* Call Contact & Full Map Action Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+      {/* 3 Action Buttons: Contact (WhatsApp/Call), Turn-by-Turn Navigation, and Full Lagos Map */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
         <button
           type="button"
           className="btn-neutral-xl"
-          style={{ height: '46px', fontSize: '12px' }}
+          style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
           onClick={handleCallParty}
           data-testid="btn-call-party"
         >
-          <Phone size={15} strokeWidth={2.3} />
+          <Phone size={14} strokeWidth={2.4} />
           <span id="callPartyLabel">{callPartyLabel}</span>
         </button>
         <button
           type="button"
           className="btn-neutral-xl"
-          style={{ height: '46px', fontSize: '12px' }}
+          style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
+          onClick={() => {
+            playKeypadChime();
+            setIsNavChooserOpen(true);
+          }}
+          data-testid="btn-external-nav"
+        >
+          <Navigation size={14} strokeWidth={2.4} />
+          <span>Navigate</span>
+        </button>
+        <button
+          type="button"
+          className="btn-neutral-xl"
+          style={{ height: '46px', fontSize: '11px', padding: '0 6px' }}
           onClick={handleOpenFullMap}
           data-testid="btn-full-map"
         >
-          <Navigation size={15} strokeWidth={2.3} />
-          <span>Full Map</span>
+          <span>Lagos Map</span>
         </button>
       </div>
+
+      {/* Cash Collection Prompt for COD Orders */}
+      {activeOrder?.paymentMethod === 'cash' && !isCashCollected && (
+        <div style={{ marginBottom: '10px' }}>
+          <button
+            type="button"
+            className="btn-neutral-xl"
+            style={{
+              height: '46px',
+              fontSize: '12px',
+              width: '100%',
+              background: '#FFF3E0',
+              border: '1.5px solid #FF5722',
+              color: '#D84315',
+              fontWeight: 800,
+            }}
+            onClick={() => {
+              playKeypadChime();
+              setIsCashModalOpen(true);
+            }}
+            data-testid="btn-open-cash-modal"
+          >
+            <Banknote size={16} strokeWidth={2.4} />
+            <span>Collect Cash ({formatKoboToNaira(activeOrder?.totalFareKobo || 250000)})</span>
+          </button>
+        </div>
+      )}
 
       {/* Step Progression CTA (Steps 1 to 3) */}
       {stepNumber < 4 && (
@@ -351,6 +471,33 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
           </button>
         </div>
       )}
+
+      {/* External Turn-by-Turn Navigation Chooser Modal */}
+      <NavigationChooserModal
+        isOpen={isNavChooserOpen}
+        onClose={() => setIsNavChooserOpen(false)}
+        target={navTarget}
+        targetType={stepNumber <= 2 ? 'pickup' : 'dropoff'}
+      />
+
+      {/* 1-Tap WhatsApp & Voice Contact Modal */}
+      <RiderContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        party={contactParty}
+        onCallMasked={() => {
+          showToast(`Initiating NDPR Masked Call to ${contactParty.name}...`);
+        }}
+      />
+
+      {/* Cash-on-Delivery Collection & Change Calculator Modal */}
+      <CashCollectionModal
+        isOpen={isCashModalOpen}
+        onClose={() => setIsCashModalOpen(false)}
+        fareKobo={activeOrder?.totalFareKobo || 250000}
+        trackingCode={activeOrder?.trackingCode || '#BF-48291'}
+        onConfirmCollection={handleCashConfirmed}
+      />
     </div>
   );
 };

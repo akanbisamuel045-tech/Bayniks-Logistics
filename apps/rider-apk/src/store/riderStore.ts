@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import type { JobNewOffer } from '@logistics/shared-types';
+import { MAX_CASH_DEBT_LIMIT_KOBO } from '@logistics/shared-types';
 import { backgroundLocationService } from '../services/backgroundLocation.service';
 import { offlineTelemetryQueue } from '../services/offlineTelemetryQueue.service';
+import { checkArrivalProximity } from '../utils/geofenceProximity';
+import { detectMockLocation } from '../utils/mockLocationDetector';
 import {
   playMissionAcceptChime,
   playKeypadChime,
@@ -227,6 +230,27 @@ export interface RiderStoreState {
   // Drawer
   isDrawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
+
+  // Feature 1: Geofence Proximity Auto-Arrival
+  isProximityArrivalPromptOpen: boolean;
+  proximityTargetName: string;
+  proximityDistanceMeters: number;
+  setProximityPrompt: (open: boolean, targetName?: string, distanceMeters?: number) => void;
+
+  // Feature 2: Cash-on-Delivery Ledger & Virtual Debt Circuit Breaker
+  walletBalanceKobo: number;
+  isDebtLocked: boolean;
+  maxDebtLimitKobo: number;
+  recordCashCollection: (amountKobo: number, notes?: string) => Promise<{ success: boolean; newBalanceKobo: number }>;
+  topUpWallet: (amountKobo: number, paymentRef?: string, apiBaseUrl?: string) => Promise<{ success: boolean; newBalanceKobo: number; error?: string }>;
+
+  // Feature 7: Hardware Battery Throttling & Mock-Location Defense
+  isBatteryCharging: boolean;
+  isLowBatteryThrottled: boolean;
+  setBatteryStatus: (level: number, charging: boolean) => void;
+  isMockLocationDetected: boolean;
+  mockLocationReason: string | null;
+  setMockLocation: (isMock: boolean, reason?: string) => void;
 }
 
 /**
@@ -351,6 +375,45 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   batteryLevel: 88,
 
   todayEarningsKobo: 1850000, // ₦18,500.00
+  walletBalanceKobo: 9230000, // ₦92,300.00
+  isDebtLocked: false,
+  maxDebtLimitKobo: MAX_CASH_DEBT_LIMIT_KOBO || 500000, // ₦5,000
+
+  // Feature 1: Geofence Proximity Auto-Arrival
+  isProximityArrivalPromptOpen: false,
+  proximityTargetName: '',
+  proximityDistanceMeters: 0,
+  setProximityPrompt: (open: boolean, targetName = '', distanceMeters = 0) =>
+    set({
+      isProximityArrivalPromptOpen: open,
+      proximityTargetName: targetName,
+      proximityDistanceMeters: distanceMeters,
+    }),
+
+  // Feature 7: Hardware Battery Throttling & Mock-Location Defense
+  isBatteryCharging: false,
+  isLowBatteryThrottled: false,
+  setBatteryStatus: (level: number, charging: boolean) => {
+    const isThrottled = level <= 15 && !charging;
+    const wasThrottled = get().isLowBatteryThrottled;
+    set({
+      batteryLevel: level,
+      isBatteryCharging: charging,
+      isLowBatteryThrottled: isThrottled,
+    });
+    if (isThrottled && !wasThrottled) {
+      get().showToast(`Battery Low (${level}%). Switched to Battery Saver Mode (15s GPS pings).`);
+    }
+  },
+  isMockLocationDetected: false,
+  mockLocationReason: null,
+  setMockLocation: (isMock: boolean, reason?: string) => {
+    set({
+      isMockLocationDetected: isMock,
+      mockLocationReason: isMock ? reason || 'Mock location detected' : null,
+    });
+  },
+
   tripPhase: 'idle',
   activeOrder: null,
   incomingOffer: null,
@@ -820,13 +883,113 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
 
   setRiderProfile: (name: string, plate: string) => set({ riderName: name, plateNumber: plate }),
 
-  setCurrentLocation: (coords, bearing = 0, speed = 0, accuracy = 3.5) =>
+  recordCashCollection: async (amountKobo: number, notes?: string) => {
+    const { walletBalanceKobo, showToast } = get();
+    // 20% platform commission on collected physical cash
+    const commissionKobo = Math.round(amountKobo * 0.2);
+    const newBalance = walletBalanceKobo - commissionKobo;
+    const shouldLock = newBalance <= -(MAX_CASH_DEBT_LIMIT_KOBO || 500000);
+
+    set({
+      walletBalanceKobo: newBalance,
+      isDebtLocked: shouldLock,
+      riderStatus: shouldLock ? 'offline' : get().riderStatus,
+    });
+
+    if (shouldLock) {
+      playErrorChime();
+      showToast('Debt Circuit-Breaker: Commission debt exceeded ₦5,000. Dispatch locked.');
+    } else {
+      showToast(
+        `Physical cash collected: ₦${Math.floor(amountKobo / 100).toLocaleString(
+          'en-NG'
+        )}. Commission deducted: ₦${Math.floor(commissionKobo / 100).toLocaleString('en-NG')}`
+      );
+    }
+
+    return { success: true, newBalanceKobo: newBalance };
+  },
+
+  topUpWallet: async (amountKobo: number, paymentRef?: string, apiBaseUrl = '') => {
+    const { walletBalanceKobo, showToast } = get();
+    const newBalance = walletBalanceKobo + amountKobo;
+    const isStillLocked = newBalance <= -(MAX_CASH_DEBT_LIMIT_KOBO || 500000);
+
+    set({
+      walletBalanceKobo: newBalance,
+      isDebtLocked: isStillLocked,
+      riderStatus: isStillLocked ? 'offline' : 'available',
+    });
+
+    playMissionAcceptChime();
+    showToast(
+      `Wallet credited: +₦${Math.floor(amountKobo / 100).toLocaleString('en-NG')}. ${
+        isStillLocked ? 'Remaining debt balance.' : 'Debt cleared! Dispatch unlocked.'
+      }`
+    );
+
+    return { success: true, newBalanceKobo: newBalance };
+  },
+
+  setCurrentLocation: (coords, bearing = 0, speed = 0, accuracy = 3.5, simulated = false) => {
+    const { activeOrder, tripPhase, isMockLocationDetected } = get();
+
+    // 1. Anti-Cheat Mock Location Check
+    const mockCheck = detectMockLocation({
+      latitude: coords.lat,
+      longitude: coords.lng,
+      accuracy,
+      speed,
+      simulated,
+    });
+
+    if (mockCheck.isMockLocation && !isMockLocationDetected) {
+      set({
+        isMockLocationDetected: true,
+        mockLocationReason: mockCheck.reason || 'Simulated provider detected',
+      });
+      playErrorChime();
+    } else if (!mockCheck.isMockLocation && isMockLocationDetected) {
+      set({ isMockLocationDetected: false, mockLocationReason: null });
+    }
+
+    // 2. Geofence Auto-Arrival Check
+    if (activeOrder && tripPhase !== 'idle') {
+      let targetLoc: { lat: number; lng: number } | null = null;
+      let targetName = '';
+
+      if (tripPhase === 'arriving_pickup') {
+        targetLoc = activeOrder.pickup.location;
+        targetName = activeOrder.pickup.landmark || activeOrder.pickup.address;
+      } else if (tripPhase === 'in_transit') {
+        targetLoc = activeOrder.stops[0]?.dropoffLocation || null;
+        targetName =
+          activeOrder.stops[0]?.dropoffLandmark ||
+          activeOrder.stops[0]?.dropoffAddress ||
+          'Destination';
+      }
+
+      if (targetLoc) {
+        const prox = checkArrivalProximity(coords, targetLoc);
+        if (prox.isWithinProximity) {
+          set({
+            isProximityArrivalPromptOpen: true,
+            proximityTargetName: targetName,
+            proximityDistanceMeters: prox.distanceMeters,
+          });
+        } else {
+          set({ isProximityArrivalPromptOpen: false });
+        }
+      }
+    }
+
     set({
       currentLocation: coords,
       currentBearing: bearing,
       currentSpeed: speed,
       currentAccuracy: accuracy,
-    }),
+    });
+  },
 
   setPendingOfflinePingsCount: (count: number) => set({ pendingOfflinePingsCount: count }),
 
@@ -840,7 +1003,15 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   },
 
   toggleOnlineStatus: async () => {
-    const { riderStatus, tripPhase, activeOrder, authToken, showToast } = get();
+    const { riderStatus, tripPhase, activeOrder, authToken, isDebtLocked, showToast } = get();
+
+    // Circuit Breaker Guard: Cannot go online if debt locked
+    if (isDebtLocked) {
+      playErrorChime();
+      showToast('Dispatch Locked: Exceeded ₦5,000 cash debt limit. Clear debt via Paystack.');
+      return;
+    }
+
     // Capacity Guard: Cannot toggle offline while actively on an assignment
     if (riderStatus === 'busy' || tripPhase !== 'idle' || activeOrder !== null) {
       playErrorChime();
@@ -887,9 +1058,9 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   },
 
   receiveJobOffer: (offer: JobNewOffer) => {
-    const { activeOrder, tripPhase, riderStatus } = get();
-    // Strict Capacity Lock (N=1): Reject incoming offers if rider is busy or has an active mission
-    if (activeOrder !== null || tripPhase !== 'idle' || riderStatus === 'busy') {
+    const { activeOrder, tripPhase, riderStatus, isDebtLocked } = get();
+    // Strict Capacity Lock (N=1) and Cash Debt Lock: Reject incoming offers if busy or debt locked
+    if (activeOrder !== null || tripPhase !== 'idle' || riderStatus === 'busy' || isDebtLocked) {
       return;
     }
     set({
@@ -911,7 +1082,14 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   },
 
   acceptOffer: async (orderId: string, apiBaseUrl = '') => {
-    const { isSubmitting, incomingOffer, authToken, simulationMode, activeOrder, tripPhase } = get();
+    const { isSubmitting, incomingOffer, authToken, simulationMode, activeOrder, tripPhase, isDebtLocked, showToast } = get();
+
+    if (isDebtLocked) {
+      playErrorChime();
+      showToast('Dispatch Locked: Clear commission debt via Paystack to accept new orders.');
+      return false;
+    }
+
     // Capacity Guard: Cannot accept order if already executing an active delivery (N=1)
     if (isSubmitting || (activeOrder !== null && tripPhase !== 'idle')) return false;
 
@@ -1216,8 +1394,27 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   },
 
   completeCurrentTrip: () => {
-    const { activeOrder, todayEarningsKobo, deliveryHistory } = get();
+    const { activeOrder, todayEarningsKobo, deliveryHistory, walletBalanceKobo, isDebtLocked } = get();
     const earningsEarned = activeOrder?.riderEarningKobo || 0;
+    const isCashOrder =
+      activeOrder?.paymentMethod === 'pay_on_pickup' ||
+      activeOrder?.paymentMethod === 'pay_on_delivery' ||
+      activeOrder?.paymentMethod === 'cash';
+
+    let nextWalletBalance = walletBalanceKobo;
+    let nextIsLocked = isDebtLocked;
+
+    if (isCashOrder) {
+      const fareKobo = activeOrder?.totalFareKobo || earningsEarned + 50000;
+      const commissionKobo = Math.round(fareKobo * 0.2);
+      nextWalletBalance = walletBalanceKobo - commissionKobo;
+      nextIsLocked = nextWalletBalance <= -(MAX_CASH_DEBT_LIMIT_KOBO || 500000);
+    } else {
+      nextWalletBalance = walletBalanceKobo + earningsEarned;
+      if (nextWalletBalance > -(MAX_CASH_DEBT_LIMIT_KOBO || 500000)) {
+        nextIsLocked = false;
+      }
+    }
 
     backgroundLocationService.stopForegroundDeliveryTracking();
 
@@ -1249,8 +1446,11 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
 
     set({
       tripPhase: 'idle',
-      riderStatus: 'available',
+      riderStatus: nextIsLocked ? 'offline' : 'available',
       activeOrder: null,
+      walletBalanceKobo: nextWalletBalance,
+      isDebtLocked: nextIsLocked,
+      isProximityArrivalPromptOpen: false,
       todayEarningsKobo: todayEarningsKobo + earningsEarned,
       deliveryHistory: historyRecord ? [historyRecord, ...deliveryHistory] : deliveryHistory,
     });
