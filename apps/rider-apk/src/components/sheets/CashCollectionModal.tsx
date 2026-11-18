@@ -211,3 +211,4 @@ export const CashCollectionModal: React.FC<CashCollectionModalProps> = ({
     </div>
   );
 };
+

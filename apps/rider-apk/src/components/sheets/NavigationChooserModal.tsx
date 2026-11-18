@@ -136,3 +136,4 @@ export const NavigationChooserModal: React.FC<NavigationChooserModalProps> = ({
     </div>
   );
 };
+

@@ -57,3 +57,4 @@ export const ProximityArrivalBanner: React.FC<ProximityArrivalBannerProps> = ({
     </div>
   );
 };
+
