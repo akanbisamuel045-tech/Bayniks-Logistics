@@ -65,6 +65,28 @@ export function App() {
   const [detailSheetType, setDetailSheetType] = useState<DynamicDetailSheetType>('personal');
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
+  // Restore saved rider session from localStorage on app boot
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const savedAuth = window.localStorage.getItem('bayniks_rider_auth');
+        if (savedAuth) {
+          const parsed = JSON.parse(savedAuth);
+          if (parsed && parsed.authToken && parsed.riderUser) {
+            useRiderStore.setState({
+              isLoggedIn: true,
+              authToken: parsed.authToken,
+              riderUser: parsed.riderUser,
+              riderName: parsed.riderUser.fullName || 'Rider',
+              plateNumber: parsed.riderUser.plateNumber || 'KJA-824-XY',
+              simulationMode: false,
+            });
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
   // URL query parameter support for view deep-linking & QA inspection
   useEffect(() => {
     if (typeof window === 'undefined') return;

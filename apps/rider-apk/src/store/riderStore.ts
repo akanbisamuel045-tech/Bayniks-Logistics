@@ -495,168 +495,202 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   loginRider: async (phone: string, password: string, apiBaseUrl = '') => {
     set({ isSubmitting: true });
     const normalizedPhone = phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`;
-    if (get().simulationMode || !apiBaseUrl) {
-      const mockUser: RiderUser = {
-        id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
-        fullName: get().riderName || 'Babajide Adeleke',
-        phone: normalizedPhone,
-        email: 'b.adeleke@bayniks.ng',
-        role: 'rider',
-        isVerified: true,
-        plateNumber: get().plateNumber || 'KJA-824-XY',
-        vehicleType: 'bike',
-      };
-      const token = 'jwt-mock-rider-session-' + Date.now();
+    const targetUrl = apiBaseUrl || (import.meta as any).env?.VITE_API_BASE_URL || '';
+
+    if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
       try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser: mockUser, authToken: token }));
+        const res = await fetch(`${targetUrl}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: normalizedPhone, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          set({ isSubmitting: false });
+          return { success: false, error: data.error || 'Invalid phone or password' };
         }
-      } catch {}
-      set({
-        isLoggedIn: true,
-        riderUser: mockUser,
-        authToken: token,
-        isAuthModalOpen: false,
-        isSubmitting: false,
-      });
-      get().showToast(`Welcome back, ${mockUser.fullName.split(' ')[0]}!`);
-      return { success: true };
+        const riderUser: RiderUser = {
+          id: data.user.id || data.user._id,
+          fullName: data.user.fullName,
+          phone: data.user.phone,
+          email: data.user.email,
+          role: 'rider',
+          isVerified: data.user.isVerified,
+          plateNumber: data.user.plateNumber || 'KJA-824-XY',
+          vehicleType: data.user.vehicleType || 'bike',
+        };
+        const token = data.tokens?.accessToken || 'jwt-rider-live';
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser, authToken: token }));
+          }
+        } catch {}
+        set({
+          isLoggedIn: true,
+          riderUser,
+          riderName: riderUser.fullName,
+          plateNumber: riderUser.plateNumber || 'KJA-824-XY',
+          authToken: token,
+          simulationMode: false,
+          isAuthModalOpen: false,
+          isSubmitting: false,
+        });
+        get().showToast(`Welcome back, ${riderUser.fullName.split(' ')[0]}!`);
+        return { success: true };
+      } catch (err: any) {
+        if (!get().simulationMode) {
+          set({ isSubmitting: false });
+          return { success: false, error: `Could not connect to server at ${targetUrl}. Check connection.` };
+        }
+      }
     }
 
+    const mockUser: RiderUser = {
+      id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
+      fullName: get().riderName || 'Babajide Adeleke',
+      phone: normalizedPhone,
+      email: 'b.adeleke@bayniks.ng',
+      role: 'rider',
+      isVerified: true,
+      plateNumber: get().plateNumber || 'KJA-824-XY',
+      vehicleType: 'bike',
+    };
+    const token = 'jwt-mock-rider-session-' + Date.now();
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: normalizedPhone, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        set({ isSubmitting: false });
-        return { success: false, error: data.error || 'Invalid phone or password' };
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser: mockUser, authToken: token }));
       }
-      const riderUser: RiderUser = {
-        id: data.user.id || data.user._id,
-        fullName: data.user.fullName,
-        phone: data.user.phone,
-        email: data.user.email,
-        role: 'rider',
-        isVerified: data.user.isVerified,
-      };
-      set({
-        isLoggedIn: true,
-        riderUser,
-        authToken: data.tokens.accessToken,
-        isAuthModalOpen: false,
-        isSubmitting: false,
-      });
-      get().showToast(`Welcome back, ${riderUser.fullName.split(' ')[0]}!`);
-      return { success: true };
-    } catch (err: any) {
-      set({ isSubmitting: false });
-      return { success: false, error: err.message || 'Network error signing in' };
-    }
+    } catch {}
+    set({
+      isLoggedIn: true,
+      riderUser: mockUser,
+      authToken: token,
+      isAuthModalOpen: false,
+      isSubmitting: false,
+    });
+    get().showToast(`Welcome back, ${mockUser.fullName.split(' ')[0]}!`);
+    return { success: true };
   },
 
   registerRider: async (payload, apiBaseUrl = '') => {
     set({ isSubmitting: true });
     const normalizedPhone = payload.phone.startsWith('+234') ? payload.phone : `+234${payload.phone.replace(/^0/, '')}`;
-    if (get().simulationMode || !apiBaseUrl) {
-      const mockUser: RiderUser = {
-        id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
-        fullName: payload.fullName,
-        phone: normalizedPhone,
-        email: payload.email || `${payload.fullName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng`,
-        role: 'rider',
-        isVerified: false,
-        plateNumber: payload.plateNumber,
-        vehicleType: payload.vehicleType,
-      };
-      set({
-        riderName: payload.fullName,
-        plateNumber: payload.plateNumber,
-        riderUser: mockUser,
-        isSubmitting: false,
-      });
-      get().showToast('OTP sent to ' + normalizedPhone);
-      return { success: true };
+    const targetUrl = apiBaseUrl || (import.meta as any).env?.VITE_API_BASE_URL || '';
+
+    if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
+      try {
+        const res = await fetch(`${targetUrl}/api/v1/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fullName: payload.fullName,
+            phone: normalizedPhone,
+            email: payload.email,
+            password: payload.password,
+            role: 'rider',
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          set({ isSubmitting: false });
+          return { success: false, error: data.error || 'Failed to create rider account' };
+        }
+        set({ isSubmitting: false });
+        get().showToast('OTP sent to ' + normalizedPhone);
+        return { success: true };
+      } catch (err: any) {
+        if (!get().simulationMode) {
+          set({ isSubmitting: false });
+          return { success: false, error: err.message || 'Network error registering' };
+        }
+      }
     }
 
-    try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: payload.fullName,
-          phone: normalizedPhone,
-          email: payload.email,
-          password: payload.password,
-          role: 'rider',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        set({ isSubmitting: false });
-        return { success: false, error: data.error || 'Failed to create rider account' };
-      }
-      set({ isSubmitting: false });
-      return { success: true };
-    } catch (err: any) {
-      set({ isSubmitting: false });
-      return { success: false, error: err.message || 'Network error registering' };
-    }
+    const mockUser: RiderUser = {
+      id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
+      fullName: payload.fullName,
+      phone: normalizedPhone,
+      email: payload.email || `${payload.fullName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng`,
+      role: 'rider',
+      isVerified: false,
+      plateNumber: payload.plateNumber,
+      vehicleType: payload.vehicleType,
+    };
+    set({
+      riderName: payload.fullName,
+      plateNumber: payload.plateNumber,
+      riderUser: mockUser,
+      isSubmitting: false,
+    });
+    get().showToast('OTP sent to ' + normalizedPhone);
+    return { success: true };
   },
 
   verifyRiderOtp: async (phone: string, otp: string, apiBaseUrl = '') => {
     set({ isSubmitting: true });
     const normalizedPhone = phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`;
-    if (get().simulationMode || !apiBaseUrl) {
-      const token = 'jwt-mock-rider-session-' + Date.now();
-      const currentUser = get().riderUser || {
-        id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
-        fullName: get().riderName,
-        phone: normalizedPhone,
-        role: 'rider',
-        isVerified: true,
-      };
-      currentUser.isVerified = true;
+    const targetUrl = apiBaseUrl || (import.meta as any).env?.VITE_API_BASE_URL || '';
+
+    if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
       try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser: currentUser, authToken: token }));
+        const res = await fetch(`${targetUrl}/api/v1/auth/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: normalizedPhone, otp }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          set({ isSubmitting: false });
+          return { success: false, error: data.error || 'Invalid OTP code' };
         }
-      } catch {}
-      set({
-        isLoggedIn: true,
-        riderUser: currentUser,
-        authToken: token,
-        isAuthModalOpen: false,
-        isSubmitting: false,
-      });
-      get().showToast('Account verified! Welcome to Bayniks Logistics');
-      return { success: true };
+        const token = data.tokens?.accessToken || 'jwt-verified-token';
+        const user = data.user || get().riderUser;
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser: user, authToken: token }));
+          }
+        } catch {}
+        set({
+          isLoggedIn: true,
+          authToken: token,
+          riderUser: user,
+          simulationMode: false,
+          isAuthModalOpen: false,
+          isSubmitting: false,
+        });
+        get().showToast('Account verified! Welcome to Bayniks Logistics');
+        return { success: true };
+      } catch (err: any) {
+        if (!get().simulationMode) {
+          set({ isSubmitting: false });
+          return { success: false, error: err.message || 'Network error verifying OTP' };
+        }
+      }
     }
 
+    const token = 'jwt-mock-rider-session-' + Date.now();
+    const currentUser = get().riderUser || {
+      id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
+      fullName: get().riderName,
+      phone: normalizedPhone,
+      role: 'rider',
+      isVerified: true,
+    };
+    currentUser.isVerified = true;
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: normalizedPhone, otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        set({ isSubmitting: false });
-        return { success: false, error: data.error || 'Invalid OTP code' };
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser: currentUser, authToken: token }));
       }
-      set({
-        isLoggedIn: true,
-        authToken: data.tokens?.accessToken || 'jwt-verified-token',
-        isAuthModalOpen: false,
-        isSubmitting: false,
-      });
-      return { success: true };
-    } catch (err: any) {
-      set({ isSubmitting: false });
-      return { success: false, error: err.message || 'Network error verifying OTP' };
-    }
+    } catch {}
+    set({
+      isLoggedIn: true,
+      riderUser: currentUser,
+      authToken: token,
+      isAuthModalOpen: false,
+      isSubmitting: false,
+    });
+    get().showToast('Account verified! Welcome to Bayniks Logistics');
+    return { success: true };
   },
 
   logoutRider: () => {
