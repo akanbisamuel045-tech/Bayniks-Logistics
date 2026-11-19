@@ -26,7 +26,16 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
   onEndShift,
   onOpenDrawer,
 }) => {
-  const { tripsCompletedToday, showToast, riderName, plateNumber, walletBalanceKobo, todayEarningsKobo } = useRiderStore();
+  const {
+    tripsCompletedToday,
+    showToast,
+    riderName,
+    plateNumber,
+    walletBalanceKobo,
+    todayEarningsKobo,
+    simulationMode,
+    deliveryHistory,
+  } = useRiderStore();
 
   const handleCopyId = () => {
     showToast('Rider ID copied');
@@ -35,7 +44,7 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
     }
   };
 
-  const careerDeliveries = 542 + tripsCompletedToday;
+  const careerDeliveries = (simulationMode ? 542 : deliveryHistory.length) + tripsCompletedToday;
 
   return (
     <section id="screen-profile" className="tab-screen active" data-testid="screen-profile">

@@ -8,6 +8,74 @@ import { RiderKycScreen } from '../components/RiderKycScreen';
 import { DeliveryHistoryScreen } from '../components/DeliveryHistoryScreen';
 import { RiderNavigationDrawer } from '../components/RiderNavigationDrawer';
 
+const testDeliveries = [
+  {
+    id: 'del-849201',
+    trackingCode: 'LGS-849201',
+    date: 'Today',
+    time: '11:15 AM',
+    timestamp: Date.now() - 3600000 * 2,
+    fromAddress: 'Otigba Street, Computer Village, Ikeja',
+    fromLandmark: 'Beside slot main building, Yellow canopy',
+    toAddress: 'Admiralty Way, Lekki Phase 1',
+    toLandmark: 'Beside Ebeano Supermarket, Gate 2',
+    distanceKm: 18.4,
+    durationMins: 45,
+    fareKobo: 450000,
+    tipKobo: 50000,
+    status: 'delivered' as const,
+    proofType: 'pin' as const,
+    pinUsed: '7482',
+    packageType: 'Electronics • Laptop & Accessories',
+    recipientName: 'Michael Chen',
+    recipientPhone: '+2348034445566',
+    rating: 5,
+  },
+  {
+    id: 'del-773192',
+    trackingCode: 'LGS-773192',
+    date: 'Today',
+    time: '09:40 AM',
+    timestamp: Date.now() - 3600000 * 4,
+    fromAddress: 'Commercial Ave, Yaba Tech Hub',
+    fromLandmark: 'Opposite Domino Pizza, Yaba',
+    toAddress: 'Victoria Island Towers, Plot 4',
+    toLandmark: 'Beside Civic Centre, Waterfront Gate',
+    distanceKm: 11.2,
+    durationMins: 28,
+    fareKobo: 380000,
+    tipKobo: 0,
+    status: 'delivered' as const,
+    proofType: 'qr' as const,
+    packageType: 'Legal Documents • Confidential',
+    recipientName: 'Barrister Folake Sanusi',
+    recipientPhone: '+2348028889900',
+    rating: 5,
+  },
+  {
+    id: 'del-620481',
+    trackingCode: 'LGS-620481',
+    date: 'Yesterday',
+    time: '04:20 PM',
+    timestamp: Date.now() - 3600000 * 24,
+    fromAddress: 'Ikeja Central Freight Depot',
+    fromLandmark: 'Inside Ikeja Rail Corridor Terminal',
+    toAddress: 'Marina Financial Hub, CMS Lagos',
+    toLandmark: 'Near UBA House Entrance',
+    distanceKm: 22.1,
+    durationMins: 52,
+    fareKobo: 520000,
+    tipKobo: 100000,
+    status: 'delivered' as const,
+    proofType: 'pin' as const,
+    pinUsed: '3190',
+    packageType: 'Spare Parts • Machine Component (4.2kg)',
+    recipientName: 'Engineer Kolawole',
+    recipientPhone: '+2348123334455',
+    rating: 5,
+  },
+];
+
 describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
   beforeEach(() => {
     useRiderStore.setState({
@@ -20,6 +88,7 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       activeTab: 'home',
       isDrawerOpen: false,
       isAuthModalOpen: false,
+      deliveryHistory: testDeliveries,
     });
   });
 

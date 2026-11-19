@@ -51,29 +51,25 @@ export class TermiiProvider {
    * In test/dev mode or when API key is unconfigured, operates deterministically in mock mode.
    */
   async sendOtpSms(to: string, otp: string): Promise<boolean> {
-    const isTestOrDev =
-      process.env.NODE_ENV === 'test' ||
-      process.env.NODE_ENV === 'development' ||
-      !this.apiKey;
+    const isTest = process.env.NODE_ENV === 'test' || !this.apiKey;
 
-    const message = `Your Dispatch logistics verification code is: ${otp}. Valid for 5 minutes. Do not share.`;
+    const message = `Your Bayniks logistics verification code is: ${otp}. Valid for 5 minutes. Do not share.`;
 
-    if (isTestOrDev) {
+    if (isTest) {
       mockSentOtps.push({ to, otp, timestamp: Date.now() });
-      if (process.env.NODE_ENV !== 'test') {
-        console.log(`[Termii Mock SMS] To: ${to} | OTP: ${otp} | Message: "${message}"`);
-      }
+      console.log(`[Termii Test/Dev SMS] To: ${to} | OTP: ${otp} | Message: "${message}"`);
       return true;
     }
 
     try {
+      const termiiTo = to.replace(/^\+/, '');
       const response = await fetch(`${this.baseUrl}/api/sms/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to,
+          to: termiiTo,
           from: this.senderId,
           sms: message,
           type: 'plain',

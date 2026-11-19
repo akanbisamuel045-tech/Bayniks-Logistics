@@ -33,7 +33,7 @@ function formatKobo(kobo: number): string {
 }
 
 export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ onBack }) => {
-  const { deliveryHistory, showToast } = useRiderStore();
+  const { deliveryHistory, onTimeSlaPercent, showToast } = useRiderStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<'all' | 'today' | 'week' | 'month'>('all');
@@ -131,10 +131,10 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ on
               Total Deliveries
             </span>
             <span className="block text-lg font-black text-zinc-900 mt-0.5">
-              560
+              {deliveryHistory.length}
             </span>
             <span className="text-[10px] text-emerald-600 font-bold">
-              98.2% on-time
+              {deliveryHistory.length > 0 ? `${onTimeSlaPercent || 99.4}% on-time` : '100% on-time'}
             </span>
           </div>
 

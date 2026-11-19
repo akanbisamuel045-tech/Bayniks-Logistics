@@ -25,6 +25,8 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
     riderStatus,
     tripPhase,
     activeOrder,
+    riderName,
+    plateNumber,
     toggleOnlineStatus,
     advanceTripPhase,
     triggerDemoOffer,
@@ -61,7 +63,7 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
       setPanY(Math.round(vh / 2 - focusY * nextZoom));
 
       if (!silent) {
-        showToast('GPS centered on Joseph Okon (BLT-4912)');
+        showToast(`GPS centered on ${riderName || 'Joseph Okon'} (${plateNumber || 'BLT-4912'})`);
       }
     },
     [hasActiveDelivery, showToast]
@@ -489,7 +491,9 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
             <div className="rider-puck-beacon">
               <Navigation size={17} className="fill-current text-white -rotate-45" />
             </div>
-            <div className="rider-puck-tag">Joseph Okon • BLT-4912</div>
+            <div className="rider-puck-tag">
+              {riderName || 'Joseph Okon'} • {plateNumber || 'BLT-4912'}
+            </div>
           </div>
         </div>
       </div>

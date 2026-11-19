@@ -567,6 +567,37 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     set({ isSubmitting: true });
     const normalizedPhone = payload.phone.startsWith('+234') ? payload.phone : `+234${payload.phone.replace(/^0/, '')}`;
     const targetUrl = apiBaseUrl || (import.meta as any).env?.VITE_API_BASE_URL || '';
+    const generatedOtp = get().simulationMode ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 1. Dispatch real SMS to Termii if VITE_TERMII_API_KEY is available
+    const termiiApiKey = (import.meta as any).env?.VITE_TERMII_API_KEY || '';
+    if (termiiApiKey) {
+      const termiiTo = normalizedPhone.replace(/^\+/, '');
+      const senderId = (import.meta as any).env?.VITE_TERMII_SENDER_ID || 'BAYNIKS';
+      const baseUrl = (import.meta as any).env?.VITE_TERMII_BASE_URL || 'https://api.ng.termii.com';
+
+      fetch(`${baseUrl}/api/sms/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: termiiTo,
+          from: senderId,
+          sms: `Your Bayniks verification code is: ${generatedOtp}. Valid for 5 minutes. Do not share.`,
+          type: 'plain',
+          channel: 'dnd',
+          api_key: termiiApiKey,
+        }),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const err = await res.text();
+            console.warn('[Termii SMS Dispatch Gateway Response]', err);
+          } else {
+            console.log('[Termii SMS Dispatch Success] Code delivered to telco gateway');
+          }
+        })
+        .catch((err) => console.warn('[Termii Network Dispatch Catch]', err));
+    }
 
     if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
       try {
@@ -586,8 +617,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
           set({ isSubmitting: false });
           return { success: false, error: data.error || 'Failed to create rider account' };
         }
-        set({ isSubmitting: false });
-        get().showToast('OTP sent to ' + normalizedPhone);
+        set({ isSubmitting: false, activeOtpCode: generatedOtp });
+        get().showToast('Verification code sent to ' + normalizedPhone);
         return { success: true };
       } catch (err: any) {
         if (!get().simulationMode) {
@@ -611,10 +642,10 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
       riderName: payload.fullName,
       plateNumber: payload.plateNumber,
       riderUser: mockUser,
-      activeOtpCode: '123456',
+      activeOtpCode: generatedOtp,
       isSubmitting: false,
     });
-    get().showToast('Verification code 123456 ready for ' + normalizedPhone);
+    get().showToast(`Verification code sent to ${normalizedPhone}`);
     return { success: true };
   },
 
@@ -780,139 +811,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   },
   setKycStatus: (status) => set({ kycStatus: status }),
 
-  // Delivery History
-  deliveryHistory: [
-    {
-      id: 'del-849201',
-      trackingCode: 'LGS-849201',
-      date: 'Today',
-      time: '11:15 AM',
-      timestamp: Date.now() - 3600000 * 2,
-      fromAddress: 'Otigba Street, Computer Village, Ikeja',
-      fromLandmark: 'Beside slot main building, Yellow canopy',
-      toAddress: 'Admiralty Way, Lekki Phase 1',
-      toLandmark: 'Beside Ebeano Supermarket, Gate 2',
-      distanceKm: 18.4,
-      durationMins: 45,
-      fareKobo: 450000,
-      tipKobo: 50000,
-      status: 'delivered',
-      proofType: 'pin',
-      pinUsed: '7482',
-      packageType: 'Electronics • Laptop & Accessories',
-      recipientName: 'Michael Chen',
-      recipientPhone: '+2348034445566',
-      rating: 5,
-    },
-    {
-      id: 'del-773192',
-      trackingCode: 'LGS-773192',
-      date: 'Today',
-      time: '09:40 AM',
-      timestamp: Date.now() - 3600000 * 4,
-      fromAddress: 'Commercial Ave, Yaba Tech Hub',
-      fromLandmark: 'Opposite Domino Pizza, Yaba',
-      toAddress: 'Victoria Island Towers, Plot 4',
-      toLandmark: 'Beside Civic Centre, Waterfront Gate',
-      distanceKm: 11.2,
-      durationMins: 28,
-      fareKobo: 380000,
-      tipKobo: 0,
-      status: 'delivered',
-      proofType: 'qr',
-      packageType: 'Legal Documents • Confidential',
-      recipientName: 'Barrister Folake Sanusi',
-      recipientPhone: '+2348028889900',
-      rating: 5,
-    },
-    {
-      id: 'del-620481',
-      trackingCode: 'LGS-620481',
-      date: 'Yesterday',
-      time: '04:20 PM',
-      timestamp: Date.now() - 3600000 * 24,
-      fromAddress: 'Ikeja Central Freight Depot',
-      fromLandmark: 'Inside Ikeja Rail Corridor Terminal',
-      toAddress: 'Marina Financial Hub, CMS Lagos',
-      toLandmark: 'Near UBA House Entrance',
-      distanceKm: 22.1,
-      durationMins: 52,
-      fareKobo: 520000,
-      tipKobo: 100000,
-      status: 'delivered',
-      proofType: 'pin',
-      pinUsed: '3190',
-      packageType: 'Spare Parts • Machine Component (4.2kg)',
-      recipientName: 'Engineer Kolawole',
-      recipientPhone: '+2348123334455',
-      rating: 5,
-    },
-    {
-      id: 'del-559104',
-      trackingCode: 'LGS-559104',
-      date: 'Yesterday',
-      time: '01:10 PM',
-      timestamp: Date.now() - 3600000 * 27,
-      fromAddress: 'Bode Thomas Street, Surulere',
-      fromLandmark: 'Near Adeniran Ogunsanya Junction',
-      toAddress: 'Allen Avenue, Ikeja',
-      toLandmark: 'Opposite Oshopey Plaza',
-      distanceKm: 12.8,
-      durationMins: 34,
-      fareKobo: 320000,
-      tipKobo: 20000,
-      status: 'delivered',
-      proofType: 'pin',
-      pinUsed: '8261',
-      packageType: 'Fashion & Apparel • Designer Box',
-      recipientName: 'Amara Nnamdi',
-      recipientPhone: '+2348091122334',
-      rating: 4.9,
-    },
-    {
-      id: 'del-412890',
-      trackingCode: 'LGS-412890',
-      date: '12 Nov 2026',
-      time: '11:05 AM',
-      timestamp: Date.now() - 3600000 * 72,
-      fromAddress: 'Maryland Mall, Ikorodu Road',
-      fromLandmark: 'Big Black Box / Anthony Bypass',
-      toAddress: 'Festac Town, 2nd Avenue, 21 Road',
-      toLandmark: 'Near Mobil Filling Station Gate',
-      distanceKm: 24.6,
-      durationMins: 58,
-      fareKobo: 610000,
-      tipKobo: 50000,
-      status: 'delivered',
-      proofType: 'qr',
-      packageType: 'Pharmaceutical Supplies • Temperature Sensitive',
-      recipientName: 'Dr. Chinedu Eze',
-      recipientPhone: '+2348039988776',
-      rating: 5,
-    },
-    {
-      id: 'del-389102',
-      trackingCode: 'LGS-389102',
-      date: '10 Nov 2026',
-      time: '03:15 PM',
-      timestamp: Date.now() - 3600000 * 120,
-      fromAddress: 'Awolowo Road, Ikoyi',
-      fromLandmark: 'Near Standard Chartered Bank',
-      toAddress: 'Chevron Drive, Lekki Phase 2',
-      toLandmark: 'Opposite Northern Foreshore Estate',
-      distanceKm: 14.2,
-      durationMins: 38,
-      fareKobo: 390000,
-      tipKobo: 0,
-      status: 'delivered',
-      proofType: 'pin',
-      pinUsed: '4019',
-      packageType: 'Office Hardware • Dual Monitors',
-      recipientName: 'Tunde Bakare',
-      recipientPhone: '+2348187766554',
-      rating: 5,
-    },
-  ],
+  // Delivery History (Clean production state: 0 records on fresh install)
+  deliveryHistory: [],
   addDeliveryHistoryRecord: (record) =>
     set((state) => ({ deliveryHistory: [record, ...state.deliveryHistory] })),
 

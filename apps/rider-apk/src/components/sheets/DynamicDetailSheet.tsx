@@ -37,7 +37,14 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
     showToast,
     walletBalanceKobo,
     isDebtLocked,
+    riderName,
+    plateNumber,
+    riderUser,
   } = useRiderStore();
+
+  const displayName = riderName || riderUser?.fullName || 'Joseph Okon';
+  const displayPlate = plateNumber || 'BLT-4912';
+  const displayEmail = riderUser?.email || (riderName ? `${riderName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng` : 'joseph.okon@bayniks.ng');
 
   const [walletBalance, setWalletBalance] = useState(92300);
   const [cashoutAmount, setCashoutAmount] = useState('25000');
@@ -163,7 +170,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
           <div className="stack-10" data-testid="view-personal-info">
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Full Name</span>
-              <span style={{ fontSize: '12px', fontWeight: 800 }}>Joseph Okon</span>
+              <span style={{ fontSize: '12px', fontWeight: 800 }}>{displayName}</span>
             </div>
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Courier ID</span>
@@ -179,12 +186,12 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Phone</span>
               <span className="tabular-num" style={{ fontSize: '12px' }}>
-                +234 803 421 8900
+                {riderUser?.phone || '+234 803 421 8900'}
               </span>
             </div>
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Email</span>
-              <span style={{ fontSize: '12px', fontWeight: 700 }}>joseph.okon@bayniks.ng</span>
+              <span style={{ fontSize: '12px', fontWeight: 700 }}>{displayEmail}</span>
             </div>
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Home Depot</span>
@@ -391,7 +398,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
               </div>
               <div style={{ fontSize: '15px', fontWeight: 800 }}>Guaranty Trust Bank</div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Account Name: JOSEPH OKON
+                Account Name: {displayName.toUpperCase()}
               </div>
               <div
                 style={{
@@ -460,7 +467,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                   fontSize: '12px',
                 }}
               >
-                BLT-4912
+                {displayPlate}
               </span>
             </div>
 
@@ -528,7 +535,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
               </div>
               <div style={{ fontSize: '14px', fontWeight: 800 }}>Roadside Emergency SOS</div>
               <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: '3px 0 10px 0' }}>
-                Broadcasts live GPS, plate BLT-4912, and ₦500k GIT cargo status to BAYNIKS Safety Dispatch.
+                Broadcasts live GPS, plate {displayPlate}, and ₦500k GIT cargo status to BAYNIKS Safety Dispatch.
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px' }}>
                 <button
@@ -652,7 +659,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 Guaranty Trust Bank • 0148298291
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Joseph Okon • Zero Transfer Fee
+                {displayName} • Zero Transfer Fee
               </div>
             </div>
 
