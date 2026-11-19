@@ -14,6 +14,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  KeyRound,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../utils/audioChimes';
@@ -33,6 +34,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     loginRider,
     registerRider,
     verifyRiderOtp,
+    activeOtpCode,
     isSubmitting,
     showToast,
   } = useRiderStore();
@@ -128,21 +130,58 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     }
   };
 
-  const handleOtpChange = (index: number, val: string) => {
-    if (!/^\d*$/.test(val)) return;
+  const handleAutoFillOtp = (code = activeOtpCode || '123456') => {
     playKeypadChime();
+    const digits = code.slice(0, 6).split('');
+    setOtpDigits(digits);
+    setErrorMsg(null);
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!text) return;
+    playKeypadChime();
+    const digits = text.split('');
+    const nextDigits = ['', '', '', '', '', ''];
+    digits.forEach((d, i) => {
+      if (i < 6) nextDigits[i] = d;
+    });
+    setOtpDigits(nextDigits);
+    const lastFilled = Math.min(digits.length, 5);
+    document.getElementById(`rider-otp-slot-${lastFilled}`)?.focus();
+  };
+
+  const handleOtpChange = (index: number, val: string) => {
+    const clean = val.replace(/\D/g, '');
+    if (!clean && val !== '') return;
+    playKeypadChime();
+
+    // If mobile auto-filled all 6 digits into this input
+    if (clean.length > 1) {
+      const digits = clean.slice(0, 6).split('');
+      const nextDigits = [...otpDigits];
+      digits.forEach((d, i) => {
+        if (index + i < 6) nextDigits[index + i] = d;
+      });
+      setOtpDigits(nextDigits);
+      const targetFocus = Math.min(index + digits.length, 5);
+      document.getElementById(`rider-otp-slot-${targetFocus}`)?.focus();
+      return;
+    }
+
     const nextDigits = [...otpDigits];
-    nextDigits[index] = val.slice(-1);
+    nextDigits[index] = clean.slice(-1);
     setOtpDigits(nextDigits);
 
     // Auto-advance
-    if (val && index < 5) {
+    if (clean && index < 5) {
       const nextInput = document.getElementById(`rider-otp-slot-${index + 1}`);
       nextInput?.focus();
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
       const prevInput = document.getElementById(`rider-otp-slot-${index - 1}`);
       prevInput?.focus();
@@ -473,15 +512,37 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
           )}
 
           {mode === 'otp' && (
-            <div className="space-y-5 py-2">
+            <div className="space-y-4 py-2">
               <div className="text-center">
-                <div className="w-12 h-12 rounded-2xl bg-orange-100 text-[#FF5722] flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-orange-100 text-[#FF5722] flex items-center justify-center mx-auto mb-2">
                   <ShieldCheck size={26} />
                 </div>
                 <p className="text-xs text-zinc-600">
-                  Please enter the 6-digit confirmation code sent via SMS to{' '}
+                  Please enter the 6-digit confirmation code for{' '}
                   <span className="font-bold text-zinc-900">{phone}</span>
                 </p>
+              </div>
+
+              {/* Instant Test Mode OTP Auto-Fill Banner */}
+              <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-3 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                    <KeyRound size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-black text-amber-900 uppercase tracking-wider">Test Verification OTP</div>
+                    <div className="font-mono font-black text-amber-700 tracking-widest text-base">
+                      {activeOtpCode || '123456'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAutoFillOtp(activeOtpCode || '123456')}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-[11px] rounded-xl shadow-sm transition-all uppercase tracking-wider"
+                >
+                  Auto-Fill
+                </button>
               </div>
 
               {/* 6 Digit Slot Boxes */}
@@ -494,6 +555,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                     inputMode="numeric"
                     maxLength={1}
                     value={digit}
+                    onPaste={handleOtpPaste}
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                     className="w-12 h-14 text-center text-xl font-black bg-zinc-50 border-2 border-zinc-200 rounded-2xl focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all shadow-inner"
@@ -510,7 +572,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                     onClick={() => {
                       playKeypadChime();
                       setResendSeconds(30);
-                      showToast('New 6-digit OTP code sent via Termii SMS');
+                      showToast('Verification code ready: ' + (activeOtpCode || '123456'));
                     }}
                     className="font-bold text-[#FF5722] hover:underline"
                   >

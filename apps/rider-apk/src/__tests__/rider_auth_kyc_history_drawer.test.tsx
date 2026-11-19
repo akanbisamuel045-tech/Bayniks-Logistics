@@ -73,7 +73,8 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
     });
 
     it('validates 6-digit OTP entry and auto-advances', async () => {
-      render(<RiderAuthModal isOpen={true} onClose={vi.fn()} initialMode="login" />);
+      const onCloseMock = vi.fn();
+      render(<RiderAuthModal isOpen={true} onClose={onCloseMock} initialMode="login" />);
 
       // Switch to register then submit form to advance to OTP
       const createAccountBtn = screen.getByRole('button', { name: /Create Account/i });
@@ -87,6 +88,24 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       await waitFor(() => {
         expect(screen.getByText(/Verify Phone Number/i)).toBeDefined();
         expect(screen.getByText(/Verify & Complete Registration/i)).toBeDefined();
+        expect(screen.getByText(/Test Verification OTP/i)).toBeDefined();
+      });
+
+      // Tap Auto-Fill button to populate 123456
+      const autoFillBtn = screen.getByRole('button', { name: /Auto-Fill/i });
+      fireEvent.click(autoFillBtn);
+
+      // Verify slots have digits
+      const slot0 = document.getElementById('rider-otp-slot-0') as HTMLInputElement;
+      expect(slot0?.value).toBe('1');
+
+      // Submit verification
+      const verifyBtn = screen.getByRole('button', { name: /Verify & Complete Registration/i });
+      fireEvent.click(verifyBtn);
+
+      await waitFor(() => {
+        expect(useRiderStore.getState().isLoggedIn).toBe(true);
+        expect(onCloseMock).toHaveBeenCalled();
       });
     });
   });
