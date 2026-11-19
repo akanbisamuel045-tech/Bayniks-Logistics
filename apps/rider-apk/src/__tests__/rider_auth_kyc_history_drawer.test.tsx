@@ -162,12 +162,14 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       await waitFor(() => {
         expect(screen.getByText(/Verify Phone Number/i)).toBeDefined();
         expect(screen.getByText(/Verify & Complete Registration/i)).toBeDefined();
-        expect(screen.getByText(/Test Verification OTP/i)).toBeDefined();
+        expect(screen.queryByText(/Test Verification OTP/i)).toBeNull();
       });
 
-      // Tap Auto-Fill button to populate 123456
-      const autoFillBtn = screen.getByRole('button', { name: /Auto-Fill/i });
-      fireEvent.click(autoFillBtn);
+      // User enters the 6 digits received via SMS into the input slots
+      ['1', '2', '3', '4', '5', '6'].forEach((digit, i) => {
+        const slot = document.getElementById(`rider-otp-slot-${i}`) as HTMLInputElement;
+        fireEvent.change(slot, { target: { value: digit } });
+      });
 
       // Verify slots have digits
       const slot0 = document.getElementById('rider-otp-slot-0') as HTMLInputElement;

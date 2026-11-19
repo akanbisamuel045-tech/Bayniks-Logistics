@@ -14,7 +14,6 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  KeyRound,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../utils/audioChimes';
@@ -130,11 +129,45 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     }
   };
 
-  const handleAutoFillOtp = (code = activeOtpCode || '123456') => {
+  const handleResendOtp = async () => {
     playKeypadChime();
-    const digits = code.slice(0, 6).split('');
-    setOtpDigits(digits);
+    setResendSeconds(30);
     setErrorMsg(null);
+    const normalizedPhone = phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`;
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    useRiderStore.getState().setActiveOtpCode(generatedOtp);
+
+    const termiiApiKey = (import.meta as any).env?.VITE_TERMII_API_KEY || '';
+    if (termiiApiKey) {
+      const termiiTo = normalizedPhone.replace(/^\+/, '');
+      const senderId = (import.meta as any).env?.VITE_TERMII_SENDER_ID || 'BAYNIKS';
+      const baseUrl = (import.meta as any).env?.VITE_TERMII_BASE_URL || 'https://api.ng.termii.com';
+
+      try {
+        const res = await fetch(`${baseUrl}/api/sms/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: termiiTo,
+            from: senderId,
+            sms: `Your Bayniks verification code is: ${generatedOtp}. Valid for 5 minutes. Do not share.`,
+            type: 'plain',
+            channel: 'dnd',
+            api_key: termiiApiKey,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setErrorMsg(`Termii Error: ${data.message || 'SMS dispatch failed'}`);
+        } else {
+          showToast(`Verification SMS resent to ${normalizedPhone}`);
+        }
+      } catch (err: any) {
+        setErrorMsg(`SMS Dispatch network error: ${err.message || 'Network error'}`);
+      }
+    } else {
+      showToast(`Verification code resent via SMS to ${normalizedPhone}`);
+    }
   };
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -518,35 +551,13 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                   <ShieldCheck size={26} />
                 </div>
                 <p className="text-xs text-zinc-600">
-                  Please enter the 6-digit confirmation code for{' '}
+                  Please enter the 6-digit confirmation code sent via SMS to{' '}
                   <span className="font-bold text-zinc-900">{phone}</span>
                 </p>
               </div>
 
-              {/* Instant Test Mode OTP Auto-Fill Banner */}
-              <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-3 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                    <KeyRound size={16} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-black text-amber-900 uppercase tracking-wider">Test Verification OTP</div>
-                    <div className="font-mono font-black text-amber-700 tracking-widest text-base">
-                      {activeOtpCode || '123456'}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleAutoFillOtp(activeOtpCode || '123456')}
-                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-[11px] rounded-xl shadow-sm transition-all uppercase tracking-wider"
-                >
-                  Auto-Fill
-                </button>
-              </div>
-
               {/* 6 Digit Slot Boxes */}
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-2 py-1">
                 {otpDigits.map((digit, idx) => (
                   <input
                     key={idx}
@@ -565,18 +576,14 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
 
               <div className="text-center text-xs text-zinc-500">
                 {resendSeconds > 0 ? (
-                  <span>Resend code in <strong className="text-zinc-800">{resendSeconds}s</strong></span>
+                  <span>Resend SMS code in <strong className="text-zinc-800">{resendSeconds}s</strong></span>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => {
-                      playKeypadChime();
-                      setResendSeconds(30);
-                      showToast('Verification code ready: ' + (activeOtpCode || '123456'));
-                    }}
+                    onClick={handleResendOtp}
                     className="font-bold text-[#FF5722] hover:underline"
                   >
-                    Resend Code Now
+                    Resend SMS Code
                   </button>
                 )}
               </div>
