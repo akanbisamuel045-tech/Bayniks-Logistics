@@ -44,13 +44,13 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   React.useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
-  const [phone, setPhone] = useState('08034218900');
-  const [password, setPassword] = useState('RiderPass123!');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState('Babajide Adeleke');
-  const [email, setEmail] = useState('b.adeleke@bayniks.ng');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [vehicleType, setVehicleType] = useState<'bike' | 'van' | 'truck'>('bike');
-  const [plateNumber, setPlateNumber] = useState('KJA-824-XY');
+  const [plateNumber, setPlateNumber] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(30);

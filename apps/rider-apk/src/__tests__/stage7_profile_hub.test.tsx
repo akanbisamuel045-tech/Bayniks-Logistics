@@ -20,6 +20,7 @@ describe('Stage 7: Rider Profile Hub, Dynamic Detail Sheets & Bank Cashout', () 
       riderName: 'Joseph Okon',
       plateNumber: 'BLT-4912',
       todayEarningsKobo: 1845000,
+      walletBalanceKobo: 9230000,
       tripsCompletedToday: 8,
       chatMessages: [],
       toastMessage: null,

@@ -312,7 +312,50 @@ function getInitialTheme(): 'light' | 'dark' {
   return 'light';
 }
 
-export const useRiderStore = create<RiderStoreState>((set, get) => ({
+function getInitialAuthState(): {
+  isLoggedIn: boolean;
+  riderUser: RiderUser | null;
+  authToken: string | null;
+  riderName: string;
+  plateNumber: string;
+} {
+  if (typeof window === 'undefined') {
+    return {
+      isLoggedIn: false,
+      riderUser: null,
+      authToken: null,
+      riderName: '',
+      plateNumber: '',
+    };
+  }
+  try {
+    const raw = window.localStorage?.getItem('bayniks_rider_auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.riderUser) {
+        return {
+          isLoggedIn: true,
+          riderUser: parsed.riderUser,
+          authToken: parsed.authToken || null,
+          riderName: parsed.riderUser.fullName || '',
+          plateNumber: parsed.riderUser.plateNumber || '',
+        };
+      }
+    }
+  } catch {}
+  return {
+    isLoggedIn: false,
+    riderUser: null,
+    authToken: null,
+    riderName: '',
+    plateNumber: '',
+  };
+}
+
+export const useRiderStore = create<RiderStoreState>((set, get) => {
+  const initialAuth = getInitialAuthState();
+
+  return {
   theme: getInitialTheme(),
   toastMessage: null,
 
@@ -364,20 +407,20 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
     set({ isQuickQrOpen: open });
   },
 
-  riderName: 'Babajide Adeleke',
-  plateNumber: 'KJA-824-XY',
-  riderStatus: 'available',
-  authToken: null,
+  riderName: initialAuth.riderName,
+  plateNumber: initialAuth.plateNumber,
+  riderStatus: initialAuth.isLoggedIn ? 'available' : 'offline',
+  authToken: initialAuth.authToken,
 
   // Default coordinate: Computer Village, Ikeja (6.5933, 3.3421)
   currentLocation: { lat: 6.5933, lng: 3.3421 },
   currentBearing: 45,
-  currentSpeed: 32.5,
+  currentSpeed: 0,
   currentAccuracy: 3.2,
-  batteryLevel: 88,
+  batteryLevel: 95,
 
-  todayEarningsKobo: 1850000, // ₦18,500.00
-  walletBalanceKobo: 9230000, // ₦92,300.00
+  todayEarningsKobo: 0,
+  walletBalanceKobo: 0,
   isDebtLocked: false,
   maxDebtLimitKobo: MAX_CASH_DEBT_LIMIT_KOBO || 500000, // ₦5,000
 
@@ -427,72 +470,16 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
   pendingOfflinePingsCount: 0,
   isNetworkConnected: typeof navigator !== 'undefined' ? navigator.onLine : true,
 
-  // Shift & Wallet Summary Initial State
-  shiftSettledTrips: [
-    {
-      id: '#473215090',
-      time: '11:15 AM',
-      from: 'Otigba St, Computer Village, Ikeja',
-      to: 'Admiralty Way, Lekki Phase 1',
-      distanceKm: 18.4,
-      fareKobo: 450000,
-      tipKobo: 50000,
-    },
-    {
-      id: '#928474948',
-      time: '09:40 AM',
-      from: 'Commercial Ave, Yaba',
-      to: 'Victoria Island Towers, Plot 4',
-      distanceKm: 11.2,
-      fareKobo: 380000,
-      tipKobo: 0,
-    },
-    {
-      id: '#882410921',
-      time: '08:20 AM',
-      from: 'Ikeja Central Depot',
-      to: 'Marina Financial Hub, Lagos',
-      distanceKm: 21.5,
-      fareKobo: 520000,
-      tipKobo: 100000,
-    },
-  ],
-  tripsCompletedToday: 18,
-  distanceCoveredKm: 42.8,
+  // Shift & Wallet Summary Initial State (Real empty initial state)
+  shiftSettledTrips: [],
+  tripsCompletedToday: 0,
+  distanceCoveredKm: 0,
   onTimeSlaPercent: 99.4,
-  chatMessages: [
-    {
-      id: 'm1',
-      sender: 'customer',
-      text: 'Good day! Please drop package with security if I am not at the door.',
-      time: '11:02 AM',
-    },
-    {
-      id: 'm2',
-      sender: 'rider',
-      text: 'Noted sir! I am currently en route, ETA is around 12 minutes.',
-      time: '11:04 AM',
-    },
-    {
-      id: 'm3',
-      sender: 'customer',
-      text: 'Great, thanks! I will have the delivery PIN ready for you.',
-      time: '11:05 AM',
-    },
-  ],
+  chatMessages: [],
 
   // Auth state & actions
-  isLoggedIn: true,
-  riderUser: {
-    id: 'usr-rider-8492',
-    fullName: 'Babajide Adeleke',
-    phone: '+2348034218900',
-    email: 'b.adeleke@bayniks.ng',
-    role: 'rider',
-    isVerified: true,
-    plateNumber: 'KJA-824-XY',
-    vehicleType: 'bike',
-  },
+  isLoggedIn: initialAuth.isLoggedIn,
+  riderUser: initialAuth.riderUser,
   isAuthModalOpen: false,
   setAuthModalOpen: (open: boolean) => set({ isAuthModalOpen: open }),
 
@@ -1658,4 +1645,5 @@ export const useRiderStore = create<RiderStoreState>((set, get) => ({
       return { success: true, message: `Incident '${incidentType}' logged locally` };
     }
   },
-}));
+};
+});

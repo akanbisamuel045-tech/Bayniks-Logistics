@@ -53,6 +53,7 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
     plateNumber,
     riderStatus,
     kycStatus,
+    walletBalanceKobo,
     logoutRider,
     toggleOnlineStatus,
   } = useRiderStore();
@@ -60,7 +61,7 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
   if (!isOpen) return null;
 
   const isOnline = riderStatus === 'available' || riderStatus === 'busy';
-  const firstName = riderName.trim().split(/\s+/)[0] || 'Babajide';
+  const firstName = riderName?.trim().split(/\s+/)[0] || 'Rider';
 
   const handleNavClick = (target: DrawerNavTarget) => {
     playKeypadChime();
@@ -119,9 +120,9 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
               />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-black text-white truncate">{riderName}</h2>
+              <h2 className="text-sm font-black text-white truncate">{riderName || 'New Rider'}</h2>
               <div className="text-[11px] text-zinc-300 truncate font-semibold">
-                4.95 ★ • Express Bike • {plateNumber}
+                4.95 ★ • Express Bike • {plateNumber || 'No Plate Linked'}
               </div>
               <button
                 type="button"
@@ -209,7 +210,9 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
                   <Wallet className="w-4 h-4 shrink-0 text-black stroke-[2.2]" style={{ color: '#000000' }} />
                   <div className="min-w-0">
                     <div className="font-extrabold text-neutral-900 truncate">Shift Earnings & Payouts</div>
-                    <div className="text-[10px] text-neutral-400 font-medium truncate">Earnings & Wallet • ₦92,300.00 Balance</div>
+                    <div className="text-[10px] text-neutral-400 font-medium truncate">
+                      Earnings &amp; Wallet • ₦{(walletBalanceKobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 })} Balance
+                    </div>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0 stroke-[2]" />

@@ -26,12 +26,12 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
   onEndShift,
   onOpenDrawer,
 }) => {
-  const { tripsCompletedToday, showToast, riderName, plateNumber } = useRiderStore();
+  const { tripsCompletedToday, showToast, riderName, plateNumber, walletBalanceKobo, todayEarningsKobo } = useRiderStore();
 
   const handleCopyId = () => {
-    showToast('Rider ID #BN-8492 copied');
+    showToast('Rider ID copied');
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText('#BN-8492');
+      navigator.clipboard.writeText(plateNumber || '#BN-0001');
     }
   };
 
@@ -181,7 +181,9 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="menu-row-title">Earnings &amp; Wallet</div>
-                  <div className="menu-row-sub">Balance: ₦92,300.00 • Today: ₦18,450</div>
+                  <div className="menu-row-sub">
+                    Balance: ₦{(walletBalanceKobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 })} • Today: ₦{(todayEarningsKobo / 100).toLocaleString('en-NG')}
+                  </div>
                 </div>
               </div>
               <span className="menu-chevron">›</span>

@@ -52,9 +52,11 @@ export const HeroEspressoCard: React.FC<HeroEspressoCardProps> = ({
 
   const isOnline = riderStatus === 'available' || riderStatus === 'busy';
   const isBusy = riderStatus === 'busy';
-  const firstName = riderName.trim().split(/\s+/)[0] || 'Joseph';
-  const initials = getInitials(riderName);
-  const greeting = `Good ${getTimeOfDayGreeting()}, ${firstName} 👋`;
+  const firstName = riderName?.trim().split(/\s+/)[0];
+  const initials = riderName ? getInitials(riderName) : 'BY';
+  const greeting = riderName
+    ? `Good ${getTimeOfDayGreeting()}, ${firstName} 👋`
+    : 'Welcome to Bayniks Courier';
 
   const handleQrClick = () => {
     playKeypadChime();
@@ -139,7 +141,11 @@ export const HeroEspressoCard: React.FC<HeroEspressoCardProps> = ({
             <span className="pro-badge">PRO</span>
           </div>
           <div className="hero-subline">
-            Express Bike • <span className="tabular-num" style={{ color: '#FFFFFF' }}>{plateNumber || 'BLT-4912'}</span>
+            {plateNumber ? (
+              <>Express Bike • <span className="tabular-num" style={{ color: '#FFFFFF' }}>{plateNumber}</span></>
+            ) : (
+              <span style={{ color: '#A8A29E' }}>Rider • No Vehicle Linked</span>
+            )}
           </div>
         </div>
       </div>

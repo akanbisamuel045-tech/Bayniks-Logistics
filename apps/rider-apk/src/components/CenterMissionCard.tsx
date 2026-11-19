@@ -153,7 +153,7 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
         </div>
         <h2 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.02em' }}>Go Online to start earning</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '14px' }}>
-          Switch online to receive instant delivery assignments in Yaba & Victoria Island. Strict 1-delivery capacity lock active.
+          Go online to start receiving delivery assignments near your current location.
         </p>
         <button
           type="button"
@@ -162,7 +162,7 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
           data-testid="btn-go-online"
         >
           <Power size={18} strokeWidth={2.5} />
-          <span>Go Online & Find Deliveries</span>
+          <span>Go Online & Receive Orders</span>
         </button>
       </div>
     );
@@ -172,30 +172,33 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
   // STATE 2: Online Radar Scanning / Idle
   // --------------------------------------------------------------------------
   if (isOnline && !hasActiveMission) {
+    const { simulationMode } = useRiderStore.getState();
     return (
       <div id="cardStateScanning" className="surface-card orange-frame" data-testid="card-state-scanning">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span className="live-chip"><span className="live-chip-dot" /> ONLINE • SCANNING</span>
           <span className="tabular-num" style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Capacity: 0/1</span>
         </div>
-        <h2 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.02em' }}>Scanning Yaba & VI corridor...</h2>
+        <h2 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '-0.02em' }}>Scanning Yaba &amp; VI corridor...</h2>
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '14px' }}>
-          High demand detected (+₦1,250 surge). Incoming requests require acceptance within 30 seconds.
+          Your GPS telemetry is actively streaming. Incoming delivery assignments will alert you on your phone automatically.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: '8px' }}>
-          <button
-            type="button"
-            className="btn-orange-xl"
-            style={{ height: '48px', fontSize: '13px' }}
-            onClick={triggerDemoOffer}
-            data-testid="btn-simulate-dispatch"
-          >
-            <span>Simulate Dispatch ⚡</span>
-          </button>
+        <div style={{ display: 'grid', gridTemplateColumns: simulationMode ? '1.35fr 1fr' : '1fr', gap: '8px' }}>
+          {simulationMode && (
+            <button
+              type="button"
+              className="btn-orange-xl"
+              style={{ height: '48px', fontSize: '13px' }}
+              onClick={triggerDemoOffer}
+              data-testid="btn-simulate-dispatch"
+            >
+              <span>Simulate Dispatch ⚡</span>
+            </button>
+          )}
           <button
             type="button"
             className="btn-neutral-xl"
-            style={{ height: '48px', fontSize: '13px' }}
+            style={{ height: '48px', fontSize: '13px', width: '100%' }}
             onClick={() => toggleOnlineStatus()}
             data-testid="btn-go-offline"
           >
