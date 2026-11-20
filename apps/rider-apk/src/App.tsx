@@ -63,7 +63,7 @@ export function App() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [detailSheetType, setDetailSheetType] = useState<DynamicDetailSheetType>('personal');
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp'>('login');
 
   // Restore saved rider session from localStorage on app boot
   useEffect(() => {
@@ -101,6 +101,9 @@ export function App() {
       setAuthModalOpen(true);
     } else if (viewParam === 'register') {
       setAuthModalMode('register');
+      setAuthModalOpen(true);
+    } else if (viewParam === 'otp') {
+      setAuthModalMode('otp');
       setAuthModalOpen(true);
     } else if (viewParam === 'history') {
       setActiveTab('history');
@@ -261,7 +264,7 @@ export function App() {
 
   return (
     <MobileAppShell
-      hideNav={isFullMapOpen}
+      hideNav={isFullMapOpen || activeTab === 'kyc'}
       onOpenQr={() => {
         setHandoverVerifyMode('qr');
         setIsHandoverVerifyOpen(true);
