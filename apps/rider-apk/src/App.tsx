@@ -78,7 +78,7 @@ export function App() {
               authToken: parsed.authToken,
               riderUser: parsed.riderUser,
               riderName: parsed.riderUser.fullName || 'Rider',
-              plateNumber: parsed.riderUser.plateNumber || 'KJA-824-XY',
+              plateNumber: parsed.riderUser.plateNumber || '',
               simulationMode: false,
             });
           }

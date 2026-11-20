@@ -40,20 +40,25 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
     riderName,
     plateNumber,
     riderUser,
+    simulationMode,
   } = useRiderStore();
 
-  const displayName = riderName || riderUser?.fullName || 'Joseph Okon';
-  const displayPlate = plateNumber || 'BLT-4912';
-  const displayEmail = riderUser?.email || (riderName ? `${riderName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng` : 'joseph.okon@bayniks.ng');
+  const displayName = riderName || riderUser?.fullName || (simulationMode ? 'Joseph Okon' : 'Courier Rider');
+  const displayPlate = plateNumber || riderUser?.plateNumber || (simulationMode ? 'BLT-4912' : 'No Plate Linked');
+  const displayEmail = riderUser?.email || (riderName ? `${riderName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng` : (simulationMode ? 'joseph.okon@bayniks.ng' : 'rider@bayniks.ng'));
 
   const [walletBalance, setWalletBalance] = useState(92300);
   const [cashoutAmount, setCashoutAmount] = useState('25000');
   const [chatInput, setChatInput] = useState('');
   const [selectedChartDay, setSelectedChartDay] = useState(5); // Saturday
-  const [payouts, setPayouts] = useState([
-    { bank: 'Guaranty Trust Bank •••• 8291', date: 'Yesterday • 18:40', amount: 24500 },
-    { bank: 'Guaranty Trust Bank •••• 8291', date: '12 Nov • 19:15', amount: 31200 },
-  ]);
+  const [payouts, setPayouts] = useState<{ bank: string; date: string; amount: number }[]>(
+    simulationMode
+      ? [
+          { bank: 'Guaranty Trust Bank •••• 8291', date: 'Yesterday • 18:40', amount: 24500 },
+          { bank: 'Guaranty Trust Bank •••• 8291', date: '12 Nov • 19:15', amount: 31200 },
+        ]
+      : []
+  );
 
   if (!isOpen) return null;
 
@@ -178,15 +183,15 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 type="button"
                 className="pill-peach-btn"
                 style={{ height: '26px', fontSize: '11px' }}
-                onClick={() => showToast('Courier ID #BN-8492 copied')}
+                onClick={() => showToast(`Courier ID #${riderUser?.id ? `BN-${riderUser.id.slice(-4)}` : (simulationMode ? 'BN-8492' : 'BN-0001')} copied`)}
               >
-                <span className="tabular-num">#BN-8492</span> <span>📋</span>
+                <span className="tabular-num">#{riderUser?.id ? `BN-${riderUser.id.slice(-4)}` : (simulationMode ? 'BN-8492' : 'BN-0001')}</span> <span>📋</span>
               </button>
             </div>
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>Phone</span>
               <span className="tabular-num" style={{ fontSize: '12px' }}>
-                {riderUser?.phone || '+234 803 421 8900'}
+                {riderUser?.phone || (simulationMode ? '+234 803 421 8900' : 'No phone linked')}
               </span>
             </div>
             <div className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -369,20 +374,26 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 RECENT PAYOUTS
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {payouts.map((p, idx) => (
-                  <div
-                    key={idx}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                  >
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: 800 }}>{p.bank}</div>
-                      <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{p.date}</div>
-                    </div>
-                    <span className="tabular-num" style={{ fontSize: '13px', color: 'var(--accent-emerald-text)' }}>
-                      ₦{p.amount.toLocaleString()} ✓
-                    </span>
+                {payouts.length === 0 ? (
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', padding: '6px 0' }}>
+                    No recent bank settlements yet.
                   </div>
-                ))}
+                ) : (
+                  payouts.map((p, idx) => (
+                    <div
+                      key={idx}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '12px', fontWeight: 800 }}>{p.bank}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{p.date}</div>
+                      </div>
+                      <span className="tabular-num" style={{ fontSize: '13px', color: 'var(--accent-emerald-text)' }}>
+                        ₦{p.amount.toLocaleString()} ✓
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -721,7 +732,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 KYC Level 2 Verified
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Your documents and GTBank payout account have been verified.
+                Your documents and settlement bank account have been verified.
               </div>
             </div>
           </div>

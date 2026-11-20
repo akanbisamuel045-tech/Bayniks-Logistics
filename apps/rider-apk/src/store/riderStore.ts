@@ -15,7 +15,7 @@ export type RiderStatus = 'offline' | 'available' | 'busy';
 export type TripPhase = 'idle' | 'arriving_pickup' | 'at_pickup' | 'in_transit' | 'at_dropoff';
 export type RiderTab = 'home' | 'profile' | 'earnings' | 'support' | 'history' | 'kyc';
 
-export type KycReviewStatus = 'pending_review' | 'approved' | 'rejected';
+export type KycReviewStatus = 'not_submitted' | 'pending_review' | 'approved' | 'rejected';
 
 export interface KycDocumentData {
   nin: string;
@@ -464,9 +464,9 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   incomingOffer: null,
   offerSecondsLeft: 30,
   isSubmitting: false,
-  activeOtpCode: '123456',
+  activeOtpCode: '',
   setActiveOtpCode: (code: string) => set({ activeOtpCode: code }),
-  simulationMode: true,
+  simulationMode: (import.meta as any).env?.MODE === 'test',
   pendingOfflinePingsCount: 0,
   isNetworkConnected: typeof navigator !== 'undefined' ? navigator.onLine : true,
 
@@ -536,14 +536,15 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
       }
     }
 
+    const userFullName = get().riderName || 'Courier Rider';
     const mockUser: RiderUser = {
       id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
-      fullName: get().riderName || 'Babajide Adeleke',
+      fullName: userFullName,
       phone: normalizedPhone,
-      email: 'b.adeleke@bayniks.ng',
+      email: `${userFullName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng`,
       role: 'rider',
-      isVerified: true,
-      plateNumber: get().plateNumber || 'KJA-824-XY',
+      isVerified: false,
+      plateNumber: get().plateNumber || '',
       vehicleType: 'bike',
     };
     const token = 'jwt-mock-rider-session-' + Date.now();
@@ -748,21 +749,21 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     get().showToast('Signed out of Bayniks Courier');
   },
 
-  // KYC state & actions
-  kycStatus: 'approved',
+  // KYC state & actions (Clean production initial state: not submitted)
+  kycStatus: 'not_submitted',
   kycRejectionReason: null,
   kycDocuments: {
-    nin: '28491029481',
-    lasdriNumber: 'LSD-2024-84910',
-    ridersCardNumber: 'RC-LAG-98214',
-    licenseNumber: 'DL-LS-2022-77192',
+    nin: '',
+    lasdriNumber: '',
+    ridersCardNumber: '',
+    licenseNumber: '',
     vehicleType: 'bike',
-    plateNumber: 'KJA-824-XY',
-    fleetCode: 'FLT-LAGOS-01',
-    dateOfBirth: '1994-06-14',
-    residentialAddress: '14 Olumo Street, Onike, Yaba, Lagos',
-    nextOfKinName: 'Abiola Adeleke',
-    nextOfKinPhone: '+2348034567890',
+    plateNumber: '',
+    fleetCode: '',
+    dateOfBirth: '',
+    residentialAddress: '',
+    nextOfKinName: '',
+    nextOfKinPhone: '',
   },
   submitKyc: async (docs, apiBaseUrl = '') => {
     set({ isSubmitting: true });
@@ -1481,7 +1482,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ text, senderName: 'Tariq Danladi (Courier)' }),
+          body: JSON.stringify({ text, senderName: `${get().riderName || 'Courier'} (Rider)` }),
         });
       } catch {
         // Non-fatal

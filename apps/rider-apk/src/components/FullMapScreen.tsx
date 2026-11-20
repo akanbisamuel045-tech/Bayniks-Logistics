@@ -31,7 +31,12 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
     advanceTripPhase,
     triggerDemoOffer,
     showToast,
+    riderUser,
+    simulationMode,
   } = useRiderStore();
+
+  const displayName = riderName || riderUser?.fullName || (simulationMode ? 'Joseph Okon' : 'Active Rider');
+  const displayPlate = plateNumber || riderUser?.plateNumber || (simulationMode ? 'BLT-4912' : '');
 
   const hasActiveDelivery = Boolean(activeOrder && tripPhase !== 'idle');
   const isOnline = riderStatus === 'available' || riderStatus === 'busy';
@@ -63,7 +68,7 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
       setPanY(Math.round(vh / 2 - focusY * nextZoom));
 
       if (!silent) {
-        showToast(`GPS centered on ${riderName || 'Joseph Okon'} (${plateNumber || 'BLT-4912'})`);
+        showToast(`GPS centered on ${displayName}${displayPlate ? ` (${displayPlate})` : ''}`);
       }
     },
     [hasActiveDelivery, showToast]
@@ -492,7 +497,7 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
               <Navigation size={17} className="fill-current text-white -rotate-45" />
             </div>
             <div className="rider-puck-tag">
-              {riderName || 'Joseph Okon'} • {plateNumber || 'BLT-4912'}
+              {displayName}{displayPlate ? ` • ${displayPlate}` : ''}
             </div>
           </div>
         </div>
@@ -569,13 +574,22 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
                       if (!isOnline) {
                         toggleOnlineStatus();
                         showToast('You are now ONLINE');
-                      } else {
+                      } else if (simulationMode) {
                         triggerDemoOffer();
+                      } else {
+                        toggleOnlineStatus();
+                        showToast('You are now OFFLINE');
                       }
                     }}
                     data-testid="full-map-standby-cta"
                   >
-                    <span>{isOnline ? 'Simulate Dispatch ⚡' : 'Go Online & Find Deliveries'}</span>
+                    <span>
+                      {!isOnline
+                        ? 'Go Online & Find Deliveries'
+                        : simulationMode
+                        ? 'Simulate Dispatch ⚡'
+                        : 'Go Offline'}
+                    </span>
                   </button>
                   <button
                     type="button"

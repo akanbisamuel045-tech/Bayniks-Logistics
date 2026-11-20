@@ -12,12 +12,17 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const { showToast } = useRiderStore();
-  const [phone, setPhone] = useState('+234 803 421 8900');
-  const [email, setEmail] = useState('joseph.okon@bayniks.ng');
+  const { showToast, riderUser, riderName, simulationMode } = useRiderStore();
+  const [phone, setPhone] = useState(riderUser?.phone || (simulationMode ? '+234 803 421 8900' : ''));
+  const [email, setEmail] = useState(
+    riderUser?.email ||
+      (riderName
+        ? `${riderName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng`
+        : (simulationMode ? 'joseph.okon@bayniks.ng' : ''))
+  );
   const [depot, setDepot] = useState('Yaba Central');
   const [bank, setBank] = useState('Guaranty Trust Bank');
-  const [acct, setAcct] = useState('0148298291');
+  const [acct, setAcct] = useState(simulationMode ? '0148298291' : '');
 
   if (!isOpen) return null;
 

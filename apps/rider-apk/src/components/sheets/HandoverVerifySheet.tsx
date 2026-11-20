@@ -19,7 +19,7 @@ export const HandoverVerifySheet: React.FC<HandoverVerifySheetProps> = ({
   onVerified,
   initialMode = 'qr',
 }) => {
-  const { completeCurrentTrip, showToast, activeOrder } = useRiderStore();
+  const { completeCurrentTrip, showToast, activeOrder, simulationMode } = useRiderStore();
   const [mode, setMode] = useState<'qr' | 'otp'>(initialMode);
   const [torchOn, setTorchOn] = useState(false);
   const [otpDigits, setOtpDigits] = useState<string[]>([]);
@@ -37,7 +37,7 @@ export const HandoverVerifySheet: React.FC<HandoverVerifySheetProps> = ({
   if (!isOpen) return null;
 
   const recipientName =
-    activeOrder?.stops?.[0]?.recipientName || 'Sarah Jenkins';
+    activeOrder?.stops?.[0]?.recipientName || (simulationMode ? 'Sarah Jenkins' : 'Recipient');
 
   const handleAppendDigit = (digit: string) => {
     if (otpDigits.length < 4) {
@@ -85,7 +85,7 @@ export const HandoverVerifySheet: React.FC<HandoverVerifySheetProps> = ({
       handleCompleteHandover(`OTP ${enteredPin} Verified ✓`);
     } else {
       playErrorChime();
-      setErrorMsg('Invalid PIN. Hint: 7482');
+      setErrorMsg(simulationMode ? 'Invalid PIN. Hint: 7482' : 'Invalid PIN code. Please confirm with recipient.');
       showToast('Invalid PIN code');
     }
   };
@@ -206,9 +206,11 @@ export const HandoverVerifySheet: React.FC<HandoverVerifySheetProps> = ({
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 Enter recipient <strong>{recipientName}&apos;s</strong> 4-digit PIN
               </p>
-              <span className="live-chip" style={{ marginTop: '5px' }}>
-                Recipient PIN Hint: 7482
-              </span>
+              {simulationMode && (
+                <span className="live-chip" style={{ marginTop: '5px' }}>
+                  Recipient PIN Hint: 7482
+                </span>
+              )}
             </div>
 
             {/* 4 Digit Slots */}

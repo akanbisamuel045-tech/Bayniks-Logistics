@@ -38,6 +38,7 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
     proximityDistanceMeters,
     setProximityPrompt,
     recordCashCollection,
+    simulationMode,
   } = useRiderStore();
 
   const [isNavChooserOpen, setIsNavChooserOpen] = useState(false);
@@ -212,18 +213,18 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
   const contactParty: ContactPartyInfo =
     stepNumber <= 2
       ? {
-          name: activeOrder?.pickup?.contactName || 'Kuchi Empire',
-          phone: activeOrder?.pickup?.contactPhone || '+234 802 555 0192',
+          name: activeOrder?.pickup?.contactName || (simulationMode ? 'Kuchi Empire' : 'Sender Contact'),
+          phone: activeOrder?.pickup?.contactPhone || (simulationMode ? '+234 802 555 0192' : ''),
           role: 'sender',
-          trackingCode: activeOrder?.trackingCode || '#BF-48291',
-          landmark: activeOrder?.pickup?.landmark || activeOrder?.pickup?.address || '14 Commercial Ave, Yaba',
+          trackingCode: activeOrder?.trackingCode || (simulationMode ? '#BF-48291' : ''),
+          landmark: activeOrder?.pickup?.landmark || activeOrder?.pickup?.address || (simulationMode ? '14 Commercial Ave, Yaba' : 'Pickup Location'),
         }
       : {
-          name: activeStop?.recipientName || 'Sarah Jenkins',
-          phone: activeStop?.recipientPhone || '+234 809 334 8821',
+          name: activeStop?.recipientName || (simulationMode ? 'Sarah Jenkins' : 'Recipient Contact'),
+          phone: activeStop?.recipientPhone || (simulationMode ? '+234 809 334 8821' : ''),
           role: 'recipient',
-          trackingCode: activeOrder?.trackingCode || '#BF-48291',
-          landmark: activeStop?.dropoffLandmark || activeStop?.dropoffAddress || 'Victoria Island Towers, Plot 4',
+          trackingCode: activeOrder?.trackingCode || (simulationMode ? '#BF-48291' : ''),
+          landmark: activeStop?.dropoffLandmark || activeStop?.dropoffAddress || (simulationMode ? 'Victoria Island Towers, Plot 4' : 'Dropoff Location'),
         };
 
   const navTarget: NavigationTarget =
@@ -231,14 +232,14 @@ export const CenterMissionCard: React.FC<CenterMissionCardProps> = ({
       ? {
           lat: activeOrder?.pickup?.location?.lat || 6.5158,
           lng: activeOrder?.pickup?.location?.lng || 3.3718,
-          address: activeOrder?.pickup?.address || '14 Commercial Ave, Yaba',
-          landmark: activeOrder?.pickup?.landmark || 'Near Sabo Market',
+          address: activeOrder?.pickup?.address || (simulationMode ? '14 Commercial Ave, Yaba' : 'Pickup Address'),
+          landmark: activeOrder?.pickup?.landmark || (simulationMode ? 'Near Sabo Market' : 'Pickup Landmark'),
         }
       : {
           lat: activeStop?.dropoffLocation?.lat || 6.4281,
           lng: activeStop?.dropoffLocation?.lng || 3.4219,
-          address: activeStop?.dropoffAddress || 'Victoria Island Towers, Plot 4',
-          landmark: activeStop?.dropoffLandmark || 'Beside Civic Centre',
+          address: activeStop?.dropoffAddress || (simulationMode ? 'Victoria Island Towers, Plot 4' : 'Dropoff Address'),
+          landmark: activeStop?.dropoffLandmark || (simulationMode ? 'Beside Civic Centre' : 'Dropoff Landmark'),
         };
 
   // --------------------------------------------------------------------------

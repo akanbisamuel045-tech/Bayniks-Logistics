@@ -35,12 +35,23 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
     todayEarningsKobo,
     simulationMode,
     deliveryHistory,
+    riderUser,
   } = useRiderStore();
+
+  const displayName = riderName || riderUser?.fullName || (simulationMode ? 'Joseph Okon' : 'Courier Rider');
+  const displayPlate = plateNumber || riderUser?.plateNumber || (simulationMode ? 'BLT-4912' : 'No Plate Linked');
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'CR';
 
   const handleCopyId = () => {
     showToast('Rider ID copied');
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(plateNumber || '#BN-0001');
+      navigator.clipboard.writeText(displayPlate || '#BN-0001');
     }
   };
 
@@ -95,17 +106,17 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
             title="Edit Profile"
             data-testid="profile-avatar-btn"
           >
-            <div className="profile-avatar-inner">JO</div>
+            <div className="profile-avatar-inner">{initials}</div>
             <span className="profile-avatar-edit-badge">
               <Pencil size={12} strokeWidth={2.6} />
             </span>
           </div>
 
           <h2 style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            {riderName || 'Joseph Okon'}
+            {displayName}
           </h2>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '2px' }}>
-            Express Bike • <span className="tabular-num" style={{ color: 'var(--text-primary)' }}>{plateNumber || 'BLT-4912'}</span>
+            Express Bike • <span className="tabular-num" style={{ color: 'var(--text-primary)' }}>{displayPlate}</span>
           </div>
 
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
@@ -172,7 +183,7 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="menu-row-title">Personal Information</div>
-                  <div className="menu-row-sub">+234 803 421 8900 • Yaba Central</div>
+                  <div className="menu-row-sub">{riderUser?.phone || (simulationMode ? '+234 803 421 8900' : 'No phone linked')} • Yaba Central</div>
                 </div>
               </div>
               <span className="menu-chevron">›</span>
@@ -210,7 +221,7 @@ export const RiderProfileScreen: React.FC<RiderProfileScreenProps> = ({
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="menu-row-title">Payout Bank Account</div>
-                  <div className="menu-row-sub">Guaranty Trust Bank •••• 8291</div>
+                  <div className="menu-row-sub">{simulationMode ? 'Guaranty Trust Bank •••• 8291' : 'Tap to manage settlement bank'}</div>
                 </div>
               </div>
               <span className="menu-chevron">›</span>

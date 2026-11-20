@@ -16,6 +16,7 @@ describe('Rider App Bayniks Design System & Customer Parity Suite', () => {
       riderName: 'Tariq Danladi',
       plateNumber: 'KJA-824-XY',
       riderStatus: 'available',
+      kycStatus: 'approved',
       tripPhase: 'idle',
       todayEarningsKobo: 3425000, // ₦34,250.00
       currentAccuracy: 3.2,

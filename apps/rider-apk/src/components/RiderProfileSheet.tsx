@@ -35,9 +35,23 @@ export const RiderProfileSheet: React.FC<RiderProfileSheetProps> = ({
     setSimulationMode,
     riderStatus,
     toggleOnlineStatus,
+    riderUser,
+    kycDocuments,
   } = useRiderStore();
 
   if (!isOpen) return null;
+
+  const displayName = riderName || riderUser?.fullName || (simulationMode ? 'Tariq Danladi' : 'Active Courier');
+  const displayPlate = plateNumber || riderUser?.plateNumber || (simulationMode ? 'KJA-824-XY' : 'No Plate Linked');
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'CR';
+  const displayPhone = riderUser?.phone || (simulationMode ? '+234 803 123 4567' : 'No phone linked');
+  const displayPermit = kycDocuments?.ridersCardNumber || (simulationMode ? 'LGS-RDR-2026-991' : 'Pending verification');
 
   return (
     <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -67,16 +81,16 @@ export const RiderProfileSheet: React.FC<RiderProfileSheetProps> = ({
           {/* Identity Card */}
           <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center gap-3.5 shadow-sm">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF6D1F] to-orange-700 flex items-center justify-center text-xl font-black text-white shadow-md">
-              TD
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-black text-zinc-900 truncate">{riderName || 'Tariq Danladi'}</h3>
+                <h3 className="text-base font-black text-zinc-900 truncate">{displayName}</h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase border border-emerald-200">
                   NIN Verified
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-mono mt-0.5">+234 803 123 4567</p>
+              <p className="text-xs text-zinc-500 font-mono mt-0.5">{displayPhone}</p>
               <div className="flex items-center gap-1.5 text-[11px] text-zinc-600 mt-1">
                 <MapPin className="w-3 h-3 text-[#FF6D1F]" />
                 <span>Lagos Central Hub (Ikeja Fleet)</span>
@@ -98,12 +112,12 @@ export const RiderProfileSheet: React.FC<RiderProfileSheetProps> = ({
 
               <div className="p-2.5 rounded-xl bg-white border border-zinc-200 shadow-xs">
                 <span className="text-[10px] text-zinc-400 font-bold block">Plate Number</span>
-                <span className="font-mono font-bold text-zinc-900">{plateNumber}</span>
+                <span className="font-mono font-bold text-zinc-900">{displayPlate}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white border border-zinc-200 shadow-xs">
                 <span className="text-[10px] text-zinc-400 font-bold block">LASRERA Riders Permit</span>
-                <span className="font-mono text-zinc-700">LGS-RDR-2026-991</span>
+                <span className="font-mono text-zinc-700">{displayPermit}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white border border-zinc-200 shadow-xs">
@@ -136,28 +150,30 @@ export const RiderProfileSheet: React.FC<RiderProfileSheetProps> = ({
               </button>
             </div>
 
-            {/* Simulation Mode Toggle */}
-            <div className="flex items-center justify-between py-2 border-t border-zinc-200">
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-emerald-600" />
-                <div>
-                  <span className="text-xs font-bold text-zinc-900 block">Dev Simulation Mode</span>
-                  <span className="text-[10px] text-zinc-500">Enables mock offers and simulated Lagos trips</span>
+            {/* Simulation Mode Toggle (Simulation only) */}
+            {simulationMode && (
+              <div className="flex items-center justify-between py-2 border-t border-zinc-200">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-emerald-600" />
+                  <div>
+                    <span className="text-xs font-bold text-zinc-900 block">Dev Simulation Mode</span>
+                    <span className="text-[10px] text-zinc-500">Enables mock offers and simulated Lagos trips</span>
+                  </div>
                 </div>
-              </div>
-              <button
-                onClick={() => setSimulationMode(!simulationMode)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${
-                  simulationMode ? 'bg-emerald-500' : 'bg-zinc-200'
-                }`}
-              >
-                <span
-                  className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform shadow-sm ${
-                    simulationMode ? 'left-6.5' : 'left-0.5'
+                <button
+                  onClick={() => setSimulationMode(!simulationMode)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${
+                    simulationMode ? 'bg-emerald-500' : 'bg-zinc-200'
                   }`}
-                />
-              </button>
-            </div>
+                >
+                  <span
+                    className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform shadow-sm ${
+                      simulationMode ? 'left-6.5' : 'left-0.5'
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Sign Out / End Shift */}

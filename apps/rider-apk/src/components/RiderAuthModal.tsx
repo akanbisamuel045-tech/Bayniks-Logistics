@@ -336,7 +336,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                     type="tel"
                     value={phone.replace(/^\+234/, '').replace(/^0/, '')}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="803 123 4567"
+                    placeholder={useRiderStore.getState().simulationMode ? "803 123 4567" : "800 000 0000"}
                     className="w-full pl-24 pr-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
                     required
                   />
@@ -399,17 +399,19 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                 )}
               </button>
 
-              {/* Instant One-Tap Demo Sign-In */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleOneTapDemoLogin}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 active:scale-[0.98] text-zinc-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-zinc-300 transition-all"
-                >
-                  <Sparkles size={15} className="text-[#FF5722]" />
-                  <span>One-Tap Demo Rider Sign-In</span>
-                </button>
-              </div>
+              {/* Instant One-Tap Demo Sign-In (Simulation only) */}
+              {useRiderStore.getState().simulationMode && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleOneTapDemoLogin}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-zinc-100 hover:bg-zinc-200 active:scale-[0.98] text-zinc-800 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-zinc-300 transition-all"
+                  >
+                    <Sparkles size={15} className="text-[#FF5722]" />
+                    <span>One-Tap Demo Rider Sign-In</span>
+                  </button>
+                </div>
+              )}
             </form>
           )}
 
@@ -425,7 +427,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Babajide Adeleke"
+                    placeholder={useRiderStore.getState().simulationMode ? "e.g. Babajide Adeleke" : "Enter your full legal name"}
                     className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
                     required
                   />
@@ -444,7 +446,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                     type="tel"
                     value={phone.replace(/^\+234/, '').replace(/^0/, '')}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="803 123 4567"
+                    placeholder={useRiderStore.getState().simulationMode ? "803 123 4567" : "800 000 0000"}
                     className="w-full pl-20 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
                     required
                   />
@@ -510,7 +512,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                   type="text"
                   value={plateNumber}
                   onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
-                  placeholder="e.g. KJA-824-XY"
+                  placeholder={useRiderStore.getState().simulationMode ? "e.g. KJA-824-XY" : "e.g. LAG-123-AA"}
                   className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-2xl text-sm font-bold uppercase focus:outline-none focus:border-[#FF5722] focus:bg-white"
                   required
                 />

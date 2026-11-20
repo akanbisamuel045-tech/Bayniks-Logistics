@@ -36,21 +36,21 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
     showToast,
   } = useRiderStore();
 
-  const [nin, setNin] = useState(kycDocuments.nin || '28491029481');
-  const [dob, setDob] = useState(kycDocuments.dateOfBirth || '1994-06-14');
-  const [address, setAddress] = useState(kycDocuments.residentialAddress || '14 Olumo Street, Onike, Yaba, Lagos');
-  const [nextOfKinName, setNextOfKinName] = useState(kycDocuments.nextOfKinName || 'Abiola Adeleke');
-  const [nextOfKinPhone, setNextOfKinPhone] = useState(kycDocuments.nextOfKinPhone || '+2348034567890');
+  const [nin, setNin] = useState(kycDocuments.nin || '');
+  const [dob, setDob] = useState(kycDocuments.dateOfBirth || '');
+  const [address, setAddress] = useState(kycDocuments.residentialAddress || '');
+  const [nextOfKinName, setNextOfKinName] = useState(kycDocuments.nextOfKinName || '');
+  const [nextOfKinPhone, setNextOfKinPhone] = useState(kycDocuments.nextOfKinPhone || '');
   const [vehicleType, setVehicleType] = useState<'bike' | 'van' | 'truck'>(kycDocuments.vehicleType || 'bike');
-  const [plateNumber, setPlateNumber] = useState(kycDocuments.plateNumber || 'KJA-824-XY');
-  const [lasdriNumber, setLasdriNumber] = useState(kycDocuments.lasdriNumber || 'LSD-2024-84910');
-  const [ridersCardNumber, setRidersCardNumber] = useState(kycDocuments.ridersCardNumber || 'RC-LAG-98214');
-  const [fleetCode, setFleetCode] = useState(kycDocuments.fleetCode || 'FLT-LAGOS-01');
+  const [plateNumber, setPlateNumber] = useState(kycDocuments.plateNumber || '');
+  const [lasdriNumber, setLasdriNumber] = useState(kycDocuments.lasdriNumber || '');
+  const [ridersCardNumber, setRidersCardNumber] = useState(kycDocuments.ridersCardNumber || '');
+  const [fleetCode, setFleetCode] = useState(kycDocuments.fleetCode || '');
 
-  // Simulated Document Upload States
-  const [passportUploaded, setPassportUploaded] = useState(true);
-  const [licenseUploaded, setLicenseUploaded] = useState(true);
-  const [permitUploaded, setPermitUploaded] = useState(true);
+  // Document Upload States
+  const [passportUploaded, setPassportUploaded] = useState(kycStatus === 'approved' || Boolean(kycDocuments.nin));
+  const [licenseUploaded, setLicenseUploaded] = useState(kycStatus === 'approved' || Boolean(kycDocuments.ridersCardNumber));
+  const [permitUploaded, setPermitUploaded] = useState(kycStatus === 'approved' || Boolean(kycDocuments.lasdriNumber));
   const [isCompressing, setIsCompressing] = useState(false);
 
   const handleFileUpload = async (type: 'passport' | 'license' | 'permit') => {
@@ -149,15 +149,17 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
           </div>
         </div>
 
-        {/* QA Approval Switcher */}
-        <button
-          type="button"
-          onClick={toggleDemoApproval}
-          className="px-2.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF5722] text-[11px] font-black uppercase tracking-wider border border-orange-200 flex items-center gap-1.5 transition-all"
-        >
-          <Sparkles size={13} />
-          <span>Toggle Approval</span>
-        </button>
+        {/* QA Approval Switcher (Simulation Only) */}
+        {useRiderStore.getState().simulationMode && (
+          <button
+            type="button"
+            onClick={toggleDemoApproval}
+            className="px-2.5 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF5722] text-[11px] font-black uppercase tracking-wider border border-orange-200 flex items-center gap-1.5 transition-all"
+          >
+            <Sparkles size={13} />
+            <span>Toggle Approval</span>
+          </button>
+        )}
       </header>
 
       <div className="p-4 max-w-lg mx-auto space-y-4">
@@ -379,7 +381,7 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-800">Passport Photo / Helmet Selfie</div>
-                    <div className="text-[10px] text-zinc-500">Verified & Compressed (142 KB)</div>
+                    <div className="text-[10px] text-zinc-500">{passportUploaded ? 'Uploaded & Verified' : 'JPEG / PNG under 2MB'}</div>
                   </div>
                 </div>
                 <button
@@ -400,7 +402,7 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-800">Lagos Driver's License (Front/Back)</div>
-                    <div className="text-[10px] text-zinc-500">Document active until Dec 2027</div>
+                    <div className="text-[10px] text-zinc-500">{licenseUploaded ? 'Valid Driver Document' : 'Front & Back Photo'}</div>
                   </div>
                 </div>
                 <button
@@ -421,7 +423,7 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-zinc-800">LASDRI Recertification Certificate</div>
-                    <div className="text-[10px] text-zinc-500">Permit #LSD-2024-84910</div>
+                    <div className="text-[10px] text-zinc-500">{permitUploaded ? (lasdriNumber ? `Permit #${lasdriNumber}` : 'Uploaded & Verified') : 'Driver Recertification Card'}</div>
                   </div>
                 </div>
                 <button
