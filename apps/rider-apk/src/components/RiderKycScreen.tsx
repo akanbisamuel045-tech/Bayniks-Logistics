@@ -54,12 +54,8 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
   const [vehicleOpen, setVehicleOpen] = useState(true);
   const [paymentOpen, setPaymentOpen] = useState(true);
 
-  // Active sub-modal (supports deep-linking via ?kycModal=...)
-  const [activeModal, setActiveModal] = useState<KycSubModal>(() => {
-    if (typeof window === 'undefined') return null;
-    const p = new URLSearchParams(window.location.search).get('kycModal');
-    return (p as KycSubModal) || null;
-  });
+  // Active sub-modal
+  const [activeModal, setActiveModal] = useState<KycSubModal>(null);
 
   // Form states
   const [firstName, setFirstName] = useState(kycDocuments.nextOfKinName?.split(' ')[0] || '');

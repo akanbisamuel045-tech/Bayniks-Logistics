@@ -14,6 +14,7 @@ import { HandoverVerifySheet } from './components/sheets/HandoverVerifySheet';
 import { RiderProfileScreen } from './components/RiderProfileScreen';
 import { EditProfileModal } from './components/sheets/EditProfileModal';
 import { DynamicDetailSheet, DynamicDetailSheetType } from './components/sheets/DynamicDetailSheet';
+import { RiderLandingScreen } from './components/RiderLandingScreen';
 import { RiderAuthModal } from './components/RiderAuthModal';
 import { RiderKycScreen } from './components/RiderKycScreen';
 import { DeliveryHistoryScreen } from './components/DeliveryHistoryScreen';
@@ -24,6 +25,7 @@ import { batteryOptimizationService } from './services/batteryOptimization.servi
 
 export function App() {
   const {
+    isLoggedIn,
     riderStatus,
     tripPhase,
     authToken,
@@ -64,6 +66,7 @@ export function App() {
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [detailSheetType, setDetailSheetType] = useState<DynamicDetailSheetType>('personal');
   const [authModalMode, setAuthModalMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp'>('login');
+  const [forceLandingView, setForceLandingView] = useState(false);
 
   // Restore saved rider session from localStorage on app boot
   useEffect(() => {
@@ -96,6 +99,8 @@ export function App() {
 
     if (viewParam === 'drawer') {
       setDrawerOpen(true);
+    } else if (viewParam === 'landing' || viewParam === 'welcome') {
+      setForceLandingView(true);
     } else if (viewParam === 'login') {
       setAuthModalMode('login');
       setAuthModalOpen(true);
@@ -262,9 +267,11 @@ export function App() {
     }
   };
 
+  const showLanding = forceLandingView || (!isLoggedIn && activeTab === 'home');
+
   return (
     <MobileAppShell
-      hideNav={isFullMapOpen || activeTab === 'kyc'}
+      hideNav={isFullMapOpen || activeTab === 'kyc' || showLanding}
       onOpenQr={() => {
         setHandoverVerifyMode('qr');
         setIsHandoverVerifyOpen(true);
@@ -289,68 +296,83 @@ export function App() {
         }
       }}
     >
-      {/* Scrollable Mobile Viewport Stage: Cockpit, Profile, History or KYC */}
+      {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Profile, History or KYC */}
       <main className="mobile-scroll-stage">
-        {activeTab === 'home' && (
-          <section id="screen-home" className="tab-screen active">
-            <div className="stack-14">
-              {/* 1. Espresso-Charcoal Hero Card with Drawer Menu Toggle */}
-              <HeroEspressoCard
-                onOpenDrawer={() => setDrawerOpen(true)}
-                onOpenNotifications={() => {
-                  setDetailSheetType('notifications');
-                  setIsDetailSheetOpen(true);
-                }}
-                onOpenQr={() => {
-                  setHandoverVerifyMode('qr');
-                  setIsHandoverVerifyOpen(true);
-                }}
-              />
-
-              {/* 2. Prominent 56px Availability Switch Bar */}
-              <AvailabilityBar />
-
-              {/* 3. Dynamic Center Mission Card (3 States & N=1 Lock) */}
-              <CenterMissionCard
-                onOpenVerification={(mode) => {
-                  setHandoverVerifyMode(mode || 'qr');
-                  setIsHandoverVerifyOpen(true);
-                }}
-                onOpenFullMap={() => {
-                  setIsFullMapOpen(true);
-                }}
-              />
-
-              {/* 4. Nearby Delivery Zones Surge Radar Card */}
-              <NearbySurgeRadar
-                onOpenFullMap={() => setIsFullMapOpen(true)}
-                onTriggerSurgeDispatch={() => triggerDemoOffer()}
-              />
-            </div>
-          </section>
-        )}
-
-        {activeTab === 'profile' && (
-          <RiderProfileScreen
-            onOpenDrawer={() => setDrawerOpen(true)}
-            onOpenEditProfile={() => setIsEditProfileOpen(true)}
-            onOpenDetailSheet={(type) => {
-              setDetailSheetType(type);
-              setIsDetailSheetOpen(true);
+        {showLanding ? (
+          <RiderLandingScreen
+            onSignIn={() => {
+              setAuthModalMode('login');
+              setAuthModalOpen(true);
             }}
-            onEndShift={() => {
-              useRiderStore.setState({ riderStatus: 'offline' });
-              showToast('Shift ended. You are now OFFLINE');
+            onRegister={() => {
+              setAuthModalMode('register');
+              setAuthModalOpen(true);
             }}
           />
-        )}
+        ) : (
+          <>
+            {activeTab === 'home' && (
+              <section id="screen-home" className="tab-screen active">
+                <div className="stack-14">
+                  {/* 1. Espresso-Charcoal Hero Card with Drawer Menu Toggle */}
+                  <HeroEspressoCard
+                    onOpenDrawer={() => setDrawerOpen(true)}
+                    onOpenNotifications={() => {
+                      setDetailSheetType('notifications');
+                      setIsDetailSheetOpen(true);
+                    }}
+                    onOpenQr={() => {
+                      setHandoverVerifyMode('qr');
+                      setIsHandoverVerifyOpen(true);
+                    }}
+                  />
 
-        {activeTab === 'history' && (
-          <DeliveryHistoryScreen onBack={() => setActiveTab('home')} />
-        )}
+                  {/* 2. Prominent 56px Availability Switch Bar */}
+                  <AvailabilityBar />
 
-        {activeTab === 'kyc' && (
-          <RiderKycScreen onBack={() => setActiveTab('profile')} />
+                  {/* 3. Dynamic Center Mission Card (3 States & N=1 Lock) */}
+                  <CenterMissionCard
+                    onOpenVerification={(mode) => {
+                      setHandoverVerifyMode(mode || 'qr');
+                      setIsHandoverVerifyOpen(true);
+                    }}
+                    onOpenFullMap={() => {
+                      setIsFullMapOpen(true);
+                    }}
+                  />
+
+                  {/* 4. Nearby Delivery Zones Surge Radar Card */}
+                  <NearbySurgeRadar
+                    onOpenFullMap={() => setIsFullMapOpen(true)}
+                    onTriggerSurgeDispatch={() => triggerDemoOffer()}
+                  />
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'profile' && (
+              <RiderProfileScreen
+                onOpenDrawer={() => setDrawerOpen(true)}
+                onOpenEditProfile={() => setIsEditProfileOpen(true)}
+                onOpenDetailSheet={(type) => {
+                  setDetailSheetType(type);
+                  setIsDetailSheetOpen(true);
+                }}
+                onEndShift={() => {
+                  useRiderStore.setState({ riderStatus: 'offline' });
+                  showToast('Shift ended. You are now OFFLINE');
+                }}
+              />
+            )}
+
+            {activeTab === 'history' && (
+              <DeliveryHistoryScreen onBack={() => setActiveTab('home')} />
+            )}
+
+            {activeTab === 'kyc' && (
+              <RiderKycScreen onBack={() => setActiveTab('profile')} />
+            )}
+          </>
         )}
       </main>
 

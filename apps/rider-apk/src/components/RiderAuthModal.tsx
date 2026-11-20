@@ -388,18 +388,19 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                 </div>
               </div>
 
-              {/* Main Submit: Bolt Green transformed to Bayniks Orange Pill */}
+              {/* Main Submit: Black button with Bayniks Orange Accent */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#FF5722] hover:bg-[#E64A19] active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 transition-all mt-2"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-2 cursor-pointer group"
               >
                 {isSubmitting ? (
                   <span>Signing In...</span>
                 ) : (
                   <>
+                    <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
                     <span>Sign In to Cockpit</span>
-                    <ArrowRight size={16} />
+                    <ArrowRight size={16} className="text-[#FF5722]" />
                   </>
                 )}
               </button>
@@ -588,14 +589,15 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                 </div>
               </div>
 
-              {/* Main Submit: Bolt Green transformed to Bayniks Orange Pill */}
+              {/* Main Submit: Black button with Bayniks Orange Accent */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#FF5722] hover:bg-[#E64A19] active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 transition-all mt-3"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-3 cursor-pointer group"
               >
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
                 <span>Continue to OTP Verification</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="text-[#FF5722]" />
               </button>
             </form>
           )}
@@ -653,14 +655,15 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                 )}
               </div>
 
-              {/* Verify Button (Green transformed to Orange Pill) */}
+              {/* Verify Button: Black button with Bayniks Orange Accent */}
               <button
                 type="button"
                 onClick={handleVerifyOtp}
                 disabled={isSubmitting || otpDigits.join('').length < 6}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#FF5722] hover:bg-[#E64A19] active:scale-[0.98] disabled:opacity-50 text-white font-bold text-sm tracking-wide shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 transition-all mt-4"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] disabled:opacity-50 text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-4 cursor-pointer group"
               >
-                <CheckCircle2 size={16} />
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <CheckCircle2 size={16} className="text-[#FF5722]" />
                 <span>Verify & Complete Registration</span>
               </button>
 
