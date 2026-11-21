@@ -373,7 +373,16 @@ export function App() {
             )}
 
             {activeTab === 'kyc' && (
-              <RiderKycScreen onBack={() => setActiveTab('home')} />
+              <RiderKycScreen
+                onBack={() => {
+                  setForceLandingView(false);
+                  setActiveTab('home');
+                }}
+                onComplete={() => {
+                  setForceLandingView(false);
+                  setActiveTab('home');
+                }}
+              />
             )}
           </>
         )}

@@ -270,6 +270,20 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
 
       expect(handleBack).toHaveBeenCalled();
     });
+
+    it('redirects to homepage when Submit registration is clicked', async () => {
+      const handleBack = vi.fn();
+      const handleComplete = vi.fn();
+      render(<RiderKycScreen onBack={handleBack} onComplete={handleComplete} />);
+
+      const submitBtn = screen.getByRole('button', { name: /Submit registration/i });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect(handleComplete).toHaveBeenCalled();
+      });
+      expect(useRiderStore.getState().activeTab).toBe('home');
+    });
   });
 
   /* -------------------------------------------------------------
