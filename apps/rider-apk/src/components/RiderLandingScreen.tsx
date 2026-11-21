@@ -84,3 +84,4 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
 };
 
 export default RiderLandingScreen;
+

@@ -57,6 +57,13 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
   // Active sub-modal
   const [activeModal, setActiveModal] = useState<KycSubModal>(null);
 
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('modal') as KycSubModal;
+    if (m) setActiveModal(m);
+  }, []);
+
   // Form states
   const [firstName, setFirstName] = useState(kycDocuments.nextOfKinName?.split(' ')[0] || '');
   const [lastName, setLastName] = useState(kycDocuments.nextOfKinName?.split(' ')[1] || '');
@@ -826,9 +833,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
               <button
                 type="button"
                 onClick={() => handleSaveModal('Personal details saved')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-4"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-4 cursor-pointer group"
               >
-                Save
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>Save</span>
               </button>
             </div>
           </div>
@@ -918,9 +926,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
               <button
                 type="button"
                 onClick={() => handleSaveModal('Vehicle details updated')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-4"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-4 cursor-pointer group"
               >
-                Save
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>Save</span>
               </button>
             </div>
           </div>
@@ -1047,9 +1056,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
               <button
                 type="button"
                 onClick={() => handleSaveModal('Settlement bank details saved')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-4"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-4 cursor-pointer group"
               >
-                Save
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>Save</span>
               </button>
             </div>
           </div>
@@ -1117,9 +1127,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 type="button"
                 disabled={isCompressing}
                 onClick={() => handleFileUpload('nin')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-6"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
               >
-                {ninUploaded ? 'Replace' : 'Add document'}
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>{ninUploaded ? 'Replace' : 'Add document'}</span>
               </button>
             </div>
           </div>
@@ -1164,14 +1175,15 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   type="button"
                   disabled={isCompressing}
                   onClick={() => handleFileUpload('photo')}
-                  className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md"
+                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group"
                 >
-                  {photoUploaded ? 'Replace' : 'Add photo'}
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>{photoUploaded ? 'Replace' : 'Add photo'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="w-full text-center text-xs font-bold text-zinc-600 hover:text-zinc-900 py-2"
+                  className="w-full text-center text-xs font-bold text-zinc-800 hover:text-[#FF5722] py-2 transition-colors"
                 >
                   Skip for now
                 </button>
@@ -1225,9 +1237,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 type="button"
                 disabled={isCompressing}
                 onClick={() => handleFileUpload('riders_card')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-6"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
               >
-                {ridersCardUploaded ? 'Replace' : 'Add document'}
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>{ridersCardUploaded ? 'Replace' : 'Add document'}</span>
               </button>
             </div>
           </div>
@@ -1270,14 +1283,15 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   type="button"
                   disabled={isCompressing}
                   onClick={() => handleFileUpload('exterior')}
-                  className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md"
+                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group"
                 >
-                  {exteriorUploaded ? 'Replace' : 'Add photo'}
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>{exteriorUploaded ? 'Replace' : 'Add photo'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="w-full text-center text-xs font-bold text-zinc-600 hover:text-zinc-900 py-2"
+                  className="w-full text-center text-xs font-bold text-zinc-800 hover:text-[#FF5722] py-2 transition-colors"
                 >
                   Skip for now
                 </button>
@@ -1332,9 +1346,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 type="button"
                 disabled={isCompressing}
                 onClick={() => handleFileUpload('autogenius')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-6"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
               >
-                {autogeniusUploaded ? 'Replace' : 'Add document'}
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>{autogeniusUploaded ? 'Replace' : 'Add document'}</span>
               </button>
             </div>
           </div>
@@ -1387,9 +1402,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 type="button"
                 disabled={isCompressing}
                 onClick={() => handleFileUpload('lasdri')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-6"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
               >
-                {lasdriUploaded ? 'Replace' : 'Add document'}
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>{lasdriUploaded ? 'Replace' : 'Add document'}</span>
               </button>
             </div>
           </div>
@@ -1441,9 +1457,10 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 type="button"
                 disabled={isCompressing}
                 onClick={() => handleFileUpload('hackney')}
-                className="w-full h-12 rounded-full bg-[#FF5722] hover:bg-[#E64A19] text-white font-bold text-sm shadow-md mt-6"
+                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
               >
-                {hackneyUploaded ? 'Replace' : 'Add document'}
+                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                <span>{hackneyUploaded ? 'Replace' : 'Add document'}</span>
               </button>
             </div>
           </div>

@@ -123,9 +123,10 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       const createAccountBtn = screen.getByRole('button', { name: /Create Account/i });
       fireEvent.click(createAccountBtn);
 
-      expect(screen.getByText(/Join Bayniks Courier Fleet/i)).toBeDefined();
-      expect(screen.getByText(/Full Legal Name/i)).toBeDefined();
-      expect(screen.getByText(/Dispatch Vehicle Type/i)).toBeDefined();
+      expect(screen.getByRole('heading', { name: /^Become a driver$/i })).toBeDefined();
+      expect(screen.getByText(/^Email address$/i)).toBeDefined();
+      expect(screen.getByText(/^City$/i)).toBeDefined();
+      expect(screen.getByRole('button', { name: /Register as a driver/i })).toBeDefined();
     });
 
     it('executes one-tap demo login and closes modal', async () => {
@@ -149,12 +150,12 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       const createAccountBtn = screen.getByRole('button', { name: /Create Account/i });
       fireEvent.click(createAccountBtn);
 
-      fireEvent.change(screen.getByPlaceholderText(/Babajide Adeleke/i), { target: { value: 'Tariq Adeleke' } });
+      fireEvent.change(screen.getByPlaceholderText(/Enter email address/i), { target: { value: 'tariq@bayniks.ng' } });
       fireEvent.change(screen.getByPlaceholderText(/803 123 4567/i), { target: { value: '08012345678' } });
-      fireEvent.change(screen.getByPlaceholderText(/At least 6 characters/i), { target: { value: 'Password123!' } });
-      fireEvent.change(screen.getByPlaceholderText(/KJA-824-XY/i), { target: { value: 'LAG-992-XD' } });
+      const termsCheckbox = screen.getByRole('checkbox');
+      fireEvent.click(termsCheckbox);
 
-      const form = screen.getByText(/Full Legal Name/i).closest('form');
+      const form = screen.getByRole('heading', { name: /^Become a driver$/i }).closest('form');
       if (form) {
         fireEvent.submit(form);
       }

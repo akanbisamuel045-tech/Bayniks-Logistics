@@ -204,12 +204,13 @@ export interface RiderStoreState {
   loginRider: (phone: string, password: string, apiBaseUrl?: string) => Promise<{ success: boolean; error?: string }>;
   registerRider: (
     payload: {
-      fullName: string;
+      fullName?: string;
       phone: string;
-      password: string;
-      vehicleType: 'bike' | 'van' | 'truck';
-      plateNumber: string;
+      password?: string;
+      vehicleType?: 'bike' | 'van' | 'truck';
+      plateNumber?: string;
       email?: string;
+      city?: string;
     },
     apiBaseUrl?: string
   ) => Promise<{ success: boolean; error?: string }>;
@@ -606,10 +607,10 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            fullName: payload.fullName,
+            fullName: payload.fullName || 'Bayniks Courier',
             phone: normalizedPhone,
-            email: payload.email,
-            password: payload.password,
+            email: payload.email || `${normalizedPhone.replace('+', '')}@bayniks.ng`,
+            password: payload.password || 'BayniksRider2026!',
             role: 'rider',
           }),
         });
@@ -631,13 +632,13 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     const mockUser: RiderUser = {
       id: 'usr-rider-' + Math.floor(1000 + Math.random() * 9000),
-      fullName: payload.fullName,
+      fullName: payload.fullName || 'Bayniks Courier',
       phone: normalizedPhone,
-      email: payload.email || `${payload.fullName.toLowerCase().replace(/\s+/g, '.')}@bayniks.ng`,
+      email: payload.email || `${normalizedPhone.replace('+', '')}@bayniks.ng`,
       role: 'rider',
       isVerified: false,
-      plateNumber: payload.plateNumber,
-      vehicleType: payload.vehicleType,
+      plateNumber: payload.plateNumber || 'PENDING',
+      vehicleType: payload.vehicleType || 'bike',
     };
     set({
       riderName: payload.fullName,

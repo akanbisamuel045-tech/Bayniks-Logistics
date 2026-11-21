@@ -16,6 +16,10 @@ import {
   ShieldCheck,
   Globe,
   Phone,
+  Search,
+  ChevronDown,
+  ArrowUpRight,
+  Check,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../utils/audioChimes';
@@ -51,11 +55,20 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [city, setCity] = useState('Lagos');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [vehicleType, setVehicleType] = useState<'bike' | 'van' | 'truck'>('bike');
   const [plateNumber, setPlateNumber] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(22);
+
+  const cleanPhone = phone.replace(/\D/g, '');
+  const isRegisterValid = Boolean(
+    email.trim().includes('@') &&
+    cleanPhone.length >= 10 &&
+    agreedToTerms
+  );
 
   if (!isOpen) return null;
 
@@ -92,34 +105,29 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    if (!fullName.trim()) {
-      setErrorMsg('Full name as stated on driver license / NIN is required');
+    if (!email.trim() || !email.includes('@')) {
+      setErrorMsg('Please enter a valid email address');
       playErrorChime();
       return;
     }
-    if (!phone || phone.length < 10) {
+    if (!phone || cleanPhone.length < 10) {
       setErrorMsg('Please enter a valid Nigerian phone number');
       playErrorChime();
       return;
     }
-    if (!password || password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long');
-      playErrorChime();
-      return;
-    }
-    if (!plateNumber.trim()) {
-      setErrorMsg('Vehicle plate number is required');
+    if (!agreedToTerms) {
+      setErrorMsg('Please agree to the Terms of Service and Privacy policy to continue');
       playErrorChime();
       return;
     }
 
     const res = await registerRider({
-      fullName,
+      fullName: fullName.trim() || email.split('@')[0] || 'Bayniks Courier',
       phone,
-      password,
-      vehicleType,
-      plateNumber,
-      email: email || undefined,
+      email: email.trim(),
+      city: city.trim() || 'Lagos',
+      vehicleType: 'bike',
+      plateNumber: plateNumber || undefined,
     });
 
     if (res.success) {
@@ -128,7 +136,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
       setResendSeconds(22);
     } else {
       playErrorChime();
-      setErrorMsg(res.error || 'Registration failed. Plate or phone may already exist.');
+      setErrorMsg(res.error || 'Registration failed. Phone number may already exist.');
     }
   };
 
@@ -253,64 +261,73 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     >
       <div className="relative w-full sm:max-w-[420px] bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 max-h-[95vh] flex flex-col">
         {/* Top Header Row */}
-        <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-zinc-100 bg-white">
-          <div className="flex items-center gap-2">
-            {mode === 'otp' && (
-              <button
-                type="button"
-                onClick={() => setMode('register')}
-                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors mr-1"
-                aria-label="Back"
-              >
-                <ArrowLeft size={16} />
-              </button>
-            )}
-            <div className="flex items-center gap-1">
-              <span className="text-xl font-black text-zinc-900 tracking-tight">Bayniks</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-[#FF5722] mt-0.5 inline-block"></span>
-              <span className="text-xl font-black text-zinc-900 tracking-tight ml-0.5">Driver</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {mode === 'otp' && (
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-bold">
-                <Globe size={13} className="text-zinc-500" />
-                <span>English</span>
-              </div>
-            )}
+        {mode === 'register' ? (
+          <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-zinc-100 bg-white">
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
               aria-label="Close"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
+            <span className="text-base font-bold text-zinc-900 tracking-tight">Register</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-800 text-xs font-bold">
+              <span className="text-xs">🇳🇬</span>
+              <span>EN</span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-zinc-100 bg-white">
+            <div className="flex items-center gap-2">
+              {mode === 'otp' && (
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors mr-1"
+                  aria-label="Back"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+              )}
+              <div className="flex items-center gap-1">
+                <span className="text-xl font-black text-zinc-900 tracking-tight">Bayniks</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FF5722] mt-0.5 inline-block"></span>
+                <span className="text-xl font-black text-zinc-900 tracking-tight ml-0.5">Driver</span>
+              </div>
+            </div>
 
-        {/* Tab Switcher (Bolt-style segmented pills for Login vs Register) */}
-        {mode !== 'otp' && (
+            <div className="flex items-center gap-2">
+              {mode === 'otp' && (
+                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-bold">
+                  <Globe size={13} className="text-zinc-500" />
+                  <span>English</span>
+                </div>
+              )}
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Switcher (Bolt-style segmented pills for Login vs Register, shown on login mode) */}
+        {mode === 'login' && (
           <div className="flex bg-zinc-100 p-1 mx-5 mt-4 rounded-full">
             <button
               type="button"
               onClick={() => handleTabChange('login')}
-              className={`flex-1 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all ${
-                mode === 'login'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+              className="flex-1 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-white text-zinc-900 shadow-sm"
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => handleTabChange('register')}
-              className={`flex-1 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all ${
-                mode === 'register'
-                  ? 'bg-white text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-900'
-              }`}
+              className="flex-1 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all text-zinc-500 hover:text-zinc-900"
             >
               Create Account
             </button>
@@ -459,146 +476,165 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
             </form>
           )}
 
-          {/* MODE: REGISTER */}
+          {/* MODE: REGISTER (Matching Bolt Image 10 exactly with Bayniks branding and Black/Orange theme) */}
           {mode === 'register' && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+            <form onSubmit={handleRegisterSubmit} className="space-y-4 pt-1">
               <div>
-                <h2 className="text-xl font-black text-zinc-900 tracking-tight">
-                  Join Bayniks Courier Fleet
-                </h2>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  Register in 2 minutes. Deliver parcels across Lagos.
-                </p>
+                <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  Become a driver
+                </h1>
               </div>
 
+              {/* Field 1: Email address */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Full Legal Name
-                </label>
-                <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder={simulationMode ? 'e.g. Babajide Adeleke' : 'Enter your full legal name'}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
-                    🇳🇬 +234
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone.replace(/^\+234/, '').replace(/^0/, '')}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={simulationMode ? '803 123 4567' : '800 000 0000'}
-                    className="w-full pl-20 pr-4 py-2.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="rider@bayniks.ng"
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              {/* Vehicle Type Choice */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Dispatch Vehicle Type
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'bike' as const, label: 'Motorcycle', icon: Bike },
-                    { id: 'van' as const, label: 'Van', icon: Truck },
-                    { id: 'truck' as const, label: 'Mini Truck', icon: Truck },
-                  ].map((v) => {
-                    const Icon = v.icon;
-                    const selected = vehicleType === v.id;
-                    return (
-                      <button
-                        key={v.id}
-                        type="button"
-                        onClick={() => {
-                          playKeypadChime();
-                          setVehicleType(v.id);
-                        }}
-                        className={`py-2 px-2 rounded-2xl border text-center flex flex-col items-center gap-1 transition-all ${
-                          selected
-                            ? 'border-[#FF5722] bg-orange-50 text-[#FF5722] font-black'
-                            : 'border-zinc-200 bg-[#F4F4F5] text-zinc-600 font-medium'
-                        }`}
-                      >
-                        <Icon size={18} />
-                        <span className="text-[11px]">{v.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Plate Number
+                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                  Email address
                 </label>
                 <input
-                  type="text"
-                  value={plateNumber}
-                  onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
-                  placeholder={simulationMode ? 'e.g. KJA-824-XY' : 'e.g. LAG-123-AA'}
-                  className="w-full px-4 py-2.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-bold uppercase focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter email address"
+                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
                   required
                 />
               </div>
 
+              {/* Field 2: Phone number */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Create Password
+                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                  Phone number
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playKeypadChime();
+                      showToast('Country selector: Nigeria (+234)');
+                    }}
+                    className="h-12 px-3.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl flex items-center gap-1.5 text-sm font-semibold text-zinc-800 shrink-0 hover:bg-zinc-200 transition-colors"
+                  >
+                    <span className="text-base">🇳🇬</span>
+                    <ChevronDown size={14} className="text-zinc-500" />
+                  </button>
+                  <div className="relative flex-1">
+                    <input
+                      type="tel"
+                      value={phone.replace(/^\+234/, '').replace(/^0/, '')}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={simulationMode ? '803 123 4567' : '800 000 0000'}
+                      className="w-full pl-14 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
+                      required
+                    />
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500 pointer-events-none">
+                      +234
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Field 3: City */}
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                  City
                 </label>
                 <div className="relative">
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                   <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters"
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                    required
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Search city"
+                    className="w-full pl-10 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
                   />
                 </div>
               </div>
 
-              {/* Main Submit: Black button with Bayniks Orange Accent */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-3 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>Continue to OTP Verification</span>
-                <ArrowRight size={16} className="text-[#FF5722]" />
-              </button>
+              {/* Checkbox: Legal & Terms */}
+              <div className="pt-1">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => {
+                      playKeypadChime();
+                      setAgreedToTerms(e.target.checked);
+                    }}
+                    className="w-5 h-5 mt-0.5 rounded border-zinc-300 text-[#18181B] focus:ring-[#FF5722] shrink-0 cursor-pointer accent-[#18181B]"
+                  />
+                  <span className="text-xs text-zinc-600 leading-snug">
+                    By registering, you agree to our{' '}
+                    <strong className="text-zinc-900 underline font-semibold">Terms of Service</strong> and{' '}
+                    <strong className="text-zinc-900 underline font-semibold">Privacy policy</strong>, commit to
+                    comply with obligations under Nigerian and local legislation and provide only legal services and
+                    content on the Bayniks Platform.
+                  </span>
+                </label>
+              </div>
+
+              {/* Promotional subtext */}
+              <p className="text-[11px] text-zinc-400 leading-relaxed pt-1">
+                Once you've become a driver, we will occasionally send you offers and promotions related to our
+                services. You can always unsubscribe by changing your communication preferences.
+              </p>
+
+              {/* Primary Action Button: Black button with Orange dot when valid, disabled light grey otherwise */}
+              {isRegisterValid ? (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-3 cursor-pointer group"
+                >
+                  {isSubmitting ? (
+                    <span>Registering...</span>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                      <span>Register as a driver</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={true}
+                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#F4F4F5] text-zinc-400 font-bold text-sm tracking-wide flex items-center justify-center mt-3 cursor-not-allowed border border-zinc-200/60"
+                >
+                  <span>Register as a driver</span>
+                </button>
+              )}
+
+              {/* Footer Links */}
+              <div className="pt-3 pb-1 text-center space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setMode('login');
+                    setErrorMsg(null);
+                  }}
+                  className="text-xs font-semibold text-zinc-800 hover:text-black inline-flex items-center gap-1 group"
+                >
+                  <span>Already have an account?</span>
+                  <span className="underline font-bold text-zinc-900 group-hover:text-[#FF5722] transition-colors">
+                    Log in
+                  </span>
+                  <ArrowUpRight size={13} className="text-zinc-600 group-hover:text-[#FF5722] transition-colors" />
+                </button>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => showToast('Fleet Owner portal: fleet.bayniks.ng')}
+                    className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
+                  >
+                    If you have multiple vehicles and drivers,{' '}
+                    <span className="underline font-bold text-zinc-800 hover:text-[#FF5722]">
+                      register as a Fleet owner.
+                    </span>
+                  </button>
+                </div>
+              </div>
             </form>
           )}
 
