@@ -491,49 +491,53 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
         const res = await fetch(`${targetUrl}/api/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: normalizedPhone, password }),
+          signal: controller.signal,
         });
-        const data = await res.json();
+        clearTimeout(timeoutId);
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          set({ isSubmitting: false });
-          return { success: false, error: data.error || 'Invalid phone or password' };
-        }
-        const riderUser: RiderUser = {
-          id: data.user.id || data.user._id,
-          fullName: data.user.fullName,
-          phone: data.user.phone,
-          email: data.user.email,
-          role: 'rider',
-          isVerified: data.user.isVerified,
-          plateNumber: data.user.plateNumber || 'KJA-824-XY',
-          vehicleType: data.user.vehicleType || 'bike',
-        };
-        const token = data.tokens?.accessToken || 'jwt-rider-live';
-        try {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser, authToken: token }));
+          if (res.status === 400 || res.status === 401) {
+            set({ isSubmitting: false });
+            return { success: false, error: data.error || 'Invalid phone or password' };
           }
-        } catch {}
-        set({
-          isLoggedIn: true,
-          riderUser,
-          riderName: riderUser.fullName,
-          plateNumber: riderUser.plateNumber || 'KJA-824-XY',
-          authToken: token,
-          simulationMode: false,
-          isAuthModalOpen: false,
-          isSubmitting: false,
-        });
-        get().showToast(`Welcome back, ${riderUser.fullName.split(' ')[0]}!`);
-        return { success: true };
-      } catch (err: any) {
-        if (!get().simulationMode) {
-          set({ isSubmitting: false });
-          return { success: false, error: `Could not connect to server at ${targetUrl}. Check connection.` };
+        } else if (data.user) {
+          const riderUser: RiderUser = {
+            id: data.user.id || data.user._id,
+            fullName: data.user.fullName,
+            phone: data.user.phone,
+            email: data.user.email,
+            role: 'rider',
+            isVerified: data.user.isVerified,
+            plateNumber: data.user.plateNumber || 'KJA-824-XY',
+            vehicleType: data.user.vehicleType || 'bike',
+          };
+          const token = data.tokens?.accessToken || 'jwt-rider-live';
+          try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+              window.localStorage.setItem('bayniks_rider_auth', JSON.stringify({ isLoggedIn: true, riderUser, authToken: token }));
+            }
+          } catch {}
+          set({
+            isLoggedIn: true,
+            riderUser,
+            riderName: riderUser.fullName,
+            plateNumber: riderUser.plateNumber || 'KJA-824-XY',
+            authToken: token,
+            isAuthModalOpen: false,
+            isSubmitting: false,
+          });
+          get().showToast(`Welcome back, ${riderUser.fullName.split(' ')[0]}!`);
+          return { success: true };
         }
+      } catch (err: any) {
+        // Backend offline or connection refused — gracefully proceed to device login
+        console.warn('[Backend API unreachable or offline, proceeding with device login]', err);
       }
     }
 
@@ -603,6 +607,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     if ((!get().simulationMode || apiBaseUrl) && targetUrl) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
         const res = await fetch(`${targetUrl}/api/v1/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -613,20 +619,24 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             password: payload.password || 'BayniksRider2026!',
             role: 'rider',
           }),
+          signal: controller.signal,
         });
-        const data = await res.json();
+        clearTimeout(timeoutId);
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          set({ isSubmitting: false });
-          return { success: false, error: data.error || 'Failed to create rider account' };
+          // If the backend actively rejected with an error message (like duplicate phone)
+          if (res.status === 400 || res.status === 409) {
+            set({ isSubmitting: false });
+            return { success: false, error: data.error || 'Phone number or email is already registered.' };
+          }
+        } else {
+          set({ isSubmitting: false, activeOtpCode: generatedOtp });
+          get().showToast('Verification code sent to ' + normalizedPhone);
+          return { success: true };
         }
-        set({ isSubmitting: false, activeOtpCode: generatedOtp });
-        get().showToast('Verification code sent to ' + normalizedPhone);
-        return { success: true };
       } catch (err: any) {
-        if (!get().simulationMode) {
-          set({ isSubmitting: false });
-          return { success: false, error: err.message || 'Network error registering' };
-        }
+        // Backend API offline / unreachable — gracefully proceed to device registration
+        console.warn('[Backend API unreachable or offline, proceeding with device registration]', err);
       }
     }
 
