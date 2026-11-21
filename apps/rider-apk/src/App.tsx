@@ -19,6 +19,7 @@ import { RiderAuthModal } from './components/RiderAuthModal';
 import { RiderKycScreen } from './components/RiderKycScreen';
 import { DeliveryHistoryScreen } from './components/DeliveryHistoryScreen';
 import { RiderNavigationDrawer, DrawerNavTarget } from './components/RiderNavigationDrawer';
+import { RiderCockpitMapHome } from './components/RiderCockpitMapHome';
 import { VirtualDebtTopUpModal } from './components/sheets/VirtualDebtTopUpModal';
 import { MockLocationWarningModal } from './components/MockLocationWarningModal';
 import { batteryOptimizationService } from './services/batteryOptimization.service';
@@ -99,6 +100,10 @@ export function App() {
 
     if (viewParam === 'drawer') {
       setDrawerOpen(true);
+    } else if (viewParam === 'home' || viewParam === 'cockpit') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
+      setActiveTab('home');
     } else if (viewParam === 'landing' || viewParam === 'welcome') {
       setForceLandingView(true);
     } else if (viewParam === 'login') {
@@ -300,7 +305,7 @@ export function App() {
       }}
     >
       {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Profile, History or KYC */}
-      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || showLanding ? '!p-0' : ''}`}>
+      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
             onSignIn={() => {
@@ -315,41 +320,29 @@ export function App() {
         ) : (
           <>
             {activeTab === 'home' && (
-              <section id="screen-home" className="tab-screen active">
-                <div className="stack-14">
-                  {/* 1. Espresso-Charcoal Hero Card with Drawer Menu Toggle */}
-                  <HeroEspressoCard
-                    onOpenDrawer={() => setDrawerOpen(true)}
-                    onOpenNotifications={() => {
-                      setDetailSheetType('notifications');
-                      setIsDetailSheetOpen(true);
-                    }}
-                    onOpenQr={() => {
-                      setHandoverVerifyMode('qr');
-                      setIsHandoverVerifyOpen(true);
-                    }}
-                  />
-
-                  {/* 2. Prominent 56px Availability Switch Bar */}
-                  <AvailabilityBar />
-
-                  {/* 3. Dynamic Center Mission Card (3 States & N=1 Lock) */}
-                  <CenterMissionCard
-                    onOpenVerification={(mode) => {
-                      setHandoverVerifyMode(mode || 'qr');
-                      setIsHandoverVerifyOpen(true);
-                    }}
-                    onOpenFullMap={() => {
-                      setIsFullMapOpen(true);
-                    }}
-                  />
-
-                  {/* 4. Nearby Delivery Zones Surge Radar Card */}
-                  <NearbySurgeRadar
-                    onOpenFullMap={() => setIsFullMapOpen(true)}
-                    onTriggerSurgeDispatch={() => triggerDemoOffer()}
-                  />
-                </div>
+              <section id="screen-home" className="tab-screen active h-full flex flex-col">
+                <RiderCockpitMapHome
+                  onOpenDrawer={() => setDrawerOpen(true)}
+                  onOpenSafety={() => {
+                    setDetailSheetType('support_sos');
+                    setIsDetailSheetOpen(true);
+                  }}
+                  onOpenFullMap={() => setIsFullMapOpen(true)}
+                  onOpenEarnings={() => {
+                    setDetailSheetType('earnings');
+                    setIsDetailSheetOpen(true);
+                  }}
+                  onOpenRewards={() => {
+                    setActiveTab('profile');
+                  }}
+                  onOpenScheduledOrders={() => {
+                    setActiveTab('history');
+                  }}
+                  onOpenVerification={(mode) => {
+                    setHandoverVerifyMode(mode || 'qr');
+                    setIsHandoverVerifyOpen(true);
+                  }}
+                />
               </section>
             )}
 
