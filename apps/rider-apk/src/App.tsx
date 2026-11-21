@@ -65,7 +65,7 @@ export function App() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [detailSheetType, setDetailSheetType] = useState<DynamicDetailSheetType>('personal');
-  const [authModalMode, setAuthModalMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp_method' | 'otp'>('login');
   const [forceLandingView, setForceLandingView] = useState(false);
 
   // Restore saved rider session from localStorage on app boot
@@ -106,6 +106,9 @@ export function App() {
       setAuthModalOpen(true);
     } else if (viewParam === 'register') {
       setAuthModalMode('register');
+      setAuthModalOpen(true);
+    } else if (viewParam === 'otp_method' || viewParam === 'method') {
+      setAuthModalMode('otp_method');
       setAuthModalOpen(true);
     } else if (viewParam === 'otp') {
       setAuthModalMode('otp');

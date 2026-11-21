@@ -848,89 +848,116 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'vehicle_info' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
-              <h2 className="text-xl font-black text-zinc-900">Vehicle details</h2>
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Top Bar with Close X on top right */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-end bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-4">
+            <div className="p-5 flex-1 overflow-y-auto space-y-4">
+              <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Vehicle details</h2>
+
+              {/* Vehicle manufacturer and model */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Vehicle manufacturer and model *
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Vehicle manufacturer and model <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={vehicleModel}
-                  onChange={(e) => setVehicleModel(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                >
-                  <option value="Bajaj Boxer 150cc">Bajaj Boxer 150cc</option>
-                  <option value="TVS HLX 125">TVS HLX 125</option>
-                  <option value="Honda Ace 125">Honda Ace 125</option>
-                  <option value="Yamaha Crux">Yamaha Crux</option>
-                  <option value="Suzuki Hayate">Suzuki Hayate</option>
-                </select>
-                <p className="text-[11px] text-zinc-400 mt-1">
-                  If you don't find your vehicle model from the list then let us know at info@bayniks.ng
+                <div className="relative">
+                  <select
+                    value={vehicleModel}
+                    onChange={(e) => setVehicleModel(e.target.value)}
+                    className="w-full h-12 px-4 pr-10 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 focus:outline-none focus:bg-white focus:border-zinc-300 appearance-none transition-all"
+                  >
+                    <option value="Manufacturer">Manufacturer</option>
+                    <option value="Bajaj Boxer 150cc">Bajaj Boxer 150cc</option>
+                    <option value="TVS HLX 125">TVS HLX 125</option>
+                    <option value="Honda Ace 125">Honda Ace 125</option>
+                    <option value="Yamaha Crux">Yamaha Crux</option>
+                    <option value="Suzuki Hayate">Suzuki Hayate</option>
+                  </select>
+                  <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-1">
+                  If you don't find your vehicle model from the list then let us know at support@bayniks.com.
                 </p>
               </div>
 
+              {/* Vehicle year */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Vehicle year *</label>
-                <select
-                  value={vehicleYear}
-                  onChange={(e) => setVehicleYear(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                >
-                  <option value="2025">2025</option>
-                  <option value="2024">2024</option>
-                  <option value="2023">2023</option>
-                  <option value="2022">2022</option>
-                  <option value="2021">2021</option>
-                  <option value="2020">2020</option>
-                </select>
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Vehicle year <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={vehicleYear}
+                    onChange={(e) => setVehicleYear(e.target.value)}
+                    className="w-full h-12 px-4 pr-10 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 focus:outline-none focus:bg-white focus:border-zinc-300 appearance-none transition-all"
+                  >
+                    <option value="">Select year</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                  </select>
+                  <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                </div>
               </div>
 
+              {/* Licence plate */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Licence plate *</label>
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Licence plate <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={plateNumber}
                   onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
-                  placeholder="e.g. 717 TTP"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-bold uppercase focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  placeholder="717 TTP"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-bold uppercase text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
               </div>
 
+              {/* Vehicle colour */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Vehicle colour *</label>
-                <select
-                  value={vehicleColour}
-                  onChange={(e) => setVehicleColour(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                >
-                  <option value="Black">Black</option>
-                  <option value="Red">Red</option>
-                  <option value="Blue">Blue</option>
-                  <option value="White">White</option>
-                  <option value="Silver">Silver</option>
-                </select>
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Vehicle colour <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={vehicleColour}
+                    onChange={(e) => setVehicleColour(e.target.value)}
+                    className="w-full h-12 px-4 pr-10 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 focus:outline-none focus:bg-white focus:border-zinc-300 appearance-none transition-all"
+                  >
+                    <option value="">Select colour</option>
+                    <option value="Black">Black</option>
+                    <option value="Red">Red</option>
+                    <option value="Blue">Blue</option>
+                    <option value="White">White</option>
+                    <option value="Silver">Silver</option>
+                  </select>
+                  <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleSaveModal('Vehicle details updated')}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-4 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>Save</span>
-              </button>
+              <div className="pt-4 pb-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveModal('Vehicle details updated')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>Save</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -941,81 +968,101 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'payment_info' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
-              <h2 className="text-xl font-black text-zinc-900">Payment details</h2>
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Top Bar with Close X */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-end bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 overflow-y-auto space-y-4">
+            <div className="p-5 flex-1 overflow-y-auto space-y-4">
+              <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Payment details</h2>
+
+              {/* Billing type */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Billing type *</label>
-                <select
-                  value={billingType}
-                  onChange={(e) => setBillingType(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                >
-                  <option value="Person">Person</option>
-                  <option value="Company">Company</option>
-                </select>
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Billing type <span className="text-red-500">*</span>
+                </label>
+                <div className="relative flex items-center">
+                  <select
+                    value={billingType}
+                    onChange={(e) => setBillingType(e.target.value)}
+                    className="w-full h-12 px-4 pr-14 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 focus:outline-none focus:bg-white focus:border-zinc-300 appearance-none transition-all"
+                  >
+                    <option value="Person">Person</option>
+                    <option value="Company">Company</option>
+                  </select>
+                  <div className="absolute right-3.5 flex items-center gap-1.5 text-zinc-400 pointer-events-none">
+                    <X size={14} className="text-zinc-400" />
+                    <span className="text-zinc-300">|</span>
+                    <ChevronDown size={16} className="text-zinc-600" />
+                  </div>
+                </div>
               </div>
 
+              {/* Bank account holder name */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Bank account holder name *
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Bank account holder name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={bankHolderName}
                   onChange={(e) => setBankHolderName(e.target.value)}
                   placeholder="ABC Taxis Ltd / John Doe"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
-                <p className="text-[10px] text-zinc-400 mt-1 font-mono">
+                <p className="text-[11px] text-zinc-400 mt-1">
                   regstep4_bank_account_holder_name_person_be
                 </p>
               </div>
 
+              {/* Bank account number */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Bank account number *
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Bank account number <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={bankAccountNumber}
                   onChange={(e) => setBankAccountNumber(e.target.value)}
                   placeholder="3047006646"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-mono font-bold focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-mono font-bold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
-                <p className="text-[11px] text-zinc-400 mt-1">
+                <p className="text-[11px] text-zinc-500 mt-1">
                   Your bank account number, in IBAN or other format
                 </p>
               </div>
 
+              {/* Bank Name or BIC/SWIFT */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
-                  Bank Name or BIC/SWIFT *
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Bank Name or BIC/SWIFT <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder="HABALT22"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
-                />
-                <p className="text-[11px] text-zinc-400 mt-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    placeholder="HABALT22"
+                    className="w-full h-12 px-4 pr-10 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
+                  />
+                  <ChevronDown size={18} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-zinc-500 mt-1">
                   If unknown, use bank's name
                 </p>
               </div>
 
+              {/* Next of Kin Name & Relationship */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
                   Next of Kin Name & Relationship
                 </label>
                 <input
@@ -1023,13 +1070,14 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   value={nextOfKinNameRel}
                   onChange={(e) => setNextOfKinNameRel(e.target.value)}
                   placeholder="John Doe: Brother"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
-                <p className="text-[11px] text-zinc-400 mt-1">Next of Kin Name & Relationship</p>
+                <p className="text-[11px] text-zinc-500 mt-1">Next of Kin Name & Relationship</p>
               </div>
 
+              {/* Next of Kin Phone Number */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
                   Next of Kin Phone Number
                 </label>
                 <input
@@ -1037,30 +1085,35 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                   value={nextOfKinPhone}
                   onChange={(e) => setNextOfKinPhone(e.target.value)}
                   placeholder="+234XXXXXXXXXX"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white font-mono"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
-                <p className="text-[11px] text-zinc-400 mt-1">Next of Kin Phone Number</p>
+                <p className="text-[11px] text-zinc-500 mt-1">Next of Kin Phone Number</p>
               </div>
 
+              {/* Address */}
               <div>
-                <label className="block text-xs font-bold text-zinc-700 mb-1">Address *</label>
+                <label className="block text-xs font-bold text-zinc-900 mb-1.5">
+                  Address <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Plot 118, Block 25 Salem St"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-[#FF5722] focus:bg-white"
+                  className="w-full h-12 px-4 bg-[#F4F4F6] border border-transparent rounded-xl text-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-zinc-300 transition-all"
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleSaveModal('Settlement bank details saved')}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-4 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>Save</span>
-              </button>
+              <div className="pt-4 pb-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveModal('Settlement bank details saved')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>Save</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1252,38 +1305,50 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'exterior_photo' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Header: Back arrow left, Close X right */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-between bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Back"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <ArrowLeft size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 text-center space-y-4 overflow-y-auto">
-              <h2 className="text-2xl font-black text-zinc-900 tracking-tight text-left">
-                Exterior Photo of your Vehicle
-              </h2>
-              <p className="text-xs text-zinc-600 text-left leading-relaxed">
-                Upload a clear picture of your vehicle's exterior, ensuring that the plate number is fully visible from either the front or back view. Visit{' '}
-                <span className="text-[#FF5722] font-bold cursor-pointer">Sample Exterior Photo</span>
-              </p>
-
-              <div className="border-2 border-dashed border-zinc-300 rounded-3xl p-6 bg-zinc-50 max-w-xs mx-auto flex flex-col items-center justify-center">
-                <Camera size={38} className="text-[#FF5722] mb-2" />
-                <span className="text-xs font-bold text-zinc-700">Vehicle Exterior</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">License plate visible</span>
+            <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  Exterior Photo of your Vehicle
+                </h2>
+                <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+                  Upload a clear picture of your vehicle's exterior, ensuring that the plate number is fully visible from either the front or back view. Visit{' '}
+                  <span className="text-[#FF5722] font-semibold cursor-pointer hover:underline">
+                    Sample Exterior Photo
+                  </span>
+                </p>
               </div>
 
-              <div className="pt-2 space-y-2">
+              {/* Clean whitespace middle area */}
+              <div className="flex-1 min-h-[160px]" />
+
+              {/* Bottom Actions */}
+              <div className="space-y-3 pt-4 pb-2">
                 <button
                   type="button"
                   disabled={isCompressing}
                   onClick={() => handleFileUpload('exterior')}
-                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group"
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
                 >
                   <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
                   <span>{exteriorUploaded ? 'Replace' : 'Add photo'}</span>
@@ -1291,7 +1356,7 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="w-full text-center text-xs font-bold text-zinc-800 hover:text-[#FF5722] py-2 transition-colors"
+                  className="w-full text-center text-xs font-bold text-zinc-700 hover:text-[#FF5722] py-2 transition-colors"
                 >
                   Skip for now
                 </button>
@@ -1306,51 +1371,58 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'autogenius' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Header: Back arrow left, Close X right */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-between bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Back"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 text-center space-y-4 overflow-y-auto">
-              <h2 className="text-2xl font-black text-zinc-900 tracking-tight text-left">
-                Autogenius Vehicle Inspection Report
-              </h2>
-              <p className="text-xs text-zinc-600 text-left leading-relaxed">
-                Upload a clear inspection report (make sure all details are readable). Visit{' '}
-                <span className="text-[#FF5722] font-bold cursor-pointer">Inspection Portal</span>
-              </p>
-              <p className="text-xs font-bold text-zinc-700 text-center py-1">
-                Use the FRONT side of the document
-              </p>
-
-              <div className="border border-zinc-200 rounded-2xl p-6 bg-zinc-50 max-w-xs mx-auto flex flex-col items-center justify-center">
-                <FileText size={36} className="text-[#FF5722] mb-2" />
-                <span className="text-xs font-bold text-zinc-700">Autogenius Roadworthiness</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">Certified Safety Check</span>
+            <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  Autogenius Vehicle Inspection Report
+                </h2>
+                <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+                  Upload a clear inspection report (make sure all details are readable). Visit{' '}
+                  <span className="text-[#FF5722] font-semibold cursor-pointer hover:underline">
+                    Inspection Portal
+                  </span>
+                </p>
+                <p className="text-xs font-semibold text-zinc-700 text-center pt-3">
+                  Use the FRONT side of the document
+                </p>
               </div>
 
-              <button
-                type="button"
-                disabled={isCompressing}
-                onClick={() => handleFileUpload('autogenius')}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>{autogeniusUploaded ? 'Replace' : 'Add document'}</span>
-              </button>
+              {/* Clean whitespace middle area */}
+              <div className="flex-1 min-h-[160px]" />
+
+              {/* Bottom Action */}
+              <div className="pt-4 pb-2">
+                <button
+                  type="button"
+                  disabled={isCompressing}
+                  onClick={() => handleFileUpload('autogenius')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>{autogeniusUploaded ? 'Replace' : 'Add document'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1361,52 +1433,62 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'lasdri' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Header: Back arrow left, Close X right */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-between bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Back"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 text-center space-y-4 overflow-y-auto">
-              <h2 className="text-2xl font-black text-zinc-900 tracking-tight text-left">
-                LASDRI Card
-              </h2>
-              <p className="text-xs text-zinc-600 text-left leading-relaxed">
-                Lagos Drivers Institute ReCertification Card Visit{' '}
-                <span className="text-[#FF5722] font-bold cursor-pointer">Lagos State Drivers Institute</span> Visit{' '}
-                <span className="text-[#FF5722] font-bold cursor-pointer">Sample LASDRI Card Photo</span>
-              </p>
-              <p className="text-xs font-bold text-zinc-700 text-center py-1">
-                Use the FRONT side of the document
-              </p>
-
-              <div className="border border-zinc-200 rounded-2xl p-6 bg-zinc-50 max-w-xs mx-auto flex flex-col items-center justify-center">
-                <FileText size={36} className="text-[#FF5722] mb-2" />
-                <span className="text-xs font-bold text-zinc-700">LASDRI Certified</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">Lagos Drivers Institute</span>
+            <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  LASDRI Card
+                </h2>
+                <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+                  Lagos Drivers Institute ReCertification Card Visit{' '}
+                  <span className="text-[#FF5722] font-semibold cursor-pointer hover:underline">
+                    Lagos State Drivers Institute
+                  </span>{' '}
+                  Visit{' '}
+                  <span className="text-[#FF5722] font-semibold cursor-pointer hover:underline">
+                    Sample LASDRI Card Photo
+                  </span>
+                </p>
+                <p className="text-xs font-semibold text-zinc-700 text-center pt-3">
+                  Use the FRONT side of the document
+                </p>
               </div>
 
-              <button
-                type="button"
-                disabled={isCompressing}
-                onClick={() => handleFileUpload('lasdri')}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>{lasdriUploaded ? 'Replace' : 'Add document'}</span>
-              </button>
+              {/* Clean whitespace middle area */}
+              <div className="flex-1 min-h-[160px]" />
+
+              {/* Bottom Action */}
+              <div className="pt-4 pb-2">
+                <button
+                  type="button"
+                  disabled={isCompressing}
+                  onClick={() => handleFileUpload('lasdri')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>{lasdriUploaded ? 'Replace' : 'Add document'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1417,51 +1499,58 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
        * ========================================================================= */}
       {activeModal === 'hackney' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-slideUp">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+          <div className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-3xl max-h-[95vh] h-full sm:h-auto flex flex-col shadow-2xl overflow-hidden animate-slideUp">
+            {/* Header: Back arrow left, Close X right */}
+            <div className="px-5 pt-4 pb-3 border-b border-zinc-100 flex items-center justify-between bg-white">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Back"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={18} />
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-700"
+                aria-label="Close"
+                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 text-center space-y-4 overflow-y-auto">
-              <h2 className="text-2xl font-black text-zinc-900 tracking-tight text-left">
-                Hackney Permit
-              </h2>
-              <p className="text-xs text-zinc-600 text-left leading-relaxed">
-                Hackney Permit issued by the Motor Vehicle Administration Agency Visit{' '}
-                <span className="text-[#FF5722] font-bold cursor-pointer">Motor Vehicle Administration Agency</span>
-              </p>
-              <p className="text-xs font-bold text-zinc-700 text-center py-1">
-                Use the FRONT side of the document
-              </p>
-
-              <div className="border border-zinc-200 rounded-2xl p-6 bg-zinc-50 max-w-xs mx-auto flex flex-col items-center justify-center">
-                <FileText size={36} className="text-[#FF5722] mb-2" />
-                <span className="text-xs font-bold text-zinc-700">Hackney Stage Carriage</span>
-                <span className="text-[10px] text-zinc-400 mt-0.5">MVAA Lagos State</span>
+            <div className="p-6 flex-1 flex flex-col justify-between overflow-y-auto">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
+                  Hackney Permit
+                </h2>
+                <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+                  Hackney Permit issued by the Motor Vehicle Administration Agency Visit{' '}
+                  <span className="text-[#FF5722] font-semibold cursor-pointer hover:underline">
+                    Motor Vehicle Administration Agency
+                  </span>
+                </p>
+                <p className="text-xs font-semibold text-zinc-700 text-center pt-3">
+                  Use the FRONT side of the document
+                </p>
               </div>
 
-              <button
-                type="button"
-                disabled={isCompressing}
-                onClick={() => handleFileUpload('hackney')}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 mt-6 cursor-pointer group"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                <span>{hackneyUploaded ? 'Replace' : 'Add document'}</span>
-              </button>
+              {/* Clean whitespace middle area */}
+              <div className="flex-1 min-h-[160px]" />
+
+              {/* Bottom Action */}
+              <div className="pt-4 pb-2">
+                <button
+                  type="button"
+                  disabled={isCompressing}
+                  onClick={() => handleFileUpload('hackney')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2 cursor-pointer group transition-all"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                  <span>{hackneyUploaded ? 'Replace' : 'Add document'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

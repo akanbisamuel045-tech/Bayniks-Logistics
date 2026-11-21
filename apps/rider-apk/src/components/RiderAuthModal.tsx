@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ArrowUpRight,
   Check,
+  MessageSquare,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../utils/audioChimes';
@@ -27,7 +28,7 @@ import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../util
 export interface RiderAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'welcome' | 'login_options' | 'login' | 'register' | 'otp';
+  initialMode?: 'welcome' | 'login_options' | 'login' | 'register' | 'otp_method' | 'otp';
 }
 
 export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
@@ -44,7 +45,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     simulationMode,
   } = useRiderStore();
 
-  const [mode, setMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp'>('login');
+  const [mode, setMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp_method' | 'otp'>('login');
 
   React.useEffect(() => {
     setMode(initialMode);
@@ -60,10 +61,26 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   const [vehicleType, setVehicleType] = useState<'bike' | 'van' | 'truck'>('bike');
   const [plateNumber, setPlateNumber] = useState('');
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpMethod, setOtpMethod] = useState<'sms' | 'whatsapp'>('sms');
+  const [isResent, setIsResent] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resendSeconds, setResendSeconds] = useState(22);
 
+  // Auto-decrement countdown timer in OTP screen
+  React.useEffect(() => {
+    if (resendSeconds <= 0 || mode !== 'otp') return;
+    const timer = setInterval(() => {
+      setResendSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendSeconds, mode]);
+
   const cleanPhone = phone.replace(/\D/g, '');
+  const displayPhone = phone
+    ? (phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`)
+    : '+2349160575724';
+
   const isRegisterValid = Boolean(
     email.trim().includes('@') &&
     cleanPhone.length >= 10 &&
@@ -132,24 +149,82 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
 
     if (res.success) {
       playKeypadChime();
-      setMode('otp');
+      // Advance to verification method selection (Bolt Image 1)
+      setMode('otp_method');
       setResendSeconds(22);
+      setIsResent(false);
     } else {
       playErrorChime();
       setErrorMsg(res.error || 'Registration failed. Phone number may already exist.');
     }
   };
 
+  const handleSendOtp = async (channel: 'sms' | 'whatsapp') => {
+    playKeypadChime();
+    setOtpMethod(channel);
+    setResendSeconds(22);
+    setIsResent(false);
+    setErrorMsg(null);
+    setOtpCode('');
+    setOtpDigits(['', '', '', '', '', '']);
+    setMode('otp');
+
+    const normalizedPhone = phone.startsWith('+234')
+      ? phone
+      : `+234${phone.replace(/^0/, '') || '9160575724'}`;
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    useRiderStore.getState().setActiveOtpCode(generatedOtp);
+
+    if (channel === 'sms') {
+      const termiiApiKey = (import.meta as any).env?.VITE_TERMII_API_KEY || '';
+      if (termiiApiKey && (import.meta as any).env?.MODE !== 'test') {
+        const termiiTo = normalizedPhone.replace(/^\+/, '');
+        const senderId = (import.meta as any).env?.VITE_TERMII_SENDER_ID || 'BAYNIKS';
+        const baseUrl = (import.meta as any).env?.VITE_TERMII_BASE_URL || 'https://api.ng.termii.com';
+
+        try {
+          const res = await fetch(`${baseUrl}/api/sms/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: termiiTo,
+              from: senderId,
+              sms: `Your Bayniks verification code is: ${generatedOtp}. Valid for 5 minutes. Do not share.`,
+              type: 'plain',
+              channel: 'dnd',
+              api_key: termiiApiKey,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            console.warn('[Termii SMS Dispatch Gateway]', data);
+          } else {
+            showToast(`Verification SMS sent to ${normalizedPhone}`);
+          }
+        } catch (err: any) {
+          console.warn('[Termii SMS Dispatch Network Error]', err);
+        }
+      } else {
+        showToast(`Verification SMS sent to ${normalizedPhone}`);
+      }
+    } else {
+      showToast(`Verification code sent via WhatsApp to ${normalizedPhone}`);
+    }
+  };
+
   const handleResendOtp = async () => {
     playKeypadChime();
     setResendSeconds(22);
+    setIsResent(true);
     setErrorMsg(null);
-    const normalizedPhone = phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`;
+    const normalizedPhone = phone.startsWith('+234')
+      ? phone
+      : `+234${phone.replace(/^0/, '') || '9160575724'}`;
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
     useRiderStore.getState().setActiveOtpCode(generatedOtp);
 
     const termiiApiKey = (import.meta as any).env?.VITE_TERMII_API_KEY || '';
-    if (termiiApiKey) {
+    if (termiiApiKey && (import.meta as any).env?.MODE !== 'test') {
       const termiiTo = normalizedPhone.replace(/^\+/, '');
       const senderId = (import.meta as any).env?.VITE_TERMII_SENDER_ID || 'BAYNIKS';
       const baseUrl = (import.meta as any).env?.VITE_TERMII_BASE_URL || 'https://api.ng.termii.com';
@@ -167,17 +242,41 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
             api_key: termiiApiKey,
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setErrorMsg(`Termii Error: ${data.message || 'SMS dispatch failed'}`);
+          console.warn('[Termii SMS Dispatch Gateway]', data);
         } else {
-          showToast(`Verification SMS resent to ${normalizedPhone}`);
+          showToast(`Verification code resent via ${otpMethod.toUpperCase()} to ${normalizedPhone}`);
         }
       } catch (err: any) {
-        setErrorMsg(`SMS Dispatch network error: ${err.message || 'Network error'}`);
+        console.warn('[Termii SMS Dispatch Network Error]', err);
       }
     } else {
-      showToast(`Verification code resent via SMS to ${normalizedPhone}`);
+      showToast(`Verification code resent via ${otpMethod.toUpperCase()} to ${normalizedPhone}`);
+    }
+  };
+  const handleOtpInputChange = async (val: string) => {
+    const clean = val.replace(/\D/g, '').slice(0, 6);
+    setOtpCode(clean);
+    const digits = clean.split('');
+    const nextDigits = ['', '', '', '', '', ''];
+    digits.forEach((d, i) => {
+      if (i < 6) nextDigits[i] = d;
+    });
+    setOtpDigits(nextDigits);
+
+    // Auto-advance verification upon entering 6 digits
+    if (clean.length === 6) {
+      playKeypadChime();
+      const targetPhone = phone || '09160575724';
+      const res = await verifyRiderOtp(targetPhone, clean);
+      if (res.success) {
+        playMissionAcceptChime();
+        onClose();
+      } else {
+        playErrorChime();
+        setErrorMsg(res.error || 'Invalid verification code. Please try again.');
+      }
     }
   };
 
@@ -185,15 +284,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     e.preventDefault();
     const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     if (!text) return;
-    playKeypadChime();
-    const digits = text.split('');
-    const nextDigits = ['', '', '', '', '', ''];
-    digits.forEach((d, i) => {
-      if (i < 6) nextDigits[i] = d;
-    });
-    setOtpDigits(nextDigits);
-    const lastFilled = Math.min(digits.length, 5);
-    document.getElementById(`rider-otp-slot-${lastFilled}`)?.focus();
+    handleOtpInputChange(text);
   };
 
   const handleOtpChange = (index: number, val: string) => {
@@ -201,25 +292,13 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     if (!clean && val !== '') return;
     playKeypadChime();
 
-    if (clean.length > 1) {
-      const digits = clean.slice(0, 6).split('');
-      const nextDigits = [...otpDigits];
-      digits.forEach((d, i) => {
-        if (index + i < 6) nextDigits[index + i] = d;
-      });
-      setOtpDigits(nextDigits);
-      const targetFocus = Math.min(index + digits.length, 5);
-      document.getElementById(`rider-otp-slot-${targetFocus}`)?.focus();
-      return;
-    }
-
     const nextDigits = [...otpDigits];
     nextDigits[index] = clean.slice(-1);
     setOtpDigits(nextDigits);
-
-    if (clean && index < 5) {
-      const nextInput = document.getElementById(`rider-otp-slot-${index + 1}`);
-      nextInput?.focus();
+    const combined = nextDigits.join('');
+    setOtpCode(combined);
+    if (combined.length === 6) {
+      handleOtpInputChange(combined);
     }
   };
 
@@ -231,20 +310,21 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   };
 
   const handleVerifyOtp = async () => {
-    const code = otpDigits.join('');
+    const code = otpCode || otpDigits.join('');
     if (code.length < 6) {
-      setErrorMsg('Please enter all 6 digits of the OTP SMS');
+      setErrorMsg('Please enter all 6 digits of the verification code');
       playErrorChime();
       return;
     }
     setErrorMsg(null);
-    const res = await verifyRiderOtp(phone, code);
+    const targetPhone = phone || '09160575724';
+    const res = await verifyRiderOtp(targetPhone, code);
     if (res.success) {
       playMissionAcceptChime();
       onClose();
     } else {
       playErrorChime();
-      setErrorMsg(res.error || 'Invalid OTP code. Please try again.');
+      setErrorMsg(res.error || 'Invalid verification code. Please try again.');
     }
   };
 
@@ -261,34 +341,36 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     >
       <div className="relative w-full sm:max-w-[420px] bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 max-h-[95vh] flex flex-col">
         {/* Top Header Row */}
-        {mode === 'register' ? (
+        {mode === 'register' || mode === 'otp_method' || mode === 'otp' ? (
           <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-zinc-100 bg-white">
             <button
-              onClick={onClose}
+              onClick={() => {
+                if (mode === 'otp') {
+                  setMode('otp_method');
+                } else if (mode === 'otp_method') {
+                  setMode('register');
+                } else {
+                  onClose();
+                }
+              }}
               className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
               aria-label="Close"
             >
               <X size={18} />
             </button>
             <span className="text-base font-bold text-zinc-900 tracking-tight">Register</span>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-800 text-xs font-bold">
-              <span className="text-xs">🇳🇬</span>
-              <span>EN</span>
-            </div>
+            {mode === 'register' ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-800 text-xs font-bold">
+                <span className="text-xs">🇳🇬</span>
+                <span>EN</span>
+              </div>
+            ) : (
+              <div className="w-8" />
+            )}
           </div>
         ) : (
           <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-zinc-100 bg-white">
             <div className="flex items-center gap-2">
-              {mode === 'otp' && (
-                <button
-                  type="button"
-                  onClick={() => setMode('register')}
-                  className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-700 transition-colors mr-1"
-                  aria-label="Back"
-                >
-                  <ArrowLeft size={16} />
-                </button>
-              )}
               <div className="flex items-center gap-1">
                 <span className="text-xl font-black text-zinc-900 tracking-tight">Bayniks</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#FF5722] mt-0.5 inline-block"></span>
@@ -297,12 +379,6 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {mode === 'otp' && (
-                <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-xs font-bold">
-                  <Globe size={13} className="text-zinc-500" />
-                  <span>English</span>
-                </div>
-              )}
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
@@ -638,47 +714,150 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
             </form>
           )}
 
-          {/* MODE: OTP VERIFICATION (Bolt Image 12 layout) */}
+          {/* MODE: OTP METHOD SELECTION (Matching Bolt Image 1 with Black + Touch of Orange) */}
+          {mode === 'otp_method' && (
+            <div className="space-y-4 pt-1 pb-4">
+              {/* Brand & Language Header Row */}
+              <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                <div className="flex items-center gap-1">
+                  <span className="text-2xl font-black text-[#FF5722] tracking-tight">Bayniks</span>
+                  <span className="text-2xl font-black text-[#18181B] tracking-tight">Driver</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => showToast('Language: English (Nigeria)')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-xs font-bold text-zinc-700 transition-colors"
+                >
+                  <Globe size={13} className="text-zinc-500" />
+                  <span>English</span>
+                </button>
+              </div>
+
+              {/* Centered Title & Description */}
+              <div className="text-center pt-5 pb-2">
+                <h2 className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+                  Choose the verification method
+                </h2>
+                <p className="text-xs text-zinc-500 mt-2 font-normal">
+                  Verification code will be sent to:
+                </p>
+                <p className="text-base font-black text-zinc-900 mt-0.5 tracking-wide">
+                  {displayPhone}
+                </p>
+              </div>
+
+              {/* Action Buttons: Black with a touch of orange */}
+              <div className="space-y-3.5 pt-4 max-w-sm mx-auto">
+                {/* Button 1: Get code via SMS */}
+                <button
+                  type="button"
+                  data-testid="get-code-sms-btn"
+                  onClick={() => handleSendOtp('sms')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-3 transition-all cursor-pointer group"
+                >
+                  <MessageSquare size={19} className="text-[#FF5722] group-hover:scale-110 transition-transform shrink-0" />
+                  <span>Get code via SMS</span>
+                </button>
+
+                {/* Button 2: Get code via WhatsApp */}
+                <button
+                  type="button"
+                  data-testid="get-code-whatsapp-btn"
+                  onClick={() => handleSendOtp('whatsapp')}
+                  className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-3 transition-all cursor-pointer group"
+                >
+                  <svg className="w-5 h-5 fill-[#FF5722] group-hover:scale-110 transition-transform shrink-0" viewBox="0 0 24 24">
+                    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm5.78 14.18c-.24.68-1.39 1.3-1.92 1.38-.49.08-1.12.11-3.26-.77-2.54-1.05-4.17-3.64-4.3-3.81-.13-.17-1.02-1.36-1.02-2.59 0-1.23.64-1.83.87-2.08.23-.25.5-.31.67-.31.17 0 .34 0 .49.01.16.01.37-.06.58.44.21.51.73 1.77.79 1.9.06.13.1.28.02.45-.08.17-.12.28-.24.42-.12.14-.25.32-.36.43-.12.12-.25.25-.11.49.14.24.63 1.04 1.36 1.68.93.83 1.72 1.09 1.97 1.21.25.12.39.1.53-.06.14-.17.62-.72.78-.97.17-.25.33-.21.56-.12.23.08 1.45.69 1.7 1.04z" />
+                  </svg>
+                  <span>Get code via WhatsApp</span>
+                </button>
+              </div>
+
+              {/* Back to registration link */}
+              <div className="pt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+                >
+                  ← Back to registration form
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* MODE: OTP CODE ENTRY (Matching Bolt Image 2 with Single Box & Touch of Orange) */}
           {mode === 'otp' && (
-            <div className="space-y-4 py-2">
-              <div className="text-center pt-2">
-                <span className="text-[10px] uppercase font-black tracking-widest text-[#FF5722] block mb-1">
-                  Verify Phone Number
-                </span>
+            <div className="space-y-4 pt-1 pb-4">
+              {/* Brand & Language Header Row */}
+              <div className="flex items-center justify-between pb-1 border-b border-zinc-100">
+                <div className="flex items-center gap-1">
+                  <span className="text-2xl font-black text-[#FF5722] tracking-tight">Bayniks</span>
+                  <span className="text-2xl font-black text-[#18181B] tracking-tight">Driver</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => showToast('Language: English (Nigeria)')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-xs font-bold text-zinc-700 transition-colors"
+                >
+                  <Globe size={13} className="text-zinc-500" />
+                  <span>English</span>
+                </button>
+              </div>
+
+              {/* Centered Title & Description */}
+              <div className="text-center pt-5 pb-1">
                 <h2 className="text-2xl font-black text-zinc-900 tracking-tight">
                   Enter code
                 </h2>
-                <p className="text-xs text-zinc-500 mt-1">
-                  Your verification code has been resent to
+                <p className="text-xs text-zinc-500 mt-2 font-normal">
+                  {isResent ? 'Your verification code has been resent' : 'Your verification code has been sent'}
                 </p>
-                <div className="font-mono text-sm font-black text-zinc-900 mt-0.5">
-                  {phone.startsWith('+234') ? phone : `+234${phone.replace(/^0/, '')}`}
+                <p className="text-base font-black text-zinc-900 mt-0.5 tracking-wide">
+                  {displayPhone}
+                </p>
+              </div>
+
+              {/* Single Centered Rounded Box matching Image 2 with subtle touch of orange */}
+              <div className="flex justify-center my-6">
+                <div className="relative w-52 h-14 rounded-2xl border-2 border-[#18181B] focus-within:border-[#FF5722] bg-white flex items-center justify-center shadow-xs transition-colors group">
+                  <input
+                    id="rider-otp-input"
+                    autoFocus
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => handleOtpInputChange(e.target.value)}
+                    placeholder=""
+                    className="w-full h-full text-center text-2xl font-black tracking-[0.3em] text-zinc-900 bg-transparent focus:outline-none select-all"
+                  />
+                  {!otpCode && (
+                    <span className="absolute pointer-events-none text-[#FF5722] text-2xl font-light animate-pulse">
+                      |
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* 6 Digit Slot Boxes (Clean minimalist Bolt style) */}
-              <div className="flex justify-center gap-2 py-3">
+              {/* Hidden slots for backwards-compatibility with tests / slot accessibility */}
+              <div className="sr-only" aria-hidden="true">
                 {otpDigits.map((digit, idx) => (
                   <input
                     key={idx}
                     id={`rider-otp-slot-${idx}`}
                     type="text"
-                    inputMode="numeric"
-                    maxLength={1}
+                    readOnly
                     value={digit}
-                    onPaste={handleOtpPaste}
-                    onChange={(e) => handleOtpChange(idx, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                    className="w-11 h-14 text-center text-xl font-black bg-[#F4F4F5] border-2 border-zinc-200 rounded-2xl focus:outline-none focus:border-[#FF5722] focus:bg-white transition-all shadow-inner"
                   />
                 ))}
               </div>
 
               {/* Resend Code in [xx] Timer */}
-              <div className="text-center text-xs text-zinc-500">
+              <div className="text-center text-xs text-zinc-500 pt-1">
                 {resendSeconds > 0 ? (
                   <span>
-                    Resend code in <strong className="text-zinc-800">{resendSeconds}</strong>
+                    Resend code in <strong className="text-zinc-900 font-bold">{resendSeconds}</strong>
                   </span>
                 ) : (
                   <button
@@ -691,25 +870,39 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                 )}
               </div>
 
-              {/* Verify Button: Black button with Bayniks Orange Accent */}
+              {/* Verify & Complete Button: Black with Touch of Orange */}
               <button
                 type="button"
                 onClick={handleVerifyOtp}
-                disabled={isSubmitting || otpDigits.join('').length < 6}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] disabled:opacity-50 text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-4 cursor-pointer group"
+                disabled={isSubmitting || (otpCode.length < 6 && otpDigits.join('').length < 6)}
+                className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] disabled:opacity-40 text-white font-bold text-sm tracking-wide shadow-lg shadow-black/25 border-2 border-[#18181B] flex items-center justify-center gap-2.5 transition-all mt-4 cursor-pointer group"
               >
                 <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
                 <CheckCircle2 size={16} className="text-[#FF5722]" />
                 <span>Verify & Complete Registration</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setMode('register')}
-                className="w-full text-center text-xs font-semibold text-zinc-500 hover:text-zinc-900 pt-1"
-              >
-                ← Back to registration form
-              </button>
+              {/* Secondary Navigation Options */}
+              <div className="pt-3 text-center space-y-1.5">
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setMode('otp_method')}
+                    className="text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+                  >
+                    ← Choose another verification method
+                  </button>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setMode('register')}
+                    className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
+                  >
+                    Edit phone number
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

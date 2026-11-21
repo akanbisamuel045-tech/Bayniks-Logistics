@@ -160,21 +160,28 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
         fireEvent.submit(form);
       }
 
+      // Step 1: Verification method selection screen (Image 1)
       await waitFor(() => {
-        expect(screen.getByText(/Verify Phone Number/i)).toBeDefined();
-        expect(screen.getByText(/Verify & Complete Registration/i)).toBeDefined();
-        expect(screen.queryByText(/Test Verification OTP/i)).toBeNull();
+        expect(screen.getByText(/Choose the verification method/i)).toBeDefined();
+        expect(screen.getByTestId('get-code-sms-btn')).toBeDefined();
+        expect(screen.getByTestId('get-code-whatsapp-btn')).toBeDefined();
       });
 
-      // User enters the 6 digits received via SMS into the input slots
-      ['1', '2', '3', '4', '5', '6'].forEach((digit, i) => {
-        const slot = document.getElementById(`rider-otp-slot-${i}`) as HTMLInputElement;
-        fireEvent.change(slot, { target: { value: digit } });
+      // User selects SMS delivery method
+      const smsBtn = screen.getByTestId('get-code-sms-btn');
+      fireEvent.click(smsBtn);
+
+      // Step 2: Enter code screen (Image 2)
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /^Enter code$/i })).toBeDefined();
+        expect(screen.getByText(/Your verification code has been sent/i)).toBeDefined();
+        expect(screen.getByRole('button', { name: /Verify & Complete Registration/i })).toBeDefined();
       });
 
-      // Verify slots have digits
-      const slot0 = document.getElementById('rider-otp-slot-0') as HTMLInputElement;
-      expect(slot0?.value).toBe('1');
+      // User enters the 6 digits in the centered code input box
+      const otpInput = document.getElementById('rider-otp-input') as HTMLInputElement;
+      expect(otpInput).toBeDefined();
+      fireEvent.change(otpInput, { target: { value: '123456' } });
 
       // Submit verification
       const verifyBtn = screen.getByRole('button', { name: /Verify & Complete Registration/i });
