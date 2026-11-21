@@ -336,63 +336,39 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
 
   return (
     <div
-      className="absolute inset-0 z-[100] flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="absolute inset-0 z-[100] w-full h-full bg-white flex flex-col overflow-hidden animate-fadeIn"
       data-testid="rider-auth-modal"
     >
-      <div className="relative w-full sm:max-w-[420px] bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden border border-zinc-200 max-h-[95vh] flex flex-col">
-        {/* Top Header Row */}
-        {mode === 'register' || mode === 'otp_method' || mode === 'otp' ? (
-          <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-zinc-100 bg-white">
-            <button
-              onClick={() => {
-                if (mode === 'otp') {
-                  setMode('otp_method');
-                } else if (mode === 'otp_method') {
-                  setMode('register');
-                } else {
-                  onClose();
-                }
-              }}
-              className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
-              aria-label="Close"
-            >
-              <X size={18} />
-            </button>
-            <span className="text-base font-bold text-zinc-900 tracking-tight">Register</span>
-            {mode === 'register' ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-800 text-xs font-bold">
-                <span className="text-xs">🇳🇬</span>
-                <span>EN</span>
-              </div>
-            ) : (
-              <div className="w-8" />
-            )}
+      <div className="relative w-full h-full max-w-md mx-auto bg-white flex flex-col overflow-hidden">
+        {/* Top Header Row (Full Screen Bolt/Bayniks Header) */}
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-zinc-100 bg-white shrink-0">
+          <button
+            onClick={() => {
+              if (mode === 'otp') {
+                setMode('otp_method');
+              } else if (mode === 'otp_method') {
+                setMode('register');
+              } else {
+                onClose();
+              }
+            }}
+            className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+          <span className="text-base font-bold text-zinc-900 tracking-tight">
+            {mode === 'login' ? 'Sign In' : 'Register'}
+          </span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 text-zinc-800 text-xs font-bold">
+            <span className="text-xs">🇳🇬</span>
+            <span>EN</span>
           </div>
-        ) : (
-          <div className="px-5 pt-4 pb-2 flex items-center justify-between border-b border-zinc-100 bg-white">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <span className="text-xl font-black text-zinc-900 tracking-tight">Bayniks</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#FF5722] mt-0.5 inline-block"></span>
-                <span className="text-xl font-black text-zinc-900 tracking-tight ml-0.5">Driver</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 flex items-center justify-center transition-colors"
-                aria-label="Close"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Tab Switcher (Bolt-style segmented pills for Login vs Register, shown on login mode) */}
         {mode === 'login' && (
-          <div className="flex bg-zinc-100 p-1 mx-5 mt-4 rounded-full">
+          <div className="flex bg-zinc-100 p-1 mx-5 mt-4 rounded-full shrink-0">
             <button
               type="button"
               onClick={() => handleTabChange('login')}
@@ -412,14 +388,14 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
 
         {/* Error Alert Box */}
         {errorMsg && (
-          <div className="mx-5 mt-3 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 animate-shake">
+          <div className="mx-5 mt-3 p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 animate-shake shrink-0">
             <AlertCircle size={16} className="shrink-0 text-red-600" />
             <span className="font-semibold">{errorMsg}</span>
           </div>
         )}
 
-        {/* Scrollable Body */}
-        <div className="p-5 overflow-y-auto max-h-[78vh]">
+        {/* Scrollable Body (Full Page Scroll Stage) */}
+        <div className="flex-1 p-5 sm:p-6 overflow-y-auto">
           {/* MODE: SIGN IN */}
           {mode === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
@@ -485,7 +461,7 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-2 cursor-pointer group"
+                className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-2 cursor-pointer group"
               >
                 {isSubmitting ? (
                   <span>Signing In...</span>
@@ -549,169 +525,190 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
                   </button>
                 </div>
               )}
-            </form>
-          )}
 
-          {/* MODE: REGISTER (Matching Bolt Image 10 exactly with Bayniks branding and Black/Orange theme) */}
-          {mode === 'register' && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-4 pt-1">
-              <div>
-                <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-                  Become a driver
-                </h1>
-              </div>
-
-              {/* Field 1: Email address */}
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
-                  Email address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter email address"
-                  className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
-                  required
-                />
-              </div>
-
-              {/* Field 2: Phone number */}
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
-                  Phone number
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      playKeypadChime();
-                      showToast('Country selector: Nigeria (+234)');
-                    }}
-                    className="h-12 px-3.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl flex items-center gap-1.5 text-sm font-semibold text-zinc-800 shrink-0 hover:bg-zinc-200 transition-colors"
-                  >
-                    <span className="text-base">🇳🇬</span>
-                    <ChevronDown size={14} className="text-zinc-500" />
-                  </button>
-                  <div className="relative flex-1">
-                    <input
-                      type="tel"
-                      value={phone.replace(/^\+234/, '').replace(/^0/, '')}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={simulationMode ? '803 123 4567' : '800 000 0000'}
-                      className="w-full pl-14 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
-                      required
-                    />
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500 pointer-events-none">
-                      +234
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Field 3: City */}
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
-                  City
-                </label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Search city"
-                    className="w-full pl-10 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Checkbox: Legal & Terms */}
-              <div className="pt-1">
-                <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => {
-                      playKeypadChime();
-                      setAgreedToTerms(e.target.checked);
-                    }}
-                    className="w-5 h-5 mt-0.5 rounded border-zinc-300 text-[#18181B] focus:ring-[#FF5722] shrink-0 cursor-pointer accent-[#18181B]"
-                  />
-                  <span className="text-xs text-zinc-600 leading-snug">
-                    By registering, you agree to our{' '}
-                    <strong className="text-zinc-900 underline font-semibold">Terms of Service</strong> and{' '}
-                    <strong className="text-zinc-900 underline font-semibold">Privacy policy</strong>, commit to
-                    comply with obligations under Nigerian and local legislation and provide only legal services and
-                    content on the Bayniks Platform.
-                  </span>
-                </label>
-              </div>
-
-              {/* Promotional subtext */}
-              <p className="text-[11px] text-zinc-400 leading-relaxed pt-1">
-                Once you've become a driver, we will occasionally send you offers and promotions related to our
-                services. You can always unsubscribe by changing your communication preferences.
-              </p>
-
-              {/* Primary Action Button: Black button with Orange dot when valid, disabled light grey otherwise */}
-              {isRegisterValid ? (
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-3 cursor-pointer group"
-                >
-                  {isSubmitting ? (
-                    <span>Registering...</span>
-                  ) : (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
-                      <span>Register as a driver</span>
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={true}
-                  className="w-full h-13 py-3.5 px-4 rounded-full bg-[#F4F4F5] text-zinc-400 font-bold text-sm tracking-wide flex items-center justify-center mt-3 cursor-not-allowed border border-zinc-200/60"
-                >
-                  <span>Register as a driver</span>
-                </button>
-              )}
-
-              {/* Footer Links */}
-              <div className="pt-3 pb-1 text-center space-y-2.5">
+              {/* Toggle to Registration */}
+              <div className="pt-3 pb-1 text-center">
                 <button
                   type="button"
                   onClick={() => {
                     playKeypadChime();
-                    setMode('login');
+                    setMode('register');
                     setErrorMsg(null);
                   }}
                   className="text-xs font-semibold text-zinc-800 hover:text-black inline-flex items-center gap-1 group"
                 >
-                  <span>Already have an account?</span>
+                  <span>Don't have an account?</span>
                   <span className="underline font-bold text-zinc-900 group-hover:text-[#FF5722] transition-colors">
-                    Log in
+                    Register as a driver
                   </span>
                   <ArrowUpRight size={13} className="text-zinc-600 group-hover:text-[#FF5722] transition-colors" />
                 </button>
-
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => showToast('Fleet Owner portal: fleet.bayniks.ng')}
-                    className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
-                  >
-                    If you have multiple vehicles and drivers,{' '}
-                    <span className="underline font-bold text-zinc-800 hover:text-[#FF5722]">
-                      register as a Fleet owner.
-                    </span>
-                  </button>
-                </div>
               </div>
             </form>
+          )}
+
+          {/* MODE: REGISTER (Full Page Bolt Card layout matching reference image) */}
+          {mode === 'register' && (
+            <div className="border border-zinc-200/90 rounded-[28px] p-5 sm:p-6 bg-white shadow-xs">
+              <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                <div>
+                  <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+                    Become a driver
+                  </h1>
+                </div>
+
+                {/* Field 1: Email address */}
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="w-full px-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* Field 2: Phone number */}
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                    Phone number
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playKeypadChime();
+                        showToast('Country selector: Nigeria (+234)');
+                      }}
+                      className="h-12 px-3.5 bg-[#F4F4F5] border border-zinc-200 rounded-2xl flex items-center gap-1.5 text-sm font-semibold text-zinc-800 shrink-0 hover:bg-zinc-200 transition-colors"
+                    >
+                      <span className="text-base">🇳🇬</span>
+                      <ChevronDown size={14} className="text-zinc-500" />
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="tel"
+                        value={phone.replace(/^\+234/, '').replace(/^0/, '')}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder={simulationMode ? '803 123 4567' : '800 000 0000'}
+                        className="w-full pl-14 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
+                        required
+                      />
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-500 pointer-events-none">
+                        +234
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Field 3: City */}
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-600 mb-1.5">
+                    City
+                  </label>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Search city"
+                      className="w-full pl-10 pr-4 py-3 bg-[#F4F4F5] border border-zinc-200 rounded-2xl text-sm font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-[#FF5722] focus:bg-white transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Checkbox: Legal & Terms */}
+                <div className="pt-1">
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => {
+                        playKeypadChime();
+                        setAgreedToTerms(e.target.checked);
+                      }}
+                      className="w-5 h-5 mt-0.5 rounded border-zinc-300 text-[#18181B] focus:ring-[#FF5722] shrink-0 cursor-pointer accent-[#18181B]"
+                    />
+                    <span className="text-xs text-zinc-600 leading-snug">
+                      By registering, you agree to our{' '}
+                      <strong className="text-zinc-900 underline font-semibold">Terms of Service</strong> and{' '}
+                      <strong className="text-zinc-900 underline font-semibold">Privacy policy</strong>, commit to
+                      comply with obligations under Nigerian and local legislation and provide only legal services and
+                      content on the Bayniks Platform.
+                    </span>
+                  </label>
+                </div>
+
+                {/* Promotional subtext */}
+                <p className="text-[11px] text-zinc-400 leading-relaxed pt-1">
+                  Once you've become a driver, we will occasionally send you offers and promotions related to our
+                  services. You can always unsubscribe by changing your communication preferences.
+                </p>
+
+                {/* Primary Action Button */}
+                {isRegisterValid ? (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-14 rounded-full bg-[#18181B] hover:bg-black active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-black/25 border-2 border-[#18181B] hover:border-black flex items-center justify-center gap-2.5 transition-all mt-3 cursor-pointer group"
+                  >
+                    {isSubmitting ? (
+                      <span>Registering...</span>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-[#FF5722] group-hover:scale-125 transition-transform" />
+                        <span>Register as a driver</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={true}
+                    className="w-full h-14 rounded-full bg-[#F4F4F5] text-zinc-400 font-bold text-sm tracking-wide flex items-center justify-center mt-3 cursor-not-allowed border border-zinc-200/60"
+                  >
+                    <span>Register as a driver</span>
+                  </button>
+                )}
+
+                {/* Footer Links */}
+                <div className="pt-3 pb-1 text-center space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playKeypadChime();
+                      setMode('login');
+                      setErrorMsg(null);
+                    }}
+                    className="text-xs font-semibold text-zinc-800 hover:text-black inline-flex items-center gap-1 group"
+                  >
+                    <span>Already have an account?</span>
+                    <span className="underline font-bold text-zinc-900 group-hover:text-[#FF5722] transition-colors">
+                      Log in
+                    </span>
+                    <ArrowUpRight size={13} className="text-zinc-600 group-hover:text-[#FF5722] transition-colors" />
+                  </button>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => showToast('Fleet Owner portal: fleet.bayniks.ng')}
+                      className="text-xs text-zinc-500 hover:text-zinc-800 transition-colors"
+                    >
+                      If you have multiple vehicles and drivers,{' '}
+                      <span className="underline font-bold text-zinc-800 hover:text-[#FF5722]">
+                        register as a Fleet owner.
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           )}
 
           {/* MODE: OTP METHOD SELECTION (Matching Bolt Image 1 with Black + Touch of Orange) */}
