@@ -167,186 +167,122 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
   const personalCount = (nin ? 1 : 0) + (ninUploaded ? 1 : 0) + (photoUploaded ? 1 : 0) + (ridersCardUploaded ? 1 : 0);
   const vehicleCount = (plateNumber ? 1 : 0) + (exteriorUploaded ? 1 : 0) + (autogeniusUploaded ? 1 : 0) + (lasdriUploaded ? 1 : 0) + (hackneyUploaded ? 1 : 0);
   const paymentCount = bankAccountNumber ? 1 : 0;
+  const isFormComplete = Boolean(
+    (personalCount >= 2 || nin || ninUploaded) &&
+    (vehicleCount >= 1 || plateNumber) &&
+    (paymentCount >= 1 || bankAccountNumber)
+  );
 
   return (
     <div
       className="min-h-full pb-32 bg-white text-zinc-900 select-none animate-fadeIn"
       data-testid="rider-kyc-screen"
     >
-      {/* Top Navigation Bar (Bolt style) */}
-      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md px-5 py-3.5 border-b border-zinc-100 flex items-center justify-between">
+      {/* Top Navigation Bar (Reference Image: Only 'Continue later ✕' pill button on right) */}
+      <header className="sticky top-0 z-20 bg-white px-5 pt-4 pb-2 flex items-center justify-end">
         <button
           type="button"
           onClick={() => {
             playKeypadChime();
             onBack();
           }}
-          className="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 active:scale-95 flex items-center justify-center text-zinc-800 transition-colors"
-          aria-label="Back to Profile"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-xs font-semibold text-zinc-800 transition-colors"
         >
-          <ArrowLeft size={18} />
+          <span>Continue later</span>
+          <X size={14} className="text-zinc-600" />
         </button>
-
-        <div className="flex items-center gap-2">
-          {/* QA Approval Switcher (Simulation Only) */}
-          {simulationMode && (
-            <button
-              type="button"
-              onClick={toggleDemoApproval}
-              className="px-2.5 py-1 rounded-full bg-orange-50 hover:bg-orange-100 text-[#FF5722] text-[10px] font-black uppercase tracking-wider border border-orange-200 flex items-center gap-1 transition-all"
-            >
-              <Sparkles size={11} />
-              <span>Toggle Approval</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-xs font-bold text-zinc-800 transition-colors"
-          >
-            <span>Continue later</span>
-            <X size={13} className="text-zinc-500" />
-          </button>
-        </div>
       </header>
 
-      {/* Main Page Content */}
-      <div className="p-5 max-w-lg mx-auto space-y-5">
-        {/* Page Title & Instructions (Image 11) */}
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#FF5722] block mb-1">
-            KYC & Regulatory Compliance
-          </span>
-          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-            Let's set up your account
-          </h1>
-          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-            Complete the steps in any order. We'll save your progress as you go.
-          </p>
+      {/* Main Page Title & Registration Category */}
+      <div className="px-5 pt-1 pb-2 max-w-lg mx-auto">
+        <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
+          Let's set up your account
+        </h1>
+        <p className="text-xs text-zinc-500 font-normal mt-1 leading-relaxed">
+          Complete the steps in any order. We'll save your progress as you go.
+        </p>
 
-          {/* Registration Category */}
-          <div className="flex items-center justify-between pt-3 pb-1 border-b border-zinc-100 mt-2">
-            <div className="text-xs text-zinc-600">
-              <span className="text-zinc-400">Registering for</span>{' '}
-              <span className="font-bold text-zinc-900">2-3 wheeler</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => showToast('Registered vehicle category: 2-3 wheeler (motorcycle)')}
-              className="text-xs font-bold text-[#FF5722] hover:underline"
-            >
-              Change
-            </button>
+        {/* Category: Registering for / 2-3 wheeler / Change (Orange) */}
+        <div className="flex items-center justify-between pt-4 pb-3 border-b border-zinc-100 mt-2">
+          <div className="text-xs">
+            <span className="text-zinc-400">Registering for</span>{' '}
+            <span className="font-semibold text-zinc-800 ml-1">2-3 wheeler</span>
           </div>
+          <button
+            type="button"
+            onClick={() => showToast('Vehicle category: 2-3 wheeler (motorcycle)')}
+            className="text-xs font-semibold text-[#FF5722] hover:underline cursor-pointer"
+          >
+            Change
+          </button>
         </div>
+      </div>
 
-        {/* Real-time Status Card (Approved / Review / Rejected) */}
-        <div
-          className={`p-4 rounded-2xl border transition-all ${
-            kycStatus === 'approved'
-              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-              : kycStatus === 'pending_review'
-              ? 'bg-amber-50/70 border-amber-200 text-amber-950'
-              : 'bg-red-50/70 border-red-200 text-red-950'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                kycStatus === 'approved'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : kycStatus === 'pending_review'
-                  ? 'bg-amber-500 text-white shadow-sm'
-                  : 'bg-red-500 text-white shadow-sm'
-              }`}
-            >
-              {kycStatus === 'approved' ? (
-                <ShieldCheck size={20} />
-              ) : kycStatus === 'pending_review' ? (
-                <Clock size={20} />
-              ) : (
-                <AlertTriangle size={20} />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase tracking-wider">
-                  {kycStatus === 'approved'
-                    ? 'KYC Level 2 Verified ✓'
-                    : kycStatus === 'pending_review'
-                    ? 'Documents Under Review'
-                    : 'Verification Rejected'}
-                </span>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/90 border border-current">
-                  {kycStatus === 'approved' ? 'FULL DISPATCH ACTIVE' : 'PENDING'}
-                </span>
-              </div>
-              <p className="text-[11px] mt-1 leading-relaxed opacity-85">
-                {kycStatus === 'approved'
-                  ? 'All Lagos commercial dispatch corridors are unlocked. Insurance and LASDRI active.'
-                  : kycStatus === 'pending_review'
-                  ? 'Your uploaded documents are being reviewed by Bayniks Compliance. Estimated time: 12–24h.'
-                  : kycRejectionReason || 'Please re-upload a clear photograph of your valid credentials.'}
+      {/* Rejection Notice Banner (shown only if compliance rejected documents) */}
+      {kycStatus === 'rejected' && (
+        <div className="px-5 max-w-lg mx-auto mt-2">
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-950 flex items-start gap-3">
+            <AlertTriangle size={20} className="text-red-500 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <span className="font-bold block">Verification Rejected</span>
+              <p className="mt-0.5 text-zinc-600">
+                {kycRejectionReason || 'Please re-upload a clear photograph of your valid credentials.'}
               </p>
             </div>
           </div>
         </div>
+      )}
 
-        {/* SECTION 1: Personal Details Accordion (Image 11) */}
-        <div className="border border-zinc-200 rounded-3xl overflow-hidden bg-white shadow-xs">
+      {/* Accordion Sections: Personal details, Vehicle details, Payment details */}
+      <div className="max-w-lg mx-auto divide-y divide-zinc-100">
+        {/* SECTION 1: Personal details (0/4 steps complete) */}
+        <div className="py-2">
           <button
             type="button"
             onClick={() => setPersonalOpen(!personalOpen)}
-            className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-left cursor-pointer"
           >
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-zinc-900 tracking-tight">
-                  Personal details
-                </h2>
-                <span className="text-[10px] font-bold text-zinc-400">
-                  (1. Civil Identity & National Records)
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 font-medium">
+              <h2 className="text-base font-bold text-zinc-900">
+                Personal details
+              </h2>
+              <p className="text-xs text-zinc-400 font-normal mt-0.5">
                 {personalCount}/4 steps complete
               </p>
             </div>
-            {personalOpen ? <ChevronUp size={18} className="text-zinc-400" /> : <ChevronDown size={18} className="text-zinc-400" />}
+            {personalOpen ? <ChevronUp size={20} className="text-zinc-700" /> : <ChevronDown size={20} className="text-zinc-700" />}
           </button>
 
           {personalOpen && (
-            <div className="divide-y divide-zinc-100 border-t border-zinc-100">
-              {/* Item 1.1: Personal Information */}
-              <button
-                type="button"
+            <div className="px-5 space-y-1">
+              {/* Item 1.1: Personal information */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('personal_info')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('personal_info');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <List size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <List size={20} />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-[#FF5722] block leading-none mb-1">
+                    <span className="text-[11px] font-semibold text-[#FF5722] block leading-none mb-1">
                       Start here
                     </span>
-                    <span className="text-sm font-bold text-zinc-900 block truncate">
+                    <span className="text-sm font-semibold text-zinc-900 block truncate">
                       Personal information
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {nin ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
 
               {/* Item 1.2: NIN Slip */}
               <div
@@ -359,33 +295,17 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                     setActiveModal('nin_slip');
                   }
                 }}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left cursor-pointer"
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-900 block truncate">
+                  <span className="text-sm font-semibold text-zinc-900 block truncate">
                     NIN Slip
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {ninUploaded ? (
-                    <button
-                      type="button"
-                      disabled={isCompressing}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileUpload('nin');
-                      }}
-                      className="px-3 py-1 rounded-full bg-zinc-100 hover:bg-orange-50 text-xs font-bold text-zinc-700 hover:text-[#FF5722] border border-zinc-200 transition-colors"
-                    >
-                      Replace
-                    </button>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
               </div>
 
               {/* Item 1.3: Driver's profile photo */}
@@ -399,33 +319,17 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                     setActiveModal('profile_photo');
                   }
                 }}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left cursor-pointer"
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-900 block truncate">
+                  <span className="text-sm font-semibold text-zinc-900 block truncate">
                     Driver's profile photo
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {photoUploaded ? (
-                    <button
-                      type="button"
-                      disabled={isCompressing}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileUpload('photo');
-                      }}
-                      className="px-3 py-1 rounded-full bg-zinc-100 hover:bg-orange-50 text-xs font-bold text-zinc-700 hover:text-[#FF5722] border border-zinc-200 transition-colors"
-                    >
-                      Replace
-                    </button>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
               </div>
 
               {/* Item 1.4: Rider's Card (Optional) */}
@@ -439,278 +343,261 @@ export const RiderKycScreen: React.FC<RiderKycScreenProps> = ({ onBack }) => {
                     setActiveModal('riders_card');
                   }
                 }}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left cursor-pointer"
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 block leading-none mb-1">
+                    <span className="text-[11px] font-medium text-zinc-400 block leading-none mb-1">
                       Optional
                     </span>
-                    <span className="text-sm font-bold text-zinc-900 block truncate">
+                    <span className="text-sm font-semibold text-zinc-900 block truncate">
                       Rider's Card (for motorbike couriers only)
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {ridersCardUploaded ? (
-                    <button
-                      type="button"
-                      disabled={isCompressing}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileUpload('riders_card');
-                      }}
-                      className="px-3 py-1 rounded-full bg-zinc-100 hover:bg-orange-50 text-xs font-bold text-zinc-700 hover:text-[#FF5722] border border-zinc-200 transition-colors"
-                    >
-                      Replace
-                    </button>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
               </div>
             </div>
           )}
         </div>
 
-        {/* SECTION 2: Vehicle Details Accordion (Image 11) */}
-        <div className="border border-zinc-200 rounded-3xl overflow-hidden bg-white shadow-xs">
+        {/* SECTION 2: Vehicle details (0/5 steps complete) */}
+        <div className="py-2">
           <button
             type="button"
             onClick={() => setVehicleOpen(!vehicleOpen)}
-            className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-left cursor-pointer"
           >
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-zinc-900 tracking-tight">
-                  Vehicle details
-                </h2>
-                <span className="text-[10px] font-bold text-zinc-400">
-                  (2. Vehicle & Lagos Commercial Permits)
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 font-medium">
+              <h2 className="text-base font-bold text-zinc-900">
+                Vehicle details
+              </h2>
+              <p className="text-xs text-zinc-400 font-normal mt-0.5">
                 {vehicleCount}/5 steps complete
               </p>
             </div>
-            {vehicleOpen ? <ChevronUp size={18} className="text-zinc-400" /> : <ChevronDown size={18} className="text-zinc-400" />}
+            {vehicleOpen ? <ChevronUp size={20} className="text-zinc-700" /> : <ChevronDown size={20} className="text-zinc-700" />}
           </button>
 
           {vehicleOpen && (
-            <div className="divide-y divide-zinc-100 border-t border-zinc-100">
-              {/* Item 2.1: Vehicle information */}
-              <button
-                type="button"
+            <div className="px-5 space-y-1">
+              {/* Item 2.1: Vehicle info */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('vehicle_info')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('vehicle_info');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <List size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <List size={20} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-900 block truncate">
+                  <span className="text-sm font-semibold text-zinc-900 block truncate">
                     Vehicle information
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {plateNumber ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
 
-              {/* Item 2.2: Exterior Photo of your Vehicle */}
-              <button
-                type="button"
+              {/* Item 2.2: Exterior Photo */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('exterior_photo')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('exterior_photo');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-900 block truncate">
+                  <span className="text-sm font-semibold text-zinc-900 block truncate">
                     Exterior Photo of your Vehicle
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {exteriorUploaded ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
 
-              {/* Item 2.3: Autogenius Inspection (Optional) */}
-              <button
-                type="button"
+              {/* Item 2.3: Autogenius Report (Optional) */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('autogenius')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('autogenius');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 block leading-none mb-1">
+                    <span className="text-[11px] font-medium text-zinc-400 block leading-none mb-1">
                       Optional
                     </span>
-                    <span className="text-sm font-bold text-zinc-900 block truncate">
+                    <span className="text-sm font-semibold text-zinc-900 block truncate">
                       Autogenius Vehicle Inspection Report
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {autogeniusUploaded ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
 
               {/* Item 2.4: LASDRI Card (Optional) */}
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('lasdri')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('lasdri');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 block leading-none mb-1">
+                    <span className="text-[11px] font-medium text-zinc-400 block leading-none mb-1">
                       Optional
                     </span>
-                    <span className="text-sm font-bold text-zinc-900 block truncate">
+                    <span className="text-sm font-semibold text-zinc-900 block truncate">
                       LASDRI Card
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {lasdriUploaded ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
 
               {/* Item 2.5: Hackney Permit (Optional) */}
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('hackney')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('hackney');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <FileText size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <FileText size={20} />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 block leading-none mb-1">
+                    <span className="text-[11px] font-medium text-zinc-400 block leading-none mb-1">
                       Optional
                     </span>
-                    <span className="text-sm font-bold text-zinc-900 block truncate">
+                    <span className="text-sm font-semibold text-zinc-900 block truncate">
                       Hackney Permit
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {hackneyUploaded ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
             </div>
           )}
         </div>
 
-        {/* SECTION 3: Payment Details Accordion (Image 11) */}
-        <div className="border border-zinc-200 rounded-3xl overflow-hidden bg-white shadow-xs">
+        {/* SECTION 3: Payment details (0/1 steps complete) */}
+        <div className="py-2">
           <button
             type="button"
             onClick={() => setPaymentOpen(!paymentOpen)}
-            className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            className="w-full px-5 py-3 flex items-center justify-between text-left cursor-pointer"
           >
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-zinc-900 tracking-tight">
-                  Payment details
-                </h2>
-                <span className="text-[10px] font-bold text-zinc-400">
-                  (3. Document Photos)
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 font-medium">
+              <h2 className="text-base font-bold text-zinc-900">
+                Payment details
+              </h2>
+              <p className="text-xs text-zinc-400 font-normal mt-0.5">
                 {paymentCount}/1 steps complete
               </p>
             </div>
-            {paymentOpen ? <ChevronUp size={18} className="text-zinc-400" /> : <ChevronDown size={18} className="text-zinc-400" />}
+            {paymentOpen ? <ChevronUp size={20} className="text-zinc-700" /> : <ChevronDown size={20} className="text-zinc-700" />}
           </button>
 
           {paymentOpen && (
-            <div className="divide-y divide-zinc-100 border-t border-zinc-100">
-              <button
-                type="button"
+            <div className="px-5 space-y-1">
+              {/* Item 3.1: Payment info */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveModal('payment_info')}
-                className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors text-left"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveModal('payment_info');
+                  }
+                }}
+                className="w-full py-3 flex items-center justify-between hover:bg-zinc-50/60 rounded-xl transition-colors text-left cursor-pointer"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center shrink-0">
-                    <List size={18} />
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-800 shrink-0">
+                    <List size={20} />
                   </div>
-                  <span className="text-sm font-bold text-zinc-900 block truncate">
+                  <span className="text-sm font-semibold text-zinc-900 block truncate">
                     Payment information
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {bankAccountNumber ? (
-                    <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                      <Check size={14} strokeWidth={2.5} />
-                    </span>
-                  ) : (
-                    <ChevronRight size={18} className="text-zinc-400" />
-                  )}
-                </div>
-              </button>
+                <ChevronRight size={18} className="text-zinc-300 shrink-0" />
+              </div>
             </div>
           )}
         </div>
-
-        {/* Footer Submit Button (Image 11) */}
-        <div className="pt-2 text-center space-y-2">
-          <p className="text-xs font-semibold text-zinc-400">
-            Complete all steps to submit
-          </p>
-          <button
-            type="button"
-            onClick={handleSubmitAll}
-            disabled={isSubmitting}
-            className="w-full h-13 py-3.5 px-4 rounded-full bg-[#FF5722] hover:bg-[#E64A19] active:scale-[0.98] text-white font-bold text-sm tracking-wide shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 transition-all"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit registration'}
-          </button>
-        </div>
       </div>
+
+      {/* Footer Submit Button (Pill button matching Reference UI) */}
+      <div className="px-5 pt-8 pb-10 max-w-lg mx-auto text-center">
+        <p className="text-xs font-medium text-zinc-400 mb-3">
+          Complete all steps to submit
+        </p>
+        <button
+          type="button"
+          onClick={handleSubmitAll}
+          disabled={isSubmitting || !isFormComplete}
+          className={`w-full h-14 rounded-full font-bold text-sm tracking-wide flex items-center justify-center gap-2 transition-all ${
+            isFormComplete
+              ? 'bg-[#18181B] hover:bg-black text-white shadow-lg shadow-black/20 active:scale-[0.98]'
+              : 'bg-[#F4F4F5] text-[#A1A1AA] cursor-not-allowed'
+          }`}
+        >
+          {isFormComplete && (
+            <span className="w-2 h-2 rounded-full bg-[#FF5722]" />
+          )}
+          <span>{isSubmitting ? 'Submitting...' : 'Submit registration'}</span>
+        </button>
+      </div>
+
+      {/* Simulation QA Helper for Automated Tests */}
+      {simulationMode && (
+        <div className="sr-only" data-testid="qa-simulation-helpers">
+          <button type="button" onClick={toggleDemoApproval}>Toggle Approval</button>
+        </div>
+      )}
 
       {/* =========================================================================
        * SUB-MODAL 1: Personal Details (Image 10)

@@ -300,7 +300,7 @@ export function App() {
       }}
     >
       {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Profile, History or KYC */}
-      <main className="mobile-scroll-stage">
+      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
             onSignIn={() => {
@@ -373,7 +373,7 @@ export function App() {
             )}
 
             {activeTab === 'kyc' && (
-              <RiderKycScreen onBack={() => setActiveTab('profile')} />
+              <RiderKycScreen onBack={() => setActiveTab('home')} />
             )}
           </>
         )}
@@ -391,6 +391,11 @@ export function App() {
         isOpen={isAuthModalOpen}
         initialMode={authModalMode}
         onClose={() => setAuthModalOpen(false)}
+        onCompleteRegistration={() => {
+          setAuthModalOpen(false);
+          setForceLandingView(false);
+          setActiveTab('kyc');
+        }}
       />
 
       {/* Edge-to-Edge Full-View Lagos Map Overlay (#fullMapScreen, z-index: 95) */}

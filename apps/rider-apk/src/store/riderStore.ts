@@ -693,6 +693,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             riderUser: user,
             riderName: user?.fullName || get().riderName,
             plateNumber: user?.plateNumber || get().plateNumber,
+            activeTab: 'kyc',
             simulationMode: false,
             isAuthModalOpen: false,
             isSubmitting: false,
@@ -732,6 +733,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
         riderName: currentUser.fullName,
         plateNumber: currentUser.plateNumber || 'KJA-824-XY',
         authToken: token,
+        activeTab: 'kyc',
         isAuthModalOpen: false,
         isSubmitting: false,
       });

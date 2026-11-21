@@ -28,12 +28,14 @@ import { playKeypadChime, playMissionAcceptChime, playErrorChime } from '../util
 export interface RiderAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCompleteRegistration?: () => void;
   initialMode?: 'welcome' | 'login_options' | 'login' | 'register' | 'otp_method' | 'otp';
 }
 
 export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
   isOpen,
   onClose,
+  onCompleteRegistration,
   initialMode = 'login',
 }) => {
   const {
@@ -272,7 +274,11 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
       const res = await verifyRiderOtp(targetPhone, clean);
       if (res.success) {
         playMissionAcceptChime();
-        onClose();
+        if (onCompleteRegistration) {
+          onCompleteRegistration();
+        } else {
+          onClose();
+        }
       } else {
         playErrorChime();
         setErrorMsg(res.error || 'Invalid verification code. Please try again.');
@@ -321,7 +327,11 @@ export const RiderAuthModal: React.FC<RiderAuthModalProps> = ({
     const res = await verifyRiderOtp(targetPhone, code);
     if (res.success) {
       playMissionAcceptChime();
-      onClose();
+      if (onCompleteRegistration) {
+        onCompleteRegistration();
+      } else {
+        onClose();
+      }
     } else {
       playErrorChime();
       setErrorMsg(res.error || 'Invalid verification code. Please try again.');

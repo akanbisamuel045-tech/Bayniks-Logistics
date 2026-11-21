@@ -189,45 +189,86 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
 
       await waitFor(() => {
         expect(useRiderStore.getState().isLoggedIn).toBe(true);
+        expect(useRiderStore.getState().activeTab).toBe('kyc');
         expect(onCloseMock).toHaveBeenCalled();
+      });
+    });
+
+    it('triggers onCompleteRegistration callback upon OTP verification', async () => {
+      const onCompleteRegistrationMock = vi.fn();
+      render(
+        <RiderAuthModal
+          isOpen={true}
+          onClose={vi.fn()}
+          onCompleteRegistration={onCompleteRegistrationMock}
+          initialMode="otp"
+        />
+      );
+
+      const otpInput = document.getElementById('rider-otp-input') as HTMLInputElement;
+      expect(otpInput).toBeDefined();
+      fireEvent.change(otpInput, { target: { value: '123456' } });
+
+      const verifyBtn = screen.getByRole('button', { name: /Verify & Complete Registration/i });
+      fireEvent.click(verifyBtn);
+
+      await waitFor(() => {
+        expect(onCompleteRegistrationMock).toHaveBeenCalled();
+        expect(useRiderStore.getState().activeTab).toBe('kyc');
       });
     });
   });
 
   /* -------------------------------------------------------------
-   * 2. Rider KYC Registration & Compliance
+   * 2. Rider KYC Registration & Account Setup Checklist
    * ----------------------------------------------------------- */
   describe('2. Rider KYC & Regulatory Compliance', () => {
-    it('renders KYC screen with status banner and Lagos compliance sections', () => {
+    it('renders KYC account setup screen with reference layout and accordions', () => {
       render(<RiderKycScreen onBack={vi.fn()} />);
 
-      expect(screen.getByText(/KYC & Regulatory Compliance/i)).toBeDefined();
-      expect(screen.getByText(/KYC Level 2 Verified/i)).toBeDefined();
-      expect(screen.getByText(/1. Civil Identity & National Records/i)).toBeDefined();
-      expect(screen.getByText(/2. Vehicle & Lagos Commercial Permits/i)).toBeDefined();
-      expect(screen.getByText(/3. Document Photos/i)).toBeDefined();
+      expect(screen.getByRole('heading', { name: /Let's set up your account/i })).toBeDefined();
+      expect(screen.getByText(/Complete the steps in any order/i)).toBeDefined();
+      expect(screen.getByRole('button', { name: /Continue later/i })).toBeDefined();
+      expect(screen.getByText(/Registering for/i)).toBeDefined();
+      expect(screen.getByText(/2-3 wheeler/i)).toBeDefined();
+
+      // Accordion Section Headers
+      expect(screen.getByText(/^Personal details$/i)).toBeDefined();
+      expect(screen.getByText(/^Vehicle details$/i)).toBeDefined();
+      expect(screen.getByText(/^Payment details$/i)).toBeDefined();
+
+      // Required and Optional items
+      expect(screen.getByText(/^Start here$/i)).toBeDefined();
+      expect(screen.getByText(/^Personal information$/i)).toBeDefined();
+      expect(screen.getByText(/^NIN Slip$/i)).toBeDefined();
+      expect(screen.getByText(/^Driver's profile photo$/i)).toBeDefined();
+      expect(screen.getByText(/^Vehicle information$/i)).toBeDefined();
+      expect(screen.getByText(/^Exterior Photo of your Vehicle$/i)).toBeDefined();
+      expect(screen.getByText(/^Payment information$/i)).toBeDefined();
+
+      // Submit section
+      expect(screen.getByText(/Complete all steps to submit/i)).toBeDefined();
+      expect(screen.getByRole('button', { name: /Submit registration/i })).toBeDefined();
     });
 
-    it('allows toggling KYC status for QA inspection', () => {
+    it('opens sub-modal upon tapping an item', () => {
       render(<RiderKycScreen onBack={vi.fn()} />);
 
-      const toggleBtn = screen.getByRole('button', { name: /Toggle Approval/i });
-      fireEvent.click(toggleBtn);
+      const personalInfoItem = screen.getByText(/^Personal information$/i);
+      fireEvent.click(personalInfoItem);
 
-      expect(useRiderStore.getState().kycStatus).toBe('pending_review');
-      expect(screen.getByText(/Documents Under Review/i)).toBeDefined();
-
-      fireEvent.click(toggleBtn);
-      expect(useRiderStore.getState().kycStatus).toBe('approved');
-      expect(screen.getByText(/KYC Level 2 Verified/i)).toBeDefined();
+      expect(screen.getAllByRole('heading', { name: /^Personal details$/i }).length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText(/First name \*/i)).toBeDefined();
     });
 
-    it('triggers document upload and updates compressed proof', () => {
-      render(<RiderKycScreen onBack={vi.fn()} />);
+    it('calls onBack when tapping Continue later', () => {
+      const handleBack = vi.fn();
+      render(<RiderKycScreen onBack={handleBack} />);
 
-      const replaceBtns = screen.getAllByRole('button', { name: /Replace/i });
-      expect(replaceBtns.length).toBeGreaterThan(0);
-      fireEvent.click(replaceBtns[0]!);
+      const continueLaterBtn = screen.getByRole('button', { name: /Continue later/i });
+      fireEvent.click(continueLaterBtn);
+
+      expect(handleBack).toHaveBeenCalled();
     });
   });
 
