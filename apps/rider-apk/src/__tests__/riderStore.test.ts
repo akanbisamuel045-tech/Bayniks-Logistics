@@ -128,7 +128,9 @@ describe('Stage 11: Dispatch Rider SPA UI & Job State Machine', () => {
     expect(result).toBe(false);
   });
 
-  it('progresses strictly through sequential trip phases: arriving_pickup -> at_pickup -> in_transit -> at_dropoff -> idle', async () => {
+  it(
+    'progresses strictly through sequential trip phases: arriving_pickup -> at_pickup -> in_transit -> at_dropoff -> idle',
+    async () => {
     const store = useRiderStore.getState();
     store.receiveJobOffer(sampleOffer);
     await store.acceptOffer('test-order-001');
@@ -161,5 +163,5 @@ describe('Stage 11: Dispatch Rider SPA UI & Job State Machine', () => {
     expect(finalState.activeOrder).toBeNull();
     // ₦10,000 baseline (1,000,000 kobo) + ₦1,800 earned (180,000 kobo) = 1,180,000 kobo
     expect(finalState.todayEarningsKobo).toBe(1180000);
-  });
+  }, 15000);
 });

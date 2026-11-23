@@ -34,7 +34,8 @@ export type DrawerNavTarget =
   | 'campaigns'
   | 'scheduled'
   | 'portal'
-  | 'privacy';
+  | 'privacy'
+  | 'settings';
 
 export interface RiderNavigationDrawerProps {
   isOpen: boolean;

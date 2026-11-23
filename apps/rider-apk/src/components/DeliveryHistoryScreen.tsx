@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRiderStore, DeliveryHistoryItem } from '../store/riderStore';
 import { playKeypadChime } from '../utils/audioChimes';
+import { TripReceiptModal, TripReceiptData } from './sheets/TripReceiptModal';
 
 export interface DeliveryHistoryScreenProps {
   onBack?: () => void;
@@ -39,6 +40,7 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ on
   const [selectedPeriod, setSelectedPeriod] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'delivered' | 'disputed'>('all');
   const [activeWaybill, setActiveWaybill] = useState<DeliveryHistoryItem | null>(null);
+  const [selectedReceiptTrip, setSelectedReceiptTrip] = useState<TripReceiptData | null>(null);
 
   // Filtered deliveries list
   const filteredDeliveries = useMemo(() => {
@@ -322,6 +324,33 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ on
                   <span>View Electronic Waybill & Breakdown</span>
                   <ChevronRight size={13} className="text-zinc-400" />
                 </button>
+
+                {/* Bolt Receipt & Dispute Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setSelectedReceiptTrip({
+                      id: delivery.trackingCode,
+                      date: delivery.date,
+                      time: delivery.time,
+                      pickupAddress: delivery.fromAddress,
+                      dropoffAddress: delivery.toAddress,
+                      fareNaira: Math.round((delivery.fareKobo + (delivery.tipKobo || 0)) / 100),
+                      customerPaidNaira: Math.round((delivery.fareKobo / 100) * 0.7),
+                      platformCompensatedNaira: Math.round((delivery.fareKobo / 100) * 0.3),
+                      distanceKm: delivery.distanceKm,
+                      durationMins: delivery.durationMins,
+                      status: delivery.status === 'cancelled' ? 'cancelled' : 'completed',
+                    });
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#FF5722] text-xs font-bold flex items-center justify-center gap-1.5 border border-orange-200 transition-colors"
+                  aria-label="View Itemized Receipt & Dispute"
+                >
+                  <Receipt size={13} className="text-[#FF5722]" />
+                  <span>Itemized Receipt & Dispute Issues</span>
+                  <ChevronRight size={13} className="text-orange-400" />
+                </button>
               </div>
             ))
           )}
@@ -417,6 +446,13 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({ on
           </div>
         </div>
       )}
+
+      {/* Bolt Itemized Trip Receipt & Dispute Modal */}
+      <TripReceiptModal
+        isOpen={Boolean(selectedReceiptTrip)}
+        trip={selectedReceiptTrip || undefined}
+        onClose={() => setSelectedReceiptTrip(null)}
+      />
     </div>
   );
 };

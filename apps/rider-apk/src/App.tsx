@@ -20,6 +20,11 @@ import { RiderKycScreen } from './components/RiderKycScreen';
 import { DeliveryHistoryScreen } from './components/DeliveryHistoryScreen';
 import { RiderNavigationDrawer, DrawerNavTarget } from './components/RiderNavigationDrawer';
 import { RiderCockpitMapHome } from './components/RiderCockpitMapHome';
+import { RiderInboxScreen } from './components/RiderInboxScreen';
+import { RiderSettingsScreen } from './components/RiderSettingsScreen';
+import { RiderCampaignsScreen } from './components/RiderCampaignsScreen';
+import { DriverScoreActivityScreen } from './components/DriverScoreActivityScreen';
+import { RiderEarningsDualScreen } from './components/RiderEarningsDualScreen';
 import { VirtualDebtTopUpModal } from './components/sheets/VirtualDebtTopUpModal';
 import { MockLocationWarningModal } from './components/MockLocationWarningModal';
 import { batteryOptimizationService } from './services/batteryOptimization.service';
@@ -123,6 +128,16 @@ export function App() {
       setAuthModalOpen(true);
     } else if (viewParam === 'history') {
       setActiveTab('history');
+    } else if (viewParam === 'inbox') {
+      setActiveTab('inbox');
+    } else if (viewParam === 'settings') {
+      setActiveTab('settings');
+    } else if (viewParam === 'campaigns') {
+      setActiveTab('campaigns');
+    } else if (viewParam === 'score') {
+      setActiveTab('score');
+    } else if (viewParam === 'earnings_dual') {
+      setActiveTab('earnings_dual');
     } else if (viewParam === 'kyc') {
       setActiveTab('kyc');
     } else if (viewParam === 'profile') {
@@ -276,8 +291,7 @@ export function App() {
       setAuthModalMode('login');
       setAuthModalOpen(true);
     } else if (target === 'campaigns') {
-      setActiveTab('profile');
-      showToast('Bayniks Campaigns: Bronze tier active');
+      setActiveTab('campaigns');
     } else if (target === 'scheduled') {
       setActiveTab('history');
       showToast('0 open scheduled delivery requests');
@@ -285,6 +299,8 @@ export function App() {
       showToast('Opening Bayniks Rider Web Portal...');
     } else if (target === 'privacy') {
       showToast('Opening Bayniks Privacy Policy...');
+    } else if ((target as any) === 'settings') {
+      setActiveTab('settings');
     }
   };
 
@@ -298,26 +314,10 @@ export function App() {
         setIsHandoverVerifyOpen(true);
       }}
       onSelectTab={(tab) => {
-        if (tab === 'home') {
-          setActiveTab('home');
-        } else if (tab === 'profile') {
-          setActiveTab('profile');
-        } else if (tab === 'earnings') {
-          setActiveTab('profile');
-          setDetailSheetType('earnings');
-          setIsDetailSheetOpen(true);
-        } else if (tab === 'support') {
-          setActiveTab('profile');
-          setDetailSheetType('support_sos');
-          setIsDetailSheetOpen(true);
-        } else if (tab === 'history') {
-          setActiveTab('history');
-        } else if (tab === 'kyc') {
-          setActiveTab('kyc');
-        }
+        setActiveTab(tab);
       }}
     >
-      {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Profile, History or KYC */}
+      {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Campaigns, Score, Earnings Dual or KYC */}
       <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
@@ -342,11 +342,16 @@ export function App() {
                   }}
                   onOpenFullMap={() => setIsFullMapOpen(true)}
                   onOpenEarnings={() => {
-                    setDetailSheetType('earnings');
-                    setIsDetailSheetOpen(true);
+                    setActiveTab('earnings_dual');
                   }}
                   onOpenRewards={() => {
-                    setActiveTab('profile');
+                    setActiveTab('campaigns');
+                  }}
+                  onOpenCampaigns={() => {
+                    setActiveTab('campaigns');
+                  }}
+                  onOpenDriverScore={() => {
+                    setActiveTab('score');
                   }}
                   onOpenScheduledOrders={() => {
                     setActiveTab('history');
@@ -359,23 +364,57 @@ export function App() {
               </section>
             )}
 
-            {activeTab === 'profile' && (
-              <RiderProfileScreen
-                onOpenDrawer={() => setDrawerOpen(true)}
-                onOpenEditProfile={() => setIsEditProfileOpen(true)}
-                onOpenDetailSheet={(type) => {
-                  setDetailSheetType(type);
-                  setIsDetailSheetOpen(true);
-                }}
-                onEndShift={() => {
-                  useRiderStore.setState({ riderStatus: 'offline' });
-                  showToast('Shift ended. You are now OFFLINE');
-                }}
+            {activeTab === 'inbox' && (
+              <RiderInboxScreen
+                onOpenCampaigns={() => setActiveTab('campaigns')}
+                onOpenEarnings={() => setActiveTab('earnings_dual')}
               />
             )}
 
             {activeTab === 'history' && (
               <DeliveryHistoryScreen onBack={() => setActiveTab('home')} />
+            )}
+
+            {activeTab === 'profile' && (
+              <RiderSettingsScreen
+                onOpenKyc={() => setActiveTab('kyc')}
+                onOpenSupport={() => {
+                  setDetailSheetType('support_sos');
+                  setIsDetailSheetOpen(true);
+                }}
+                onOpenDrawer={() => setDrawerOpen(true)}
+              />
+            )}
+
+            {activeTab === 'settings' && (
+              <RiderSettingsScreen
+                onOpenKyc={() => setActiveTab('kyc')}
+                onOpenSupport={() => {
+                  setDetailSheetType('support_sos');
+                  setIsDetailSheetOpen(true);
+                }}
+                onOpenDrawer={() => setDrawerOpen(true)}
+              />
+            )}
+
+            {activeTab === 'campaigns' && (
+              <RiderCampaignsScreen onBack={() => setActiveTab('home')} />
+            )}
+
+            {activeTab === 'score' && (
+              <DriverScoreActivityScreen onBack={() => setActiveTab('home')} />
+            )}
+
+            {(activeTab === 'earnings_dual' || activeTab === 'earnings') && (
+              <RiderEarningsDualScreen
+                onBack={() => setActiveTab('home')}
+                onOpenCashout={() => {
+                  setDetailSheetType('cashout');
+                  setIsDetailSheetOpen(true);
+                }}
+                onOpenHistory={() => setActiveTab('history')}
+                onOpenDebtTopUp={() => setIsDebtTopUpOpen(true)}
+              />
             )}
 
             {activeTab === 'kyc' && (

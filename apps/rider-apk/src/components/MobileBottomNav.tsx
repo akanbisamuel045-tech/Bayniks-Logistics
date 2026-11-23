@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Banknote, Clock, HelpCircle, QrCode } from 'lucide-react';
+import { Home, Bell, Clock, Settings, QrCode } from 'lucide-react';
 import { useRiderStore, RiderTab } from '../store/riderStore';
 import { playKeypadChime } from '../utils/audioChimes';
 
@@ -41,17 +41,23 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   };
 
   const isHomeActive = activeTab === 'home';
-  const isEarningsActive = activeTab === 'earnings';
+  const isInboxActive = activeTab === 'inbox';
   const isHistoryActive = activeTab === 'history';
-  const isProfileActive =
-    activeTab === 'profile' || activeTab === 'earnings' || activeTab === 'support';
+  const isSettingsActive =
+    activeTab === 'settings' ||
+    activeTab === 'profile' ||
+    activeTab === 'earnings' ||
+    activeTab === 'support' ||
+    activeTab === 'campaigns' ||
+    activeTab === 'score' ||
+    activeTab === 'earnings_dual';
 
   return (
     <nav
       className="mobile-bottom-nav !bg-white !border-t !border-zinc-200/80 px-1 flex items-center justify-between z-40 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
       aria-label="Mobile Rider Navigation"
     >
-      {/* Tab 1: Home Cockpit (matches Reference Image) */}
+      {/* Tab 1: Home Cockpit (matches Reference Video & Image) */}
       <button
         type="button"
         className={`nav-tab-btn flex-1 py-1 flex flex-col items-center justify-center transition-colors cursor-pointer ${
@@ -69,24 +75,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         </span>
       </button>
 
-      {/* Tab 2: Earn more (matches Reference Image) */}
+      {/* Tab 2: Inbox (matches Video Tab 2) */}
       <button
         type="button"
         className={`nav-tab-btn flex-1 py-1 flex flex-col items-center justify-center transition-colors cursor-pointer ${
-          isEarningsActive ? 'active text-zinc-950' : 'text-zinc-400 hover:text-zinc-600'
+          isInboxActive ? 'active text-zinc-950' : 'text-zinc-400 hover:text-zinc-600'
         }`}
-        data-screen="earnings"
-        onClick={() => {
-          if (onOpenEarnings) onOpenEarnings();
-          handleTabClick('earnings');
-        }}
-        aria-label="Earn more"
+        data-screen="inbox"
+        onClick={() => handleTabClick('inbox')}
+        aria-label="Inbox"
       >
         <span className="nav-circle-wrap !w-auto !h-auto !bg-transparent !shadow-none !text-inherit flex items-center justify-center">
-          <Banknote size={22} strokeWidth={isEarningsActive ? 2.4 : 1.8} />
+          <Bell size={22} strokeWidth={isInboxActive ? 2.4 : 1.8} />
         </span>
-        <span className={`text-[10px] font-bold mt-1 tracking-tight ${isEarningsActive ? 'text-zinc-950' : 'text-zinc-400'}`}>
-          Earn more
+        <span className={`text-[10px] font-bold mt-1 tracking-tight ${isInboxActive ? 'text-zinc-950' : 'text-zinc-400'}`}>
+          Inbox
         </span>
       </button>
 
@@ -102,7 +105,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <QrCode size={1} />
       </button>
 
-      {/* Tab 3: Rides / Deliveries (matches Reference Image) */}
+      {/* Tab 3: Rides / Deliveries (matches Video Tab 3) */}
       <button
         type="button"
         className={`nav-tab-btn flex-1 py-1 flex flex-col items-center justify-center transition-colors cursor-pointer ${
@@ -120,24 +123,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         </span>
       </button>
 
-      {/* Tab 4: Help (matches Reference Image) */}
+      {/* Tab 4: Settings (matches Video Tab 4 & Profile test compatibility) */}
       <button
         type="button"
         className={`nav-tab-btn flex-1 py-1 flex flex-col items-center justify-center transition-colors cursor-pointer ${
-          isProfileActive ? 'active text-zinc-950' : 'text-zinc-400 hover:text-zinc-600'
+          isSettingsActive ? 'active text-zinc-950' : 'text-zinc-400 hover:text-zinc-600'
         }`}
         data-screen="profile"
-        onClick={() => {
-          if (onOpenHelp) onOpenHelp();
-          handleTabClick('profile');
-        }}
+        onClick={() => handleTabClick('profile')}
         aria-label="Rider Profile & Performance"
       >
         <span className="nav-circle-wrap !w-auto !h-auto !bg-transparent !shadow-none !text-inherit flex items-center justify-center">
-          <HelpCircle size={22} strokeWidth={isProfileActive ? 2.4 : 1.8} />
+          <Settings size={22} strokeWidth={isSettingsActive ? 2.4 : 1.8} />
         </span>
-        <span className={`text-[10px] font-bold mt-1 tracking-tight ${isProfileActive ? 'text-zinc-950' : 'text-zinc-400'}`}>
-          Help
+        <span className={`text-[10px] font-bold mt-1 tracking-tight ${isSettingsActive ? 'text-zinc-950' : 'text-zinc-400'}`}>
+          Settings
           <span className="sr-only">Profile</span>
         </span>
       </button>

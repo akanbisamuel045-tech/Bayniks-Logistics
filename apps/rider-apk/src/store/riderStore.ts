@@ -13,7 +13,18 @@ import {
 
 export type RiderStatus = 'offline' | 'available' | 'busy';
 export type TripPhase = 'idle' | 'arriving_pickup' | 'at_pickup' | 'in_transit' | 'at_dropoff';
-export type RiderTab = 'home' | 'profile' | 'earnings' | 'support' | 'history' | 'kyc';
+export type RiderTab =
+  | 'home'
+  | 'profile'
+  | 'earnings'
+  | 'support'
+  | 'history'
+  | 'kyc'
+  | 'inbox'
+  | 'settings'
+  | 'campaigns'
+  | 'score'
+  | 'earnings_dual';
 
 export type KycReviewStatus = 'not_submitted' | 'pending_review' | 'approved' | 'rejected';
 

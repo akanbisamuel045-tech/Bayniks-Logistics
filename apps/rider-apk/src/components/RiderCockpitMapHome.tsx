@@ -11,10 +11,14 @@ import {
   Pause,
   AlertCircle,
   Package,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime, playMissionAcceptChime } from '../utils/audioChimes';
 import { CenterMissionCard } from './CenterMissionCard';
+import { DestinationModeSheet } from './sheets/DestinationModeSheet';
+import { SurgePromptModal } from './sheets/SurgePromptModal';
 
 export interface RiderCockpitMapHomeProps {
   onOpenDrawer: () => void;
@@ -24,6 +28,8 @@ export interface RiderCockpitMapHomeProps {
   onOpenRewards: () => void;
   onOpenScheduledOrders: () => void;
   onOpenVerification?: (mode?: 'qr' | 'otp') => void;
+  onOpenCampaigns?: () => void;
+  onOpenDriverScore?: (subTab?: 'score' | 'activity') => void;
 }
 
 export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
@@ -34,6 +40,8 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   onOpenRewards,
   onOpenScheduledOrders,
   onOpenVerification,
+  onOpenCampaigns,
+  onOpenDriverScore,
 }) => {
   const {
     riderStatus,
@@ -49,6 +57,9 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   const hasActiveDelivery = Boolean(activeOrder && tripPhase !== 'idle');
 
   const [mapCentered, setMapCentered] = useState(true);
+  const [destinationModeAddress, setDestinationModeAddress] = useState<string | null>(null);
+  const [isDestinationSheetOpen, setIsDestinationSheetOpen] = useState(false);
+  const [isSurgePromptOpen, setIsSurgePromptOpen] = useState(false);
 
   const handleToggleOnline = () => {
     if (kycStatus === 'pending_review') {
@@ -58,8 +69,13 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
     if (!isOnline) {
       playMissionAcceptChime();
       showToast('You are now ONLINE. Searching for orders in Lagos...');
+      // Occasionally trigger high rates surge prompt matching video Frame #6
+      setTimeout(() => {
+        setIsSurgePromptOpen(true);
+      }, 1200);
     } else {
       playKeypadChime();
+      setDestinationModeAddress(null);
       showToast('Shift paused. You are now OFFLINE');
     }
   };
@@ -72,7 +88,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
 
   const handleFilterClick = () => {
     playKeypadChime();
-    showToast('Delivery radius: 10km • Auto-accept available');
+    setIsDestinationSheetOpen(true);
   };
 
   return (
@@ -83,7 +99,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       {/* =========================================================================
        * 1. TOP INTERACTIVE LIGHT MODE DAYTIME MAP CANVAS
        * ========================================================================= */}
-      <div className="relative flex-1 w-full bg-[#EEF1F5] overflow-hidden min-h-[300px]">
+      <div className="relative flex-1 w-full bg-[#EEF1F5] overflow-hidden min-h-[260px]">
         {/* SVG Light Mode Map Background (Detailed Lagos Road Network) */}
         <svg
           className="absolute inset-0 w-full h-full object-cover"
@@ -182,8 +198,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             <path d="M190 -20 L 200 240 L 185 500" />
           </g>
 
-          {/* Point of Interest Icons & Labels (Daytime high contrast) */}
-          {/* 1. Mall (Ikeja City Mall) */}
+          {/* Point of Interest Icons & Labels */}
           <g transform="translate(65, 95)">
             <circle cx="0" cy="0" r="7.5" fill="#2563EB" />
             <path d="M-3 -1 L 3 -1 L 2 4 L -2 4 Z M-1.5 -1 C-1.5 -2.5 1.5 -2.5 1.5 -1" fill="none" stroke="#FFF" strokeWidth="1" />
@@ -192,7 +207,6 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             </text>
           </g>
 
-          {/* 2. Supermarket (Smart Supermarket) */}
           <g transform="translate(200, 130)">
             <circle cx="0" cy="0" r="7.5" fill="#0284C7" />
             <circle cx="-1.5" cy="2.5" r="0.9" fill="#FFF" />
@@ -203,7 +217,6 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             </text>
           </g>
 
-          {/* 3. Park / Garden (Sant'Anton Park) */}
           <g transform="translate(260, 195)">
             <circle cx="0" cy="0" r="7.5" fill="#10B981" />
             <path d="M0 -3 C-2 -1 -2 2 0 3 C2 2 2 -1 0 -3 Z" fill="#FFF" />
@@ -212,84 +225,81 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             </text>
           </g>
 
-          {/* 4. Commercial hub (Yaba Tech Hub) */}
           <g transform="translate(170, 245)">
             <text x="0" y="0" fill="#DC2626" fontSize="9.5" fontWeight="800" fontFamily="sans-serif" letterSpacing="0.5">
               Yaba Tech Hub
             </text>
           </g>
 
-          {/* 5. Store (Homemate Co. Ltd) */}
           <g transform="translate(260, 270)">
             <text x="0" y="0" fill="#64748B" fontSize="8" fontWeight="600" fontFamily="sans-serif">
               Homemate Co. Ltd
             </text>
           </g>
 
-          {/* 6. District (Victoria Island) */}
           <g transform="translate(185, 430)">
             <text x="0" y="0" fill="#0F172A" fontSize="10.5" fontWeight="800" fontFamily="sans-serif" letterSpacing="0.8">
               Victoria Island
             </text>
           </g>
 
-          {/* Road Name Street Badges */}
-          <text x="140" y="325" fill="#64748B" fontSize="7" fontWeight="600" transform="rotate(35 140 325)">
-            Commercial Ave
-          </text>
-          <text x="215" y="375" fill="#64748B" fontSize="7" fontWeight="600" transform="rotate(-60 215 375)">
-            Herbert Macaulay Way
-          </text>
-
-          {/* Top-Down Dispatch Motorbike (Centered right in the middle, facing forward) */}
+          {/* Top-Down Dispatch Motorbike */}
           <g transform="translate(200, 240)">
-            {/* GPS Pulse Ring */}
             <circle cx="0" cy="0" r="28" fill="url(#bike-gps-glow-light)" />
             <circle cx="0" cy="0" r="16" fill="none" stroke="#FF5722" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
 
-            {/* Headlight beam shining onto road */}
             <polygon points="0,-10 -25,-90 25,-90" fill="url(#headlight-beam-light)" pointerEvents="none" />
-
-            {/* Bike Soft Shadow */}
             <ellipse cx="1" cy="5" rx="10" ry="19" fill="#000000" opacity="0.22" />
 
-            {/* Rear Delivery Box (Signature Bayniks Orange) */}
+            {/* Rear Delivery Box */}
             <rect x="-6" y="5" width="12" height="12" rx="2.5" fill="#FF5722" stroke="#EA580C" strokeWidth="1" />
             <text x="0" y="13.5" fill="#FFFFFF" fontSize="6" fontWeight="900" textAnchor="middle" fontFamily="sans-serif">
               B
             </text>
 
-            {/* Seat & Chassis */}
             <rect x="-4" y="-7" width="8" height="13" rx="3" fill="#18181B" stroke="#27272A" strokeWidth="0.8" />
-
-            {/* Fuel Tank */}
             <ellipse cx="0" cy="-7" rx="3.5" ry="5" fill="#27272A" />
 
-            {/* Handlebars with Grips & Mirrors */}
             <path d="M-11 -12 L 11 -12" stroke="#475569" strokeWidth="1.8" strokeLinecap="round" />
             <circle cx="-11" cy="-12" r="1.5" fill="#18181B" />
             <circle cx="11" cy="-12" r="1.5" fill="#18181B" />
-            {/* Mirrors */}
             <circle cx="-12" cy="-14" r="1.2" fill="#64748B" />
             <circle cx="12" cy="-14" r="1.2" fill="#64748B" />
 
-            {/* Front Fender & Tire */}
             <rect x="-2" y="-21" width="4" height="10" rx="1.5" fill="#09090B" />
-            {/* Front Headlight glass */}
             <ellipse cx="0" cy="-14" rx="2.5" ry="1.5" fill="#FACC15" />
           </g>
         </svg>
 
-        {/* Google watermark in bottom-left */}
+        {/* Destination Mode Active Corridor Top Banner (Matching Frame #30) */}
+        {destinationModeAddress && (
+          <div className="absolute top-4 left-18 right-18 z-20 bg-amber-500 text-white px-3 py-1.5 rounded-full flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-1.5 text-xs font-black truncate">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="truncate">Matching trips towards... {destinationModeAddress}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setDestinationModeAddress(null);
+                showToast('Destination matching deactivated');
+              }}
+              className="p-1 hover:bg-amber-600 rounded-full cursor-pointer ml-1"
+              aria-label="Cancel destination"
+            >
+              <X size={13} />
+            </button>
+          </div>
+        )}
+
+        {/* Google watermark */}
         <div className="absolute left-4 bottom-3 pointer-events-none select-none z-10">
           <span className="text-[11px] font-bold text-zinc-500/80 tracking-wider">Google</span>
         </div>
 
-        {/* =====================================================================
-         * FLOATING MAP ACTION BUTTONS (DAYTIME LIGHT MODE)
-         * ===================================================================== */}
-
-        {/* 1. Top Left: Hamburger Menu Button (Light Mode White Circle) */}
+        {/* FLOATING ACTION BUTTONS */}
+        {/* Top Left: Hamburger Menu */}
         <div className="absolute top-4 left-4 z-20">
           <button
             type="button"
@@ -303,7 +313,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           </button>
         </div>
 
-        {/* 2. Top Right: Safety & SCAN Button (Light Mode White Circle) */}
+        {/* Top Right: Safety & SCAN */}
         <div className="absolute top-4 right-4 z-20">
           <button
             type="button"
@@ -319,7 +329,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           </button>
         </div>
 
-        {/* 3. Bottom Left: Folded Map Layers Button with Red Notification Dot */}
+        {/* Bottom Left: Folded Map Layers */}
         <div className="absolute bottom-3 left-4 z-20">
           <button
             type="button"
@@ -329,14 +339,12 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             className="w-11 h-11 rounded-full bg-white text-zinc-800 shadow-md border border-zinc-100 flex items-center justify-center relative active:scale-95 transition-all cursor-pointer hover:bg-zinc-50"
           >
             <MapIcon size={19} className="text-zinc-800" strokeWidth={2.2} />
-            {/* Red Notification Badge */}
             <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-white" />
           </button>
         </div>
 
-        {/* 4. Bottom Right: Stacked GPS Center & Filter Buttons */}
+        {/* Bottom Right: Stacked GPS Center & Filter Buttons */}
         <div className="absolute bottom-3 right-4 z-20 flex flex-col items-center gap-2.5">
-          {/* Target / Recenter Button */}
           <button
             type="button"
             onClick={handleRecenter}
@@ -347,12 +355,12 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
             <Crosshair size={19} className="text-zinc-800" strokeWidth={2.2} />
           </button>
 
-          {/* Sliders / Filters Button */}
+          {/* Sliders / Destination Filters Button */}
           <button
             type="button"
             onClick={handleFilterClick}
-            title="Delivery preferences & filters"
-            aria-label="Delivery preferences & filters"
+            title="Trips towards destination & filters"
+            aria-label="Trips towards destination & filters"
             className="w-11 h-11 rounded-full bg-white text-zinc-800 shadow-md border border-zinc-100 flex items-center justify-center active:scale-95 transition-all cursor-pointer hover:bg-zinc-50"
           >
             <SlidersHorizontal size={19} className="text-zinc-800" strokeWidth={2.2} />
@@ -361,7 +369,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       </div>
 
       {/* =========================================================================
-       * 2. "GO ONLINE" ACTION BAR (FULL-WIDTH SLIDER/TAP BAR)
+       * 2. "GO ONLINE" ACTION BAR
        * Follows user rule: black with a touch of orange!
        * ========================================================================= */}
       <div className="relative z-30 shrink-0">
@@ -371,7 +379,9 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           aria-label={isOnline ? 'Go offline' : 'Go online'}
           data-testid="bolt-online-toggle-bar"
           className={`w-full h-14 flex items-center justify-between px-6 transition-all cursor-pointer shadow-md active:scale-[0.99] ${
-            isOnline
+            destinationModeAddress
+              ? 'bg-amber-600 hover:bg-amber-700 text-white'
+              : isOnline
               ? 'bg-[#18181B] border-y border-[#FF5722]/40 text-white'
               : 'bg-[#18181B] hover:bg-black border-y border-zinc-800 text-white'
           }`}
@@ -388,7 +398,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           {/* Center Title */}
           <div className="flex items-center gap-2">
             <span className="text-base font-extrabold tracking-wide text-white">
-              {isOnline ? "You're online" : 'Go online'}
+              {destinationModeAddress ? 'Go offline' : isOnline ? "You're online" : 'Go online'}
             </span>
             <span
               className={`w-2 h-2 rounded-full ${
@@ -405,10 +415,9 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       </div>
 
       {/* =========================================================================
-       * 3. DASHBOARD BOTTOM LIGHT CONTAINER (CARDS SECTION)
+       * 3. DASHBOARD BOTTOM LIGHT CONTAINER (Exact Replication of Video Frames #1 - #4)
        * ========================================================================= */}
-      <div className="shrink-0 bg-white px-4 pt-3 pb-4 space-y-2.5 border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
-        {/* If there is an active mission in progress, show mission card prominently */}
+      <div className="shrink-0 bg-white px-4 pt-3 pb-4 space-y-2.5 border-t border-zinc-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] max-h-[46vh] overflow-y-auto">
         {hasActiveDelivery ? (
           <div className="py-1">
             <CenterMissionCard
@@ -418,7 +427,155 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           </div>
         ) : (
           <>
-            {/* CARD 1: New Scheduled Deliveries requests (Light Mode) */}
+            {/* CARD 1: ACTIVE CAMPAIGN MILESTONE CARD (Frames #1 - #4) */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                playKeypadChime();
+                if (onOpenCampaigns) onOpenCampaigns();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (onOpenCampaigns) onOpenCampaigns();
+                }
+              }}
+              className="w-full bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-zinc-200/80 rounded-2xl p-3.5 space-y-2 cursor-pointer shadow-2xs transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Rush
+                </span>
+                <span className="text-zinc-500 font-semibold">Today, 07:00-11:59</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-zinc-900 tracking-tight">
+                    ₦1500 MORNING BONUS
+                  </h4>
+                  <div className="text-[11px] text-zinc-500 font-medium">
+                    Base: Lagos • Trips: 0/6 • Hours: 0h/4h
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-zinc-400 shrink-0" />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-bold text-purple-700 pt-1 border-t border-zinc-200/60">
+                <span>View all conditions</span>
+                <span className="text-zinc-400 font-normal">Min 85% accept</span>
+              </div>
+            </div>
+
+            {/* Quick Navigation Links: View all campaigns & Destination Mode */}
+            <div className="flex justify-between items-center px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  playKeypadChime();
+                  if (onOpenCampaigns) onOpenCampaigns();
+                }}
+                className="text-xs font-bold text-purple-700 hover:text-purple-900 transition cursor-pointer"
+              >
+                View all campaigns &gt;
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  playKeypadChime();
+                  setIsDestinationSheetOpen(true);
+                }}
+                className="text-xs font-bold text-zinc-600 hover:text-zinc-900 transition cursor-pointer"
+              >
+                Trips towards destination (2/2) &gt;
+              </button>
+            </div>
+
+            {/* THREE-COLUMN ROW: Today's earnings | Driver score | Confirmation rate (Frames #1 - #4) */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* Card A: Today's earnings */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  playKeypadChime();
+                  onOpenEarnings();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onOpenEarnings();
+                  }
+                }}
+                className="bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-2.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-all min-h-[76px]"
+              >
+                <span className="text-[10px] text-zinc-500 font-bold block truncate">
+                  Today's earnings
+                </span>
+                <div className="mt-1">
+                  <span className="text-sm font-black text-zinc-900 font-mono tracking-tight block truncate">
+                    ₦ {Math.floor((todayEarningsKobo || 0) / 100).toLocaleString('en-NG')}
+                  </span>
+                </div>
+                <span className="text-[9px] text-zinc-400 font-medium">0 trips</span>
+              </div>
+
+              {/* Card B: Driver score */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  playKeypadChime();
+                  if (onOpenDriverScore) onOpenDriverScore('score');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onOpenDriverScore) onOpenDriverScore('score');
+                  }
+                }}
+                className="bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-2.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-all min-h-[76px]"
+              >
+                <span className="text-[10px] text-zinc-500 font-bold block truncate">
+                  Driver score
+                </span>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="text-sm font-black text-emerald-600 font-mono tracking-tight block">
+                    92%
+                  </span>
+                  <span className="text-[10px] text-zinc-500">★ 4.92</span>
+                </div>
+                <span className="text-[9px] text-emerald-700 font-bold">Great</span>
+              </div>
+
+              {/* Card C: Confirmation rate */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  playKeypadChime();
+                  if (onOpenDriverScore) onOpenDriverScore('activity');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (onOpenDriverScore) onOpenDriverScore('activity');
+                  }
+                }}
+                className="bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-2.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-all min-h-[76px]"
+              >
+                <span className="text-[10px] text-zinc-500 font-bold block truncate">
+                  Confirm rate
+                </span>
+                <div className="mt-1">
+                  <span className="text-sm font-black text-zinc-900 font-mono tracking-tight block">
+                    100%
+                  </span>
+                </div>
+                <span className="text-[9px] text-zinc-400 font-medium">Past 50 jobs</span>
+              </div>
+            </div>
+
+            {/* CARD 3: New Scheduled Deliveries requests */}
             <div
               role="button"
               tabIndex={0}
@@ -429,88 +586,44 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
                   onOpenScheduledOrders();
                 }
               }}
-              className="w-full bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-3.5 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all"
+              className="w-full bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-3 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                  <CalendarClock size={20} strokeWidth={2.2} />
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                  <CalendarClock size={17} strokeWidth={2.2} />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[13px] font-bold text-zinc-900 block truncate leading-tight">
+                  <span className="text-xs font-bold text-zinc-900 block truncate leading-tight">
                     New Scheduled Deliveries requests
                   </span>
-                  <span className="text-xs text-zinc-500 font-normal block truncate mt-0.5">
+                  <span className="text-[11px] text-zinc-500 font-normal block truncate mt-0.5">
                     There are 0 open requests
                   </span>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-zinc-400 shrink-0 ml-2" />
-            </div>
-
-            {/* TWO-COLUMN ROW: Today's earnings & Bayniks Rewards (Light Mode) */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Card 2: Today's earnings */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={onOpenEarnings}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onOpenEarnings();
-                  }
-                }}
-                className="bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-all min-h-[88px]"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500 font-medium">
-                    Today's earnings
-                  </span>
-                  <ChevronRight size={16} className="text-zinc-400" />
-                </div>
-                <div className="mt-2">
-                  <span className="text-lg font-black text-zinc-900 font-mono tracking-tight block">
-                    ₦ {Math.floor((todayEarningsKobo || 0) / 100).toLocaleString('en-NG', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Card 3: Bayniks Rewards (Bronze tier) */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={onOpenRewards}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onOpenRewards();
-                  }
-                }}
-                className="bg-[#F4F6F9] hover:bg-[#EEF1F6] border border-zinc-200/70 rounded-2xl p-3.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-all min-h-[88px]"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-zinc-500 font-medium">
-                    Bayniks Rewards
-                  </span>
-                  <ChevronRight size={16} className="text-zinc-400" />
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  {/* Bronze badge: Orange circle with white center dot */}
-                  <span className="w-4 h-4 rounded-full bg-[#EA580C] ring-2 ring-[#EA580C]/30 flex items-center justify-center shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                  </span>
-                  <span className="text-sm font-bold text-zinc-900 tracking-wide">
-                    Bronze
-                  </span>
-                </div>
-              </div>
+              <ChevronRight size={16} className="text-zinc-400 shrink-0 ml-2" />
             </div>
           </>
         )}
       </div>
+
+      {/* Trips Towards Destination Sheet (Frames #28 - #31) */}
+      <DestinationModeSheet
+        isOpen={isDestinationSheetOpen}
+        onClose={() => setIsDestinationSheetOpen(false)}
+        onSelectDestination={(dest) => setDestinationModeAddress(dest)}
+      />
+
+      {/* Higher Rates Surge Prompt Modal (Frame #6) */}
+      <SurgePromptModal
+        isOpen={isSurgePromptOpen}
+        onStayOnline={() => setIsSurgePromptOpen(false)}
+        onGoOffline={() => {
+          setIsSurgePromptOpen(false);
+          toggleOnlineStatus();
+          showToast('You are now OFFLINE');
+        }}
+      />
     </div>
   );
 };
