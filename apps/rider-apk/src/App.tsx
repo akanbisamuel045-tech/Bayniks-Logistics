@@ -99,6 +99,9 @@ export function App() {
     const phaseParam = params.get('phase');
 
     if (viewParam === 'drawer') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
+      setActiveTab('home');
       setDrawerOpen(true);
     } else if (viewParam === 'home' || viewParam === 'cockpit') {
       useRiderStore.setState({ isLoggedIn: true });
@@ -272,6 +275,16 @@ export function App() {
     } else if (target === 'auth') {
       setAuthModalMode('login');
       setAuthModalOpen(true);
+    } else if (target === 'campaigns') {
+      setActiveTab('profile');
+      showToast('Bayniks Campaigns: Bronze tier active');
+    } else if (target === 'scheduled') {
+      setActiveTab('history');
+      showToast('0 open scheduled delivery requests');
+    } else if (target === 'portal') {
+      showToast('Opening Bayniks Rider Web Portal...');
+    } else if (target === 'privacy') {
+      showToast('Opening Bayniks Privacy Policy...');
     }
   };
 
