@@ -260,3 +260,4 @@ To reach 100% parity with this second video, our logistics platform must incorpo
 5. **Floating Overlay Widget (Android Native):** Android system overlay permission (`SYSTEM_ALERT_WINDOW`) enabling the floating courier orb when Google Maps is active.
 6. **Cash vs Promo Split Settlement:** Explicit split on the trip completion screen between `Cash collected from customer` and `Compensated by Bayniks (promo discount)`.
 7. **Three-Tier Passenger Contact Sheet:** Seamless choice between in-app chat, in-app VoIP, and external GSM cellular dialer.
+

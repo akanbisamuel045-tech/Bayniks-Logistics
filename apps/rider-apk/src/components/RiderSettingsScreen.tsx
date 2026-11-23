@@ -32,9 +32,10 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
   onOpenSupport,
   onOpenDrawer,
 }) => {
-  const { riderName, plateNumber, logoutRider, showToast, kycStatus } = useRiderStore();
+  const { riderName, plateNumber, logoutRider, showToast, kycStatus, autoConfirm, setAutoConfirm } = useRiderStore();
 
-  const [activeModal, setActiveModal] = useState<'vehicles' | 'navigation' | 'account' | 'app_settings' | null>(null);
+  const [activeModal, setActiveModal] = useState<'vehicles' | 'navigation' | 'account' | 'app_settings' | 'auto_confirm' | 'theme' | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<'system' | 'dark' | 'light'>('light');
 
   // Settings State matching Bolt screen recording
   const [selectedVehicle, setSelectedVehicle] = useState('FST476FB - Toyota Corolla 2004, Silver');
@@ -42,7 +43,6 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
   const [navAutoStart, setNavAutoStart] = useState(false);
   const [realtimeTraffic, setRealtimeTraffic] = useState(true);
   const [quickAccessWidget, setQuickAccessWidget] = useState(true);
-  const [autoConfirmOrders, setAutoConfirmOrders] = useState(false);
 
   const handleLogout = () => {
     playKeypadChime();
@@ -427,26 +427,11 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
               </button>
             </div>
             <div className="p-4 space-y-3">
+              {/* Quick access */}
               <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80">
                 <div>
-                  <div className="text-xs font-bold text-zinc-900">Auto-Confirm Orders</div>
-                  <div className="text-[11px] text-zinc-500">Automatically accept incoming dispatches</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={autoConfirmOrders}
-                  onChange={(e) => {
-                    setAutoConfirmOrders(e.target.checked);
-                    showToast(`Auto-Confirm ${e.target.checked ? 'Enabled' : 'Disabled'}`);
-                  }}
-                  className="w-5 h-5 accent-emerald-600 cursor-pointer"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80">
-                <div>
-                  <div className="text-xs font-bold text-zinc-900">Quick access widget</div>
-                  <div className="text-[11px] text-zinc-500">Floating icon when app is in background</div>
+                  <div className="text-xs font-bold text-zinc-900">Quick access</div>
+                  <div className="text-[11px] text-zinc-500">Lock On / Widget On</div>
                 </div>
                 <input
                   type="checkbox"
@@ -456,15 +441,130 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
                 />
               </div>
 
-              <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-900">
-                <span>Theme</span>
-                <span className="text-zinc-500">Light (Daytime)</span>
-              </div>
+              {/* Auto-Confirm row -> Opens dedicated Auto-Confirm sub-page */}
+              <button
+                type="button"
+                onClick={() => {
+                  playKeypadChime();
+                  setActiveModal('auto_confirm');
+                }}
+                className="w-full p-3.5 bg-zinc-50 hover:bg-zinc-100 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-left transition cursor-pointer"
+              >
+                <div>
+                  <div className="text-xs font-bold text-zinc-900">Auto-Confirm</div>
+                  <div className="text-[11px] text-zinc-500">
+                    {autoConfirm ? 'On' : 'Off'}
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-zinc-400" />
+              </button>
 
+              {/* Theme Selector */}
+              <button
+                type="button"
+                onClick={() => {
+                  playKeypadChime();
+                  setActiveModal('theme');
+                }}
+                className="w-full p-3.5 bg-zinc-50 hover:bg-zinc-100 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-left transition cursor-pointer"
+              >
+                <span className="text-xs font-bold text-zinc-900">Theme</span>
+                <div className="flex items-center gap-1 text-zinc-500 text-xs font-semibold">
+                  <span className="capitalize">{selectedTheme}</span>
+                  <ChevronRight size={16} className="text-zinc-400" />
+                </div>
+              </button>
+
+              {/* Language */}
               <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-900">
                 <span>Language</span>
-                <span className="text-zinc-500">English (United Kingdom)</span>
+                <span className="text-zinc-500">English, United Kingdom, GB</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+       * SUB-MODAL 5: DEDICATED AUTO-CONFIRM PAGE (Frames #2 - #11)
+       * ========================================================================= */}
+      {activeModal === 'auto_confirm' && (
+        <div className="absolute inset-0 z-50 bg-white flex flex-col animate-slideUp">
+          <div className="p-4 border-b border-zinc-200 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveModal('app_settings')}
+              className="w-9 h-9 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-700"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h3 className="text-base font-black text-zinc-900">Auto-Confirm</h3>
+          </div>
+
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <span className="text-base font-bold text-zinc-900">Auto-Confirm</span>
+              <input
+                type="checkbox"
+                checked={autoConfirm}
+                onChange={(e) => {
+                  setAutoConfirm(e.target.checked);
+                  showToast(`Auto-Confirm ${e.target.checked ? 'Enabled' : 'Disabled'}`);
+                }}
+                className="w-6 h-6 accent-[#00A859] cursor-pointer"
+              />
+            </div>
+
+            <div className="space-y-3 text-xs text-zinc-500 leading-relaxed">
+              <p>Incoming trip requests will be confirmed automatically.</p>
+              <p>Auto-Confirm will be disabled when you decline, cancel or miss a trip request.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+       * SUB-MODAL 6: THEME PICKER MODAL (Frame #18)
+       * ========================================================================= */}
+      {activeModal === 'theme' && (
+        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
+          <div className="bg-white rounded-t-3xl p-5 space-y-4 animate-slideUp">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
+              <h3 className="text-sm font-black text-zinc-900">Theme</h3>
+              <button
+                type="button"
+                onClick={() => setActiveModal('app_settings')}
+                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { id: 'system' as const, label: 'System default' },
+                { id: 'dark' as const, label: 'Dark' },
+                { id: 'light' as const, label: 'Light' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setSelectedTheme(t.id);
+                    setActiveModal('app_settings');
+                    showToast(`Theme updated to ${t.label}`);
+                  }}
+                  className={`w-full p-4 rounded-2xl flex items-center justify-between text-xs font-bold transition ${
+                    selectedTheme === t.id
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                      : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200'
+                  }`}
+                >
+                  <span>{t.label}</span>
+                  {selectedTheme === t.id && <Check size={18} className="text-emerald-600" />}
+                </button>
+              ))}
             </div>
           </div>
         </div>

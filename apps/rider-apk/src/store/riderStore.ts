@@ -265,6 +265,35 @@ export interface RiderStoreState {
   isMockLocationDetected: boolean;
   mockLocationReason: string | null;
   setMockLocation: (isMock: boolean, reason?: string) => void;
+
+  // Video 2: Auto-Confirm & Live Active Trip Lifecycle Telemetry
+  autoConfirm: boolean;
+  setAutoConfirm: (enabled: boolean) => void;
+  dispatchRadiusKm: number;
+  setDispatchRadiusKm: (radius: number) => void;
+  waitingSecondsLeft: number;
+  setWaitingSecondsLeft: (seconds: number) => void;
+  tickWaitingTimer: () => void;
+  isDestinationUpdated: boolean;
+  setIsDestinationUpdated: (updated: boolean) => void;
+  triggerMidTripReroute: () => void;
+  tripPriceConfirmation: {
+    cashKobo: number;
+    subsidyKobo: number;
+    totalKobo: number;
+    customerName: string;
+    tripId: string;
+  } | null;
+  setTripPriceConfirmation: (
+    data: {
+      cashKobo: number;
+      subsidyKobo: number;
+      totalKobo: number;
+      customerName: string;
+      tripId: string;
+    } | null
+  ) => void;
+  ratePassenger: (rating: number, comment?: string) => Promise<void>;
 }
 
 /**
@@ -841,6 +870,55 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   addDeliveryHistoryRecord: (record) =>
     set((state) => ({ deliveryHistory: [record, ...state.deliveryHistory] })),
 
+  // Video 2: Auto-Confirm & Active Trip Lifecycle Telemetry
+  autoConfirm: true,
+  setAutoConfirm: (enabled: boolean) => set({ autoConfirm: enabled }),
+  dispatchRadiusKm: 2,
+  setDispatchRadiusKm: (radius: number) => set({ dispatchRadiusKm: radius }),
+  waitingSecondsLeft: 300,
+  setWaitingSecondsLeft: (seconds: number) => set({ waitingSecondsLeft: seconds }),
+  tickWaitingTimer: () => {
+    const { waitingSecondsLeft } = get();
+    if (waitingSecondsLeft > 0) {
+      set({ waitingSecondsLeft: waitingSecondsLeft - 1 });
+    }
+  },
+  isDestinationUpdated: false,
+  setIsDestinationUpdated: (updated: boolean) => set({ isDestinationUpdated: updated }),
+  triggerMidTripReroute: () => {
+    const { activeOrder, showToast } = get();
+    if (!activeOrder) return;
+    const firstStop = activeOrder.stops[0];
+    const updatedStops: ActiveOrderStop[] = [
+      {
+        sequenceNumber: firstStop?.sequenceNumber ?? 1,
+        recipientName: firstStop?.recipientName ?? 'Ebi',
+        recipientPhone: firstStop?.recipientPhone ?? '+2348034445566',
+        packageDescription: firstStop?.packageDescription ?? 'Ride passenger',
+        status: firstStop?.status ?? 'in_transit',
+        dropoffAddress: 'NNPC Junior Staff Club, Warri, Nigeria',
+        dropoffLandmark: 'Opposite NNPC Housing Complex Gate',
+        dropoffLocation: { lat: 5.5489, lng: 5.7612 },
+      },
+    ];
+    set({
+      isDestinationUpdated: true,
+      activeOrder: {
+        ...activeOrder,
+        stops: updatedStops,
+        estimatedDistanceKm: 1.2,
+      },
+    });
+    showToast('📍 Route updated — Destination has been changed to NNPC Junior Staff Club');
+  },
+  tripPriceConfirmation: null,
+  setTripPriceConfirmation: (data) => set({ tripPriceConfirmation: data }),
+  ratePassenger: async (rating: number, comment?: string) => {
+    const { showToast } = get();
+    set({ tripPriceConfirmation: null, isDestinationUpdated: false });
+    showToast(`Passenger rated ${rating} ★${comment ? `: "${comment}"` : ''}. Thank you!`);
+  },
+
   // Drawer
   isDrawerOpen: false,
   setDrawerOpen: (open: boolean) => set({ isDrawerOpen: open }),
@@ -1166,7 +1244,12 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   },
 
   declineOffer: async (orderId: string, apiBaseUrl = '') => {
-    const { authToken, simulationMode } = get();
+    const { authToken, simulationMode, autoConfirm, showToast } = get();
+
+    if (autoConfirm) {
+      set({ autoConfirm: false });
+      showToast('Auto-Confirm disabled because trip offer was declined or missed');
+    }
 
     if (authToken && !simulationMode) {
       try {
@@ -1419,6 +1502,14 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
       isProximityArrivalPromptOpen: false,
       todayEarningsKobo: todayEarningsKobo + earningsEarned,
       deliveryHistory: historyRecord ? [historyRecord, ...deliveryHistory] : deliveryHistory,
+      waitingSecondsLeft: 300,
+      tripPriceConfirmation: {
+        cashKobo: 40000,
+        subsidyKobo: 10000,
+        totalKobo: 50000,
+        customerName: activeOrder?.stops[0]?.recipientName || 'Ebi',
+        tripId: activeOrder?.trackingCode || 'TRIP-884920',
+      },
     });
   },
 

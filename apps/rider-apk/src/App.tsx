@@ -158,6 +158,18 @@ export function App() {
       setIsHandoverVerifyOpen(true);
     } else if (viewParam === 'offer') {
       triggerDemoOffer();
+    } else if (viewParam === 'confirm_price') {
+      useRiderStore.setState({
+        isLoggedIn: true,
+        tripPriceConfirmation: {
+          cashKobo: 40000,
+          subsidyKobo: 10000,
+          totalKobo: 50000,
+          customerName: 'Ebi',
+          tripId: 'TRIP-884920',
+        },
+      });
+      setActiveTab('home');
     } else if (viewParam === 'debt') {
       setIsDebtTopUpOpen(true);
     } else if (viewParam === 'mock') {
