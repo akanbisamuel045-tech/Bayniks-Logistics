@@ -133,16 +133,14 @@ export function App() {
       setActiveTab('settings');
     } else if (viewParam === 'score') {
       setActiveTab('score');
-    } else if (viewParam === 'earnings_dual') {
+    } else if (viewParam === 'earnings' || viewParam === 'earnings_dual' || viewParam === 'balances') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
       setActiveTab('earnings_dual');
     } else if (viewParam === 'kyc') {
       setActiveTab('kyc');
     } else if (viewParam === 'profile') {
       setActiveTab('profile');
-    } else if (viewParam === 'earnings') {
-      setActiveTab('profile');
-      setDetailSheetType('earnings');
-      setIsDetailSheetOpen(true);
     } else if (viewParam === 'chat' || viewParam === 'support') {
       setActiveTab('profile');
       setDetailSheetType('support_sos');
@@ -277,9 +275,7 @@ export function App() {
     } else if (target === 'kyc') {
       setActiveTab('kyc');
     } else if (target === 'earnings') {
-      setActiveTab('profile');
-      setDetailSheetType('earnings');
-      setIsDetailSheetOpen(true);
+      setActiveTab('earnings_dual');
     } else if (target === 'bank') {
       setActiveTab('profile');
       setDetailSheetType('bank');
@@ -315,7 +311,7 @@ export function App() {
 
   return (
     <MobileAppShell
-      hideNav={isFullMapOpen || activeTab === 'kyc' || showLanding}
+      hideNav={isFullMapOpen || activeTab === 'kyc' || activeTab === 'earnings_dual' || activeTab === 'earnings' || showLanding}
       onOpenQr={() => {
         setHandoverVerifyMode('qr');
         setIsHandoverVerifyOpen(true);
@@ -325,7 +321,7 @@ export function App() {
       }}
     >
       {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Score, Earnings Dual or KYC */}
-      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || showLanding ? '!p-0' : ''}`}>
+      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || activeTab === 'earnings_dual' || activeTab === 'earnings' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
             onSignIn={() => {
