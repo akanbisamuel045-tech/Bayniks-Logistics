@@ -12,19 +12,12 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
 }) => {
   return (
     <div
-      className="relative w-full h-full min-h-screen flex flex-col justify-center items-center bg-white px-6 py-10 sm:px-8 select-none overflow-hidden animate-fadeIn"
+      className="relative w-full h-full min-h-full flex flex-col justify-between items-center bg-white px-6 pt-12 pb-8 sm:px-8 select-none overflow-hidden animate-fadeIn"
       data-testid="rider-landing-screen"
     >
-      {/* Centered Minimalist Typography-First Welcome Container */}
-      <div className="w-full max-w-sm flex flex-col items-center text-center">
-        {/* Region / Partner Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200/80 text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-6">
-          <span>🇳🇬</span>
-          <span>Nigeria Courier Partner</span>
-        </div>
-
-        {/* Brand Logo: Bayniks (Orange) + Driver (Black) */}
-        <div className="flex items-center justify-center gap-1.5 mb-3">
+      {/* Centered Minimalist Brand Wordmark */}
+      <div className="flex-1 w-full max-w-sm flex items-center justify-center">
+        <div className="flex items-center justify-center gap-1.5">
           <span className="text-4xl font-black text-[#FF5722] tracking-tight">
             Bayniks
           </span>
@@ -32,16 +25,11 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
             Driver
           </span>
         </div>
+      </div>
 
-        {/* Value Proposition Headline */}
-        <div className="text-[#18181B] font-extrabold text-[19px] leading-snug tracking-tight mb-10">
-          <p>Deliver with Bayniks.</p>
-          <p>Earn extra money delivering.</p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="w-full space-y-3.5">
-          {/* Button 1: Sign in — Primary Black Button with Orange Brand Accent */}
+      {/* Bottom Action Buttons */}
+      <div className="w-full max-w-sm flex flex-col items-center">
+        <div className="w-full space-y-3.5" data-testid="landing-bottom-actions">
           <button
             type="button"
             data-testid="landing-sign-in-btn"
@@ -55,7 +43,6 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
             <span>Sign in</span>
           </button>
 
-          {/* Button 2: Register — Minimalist Light Gray Pill */}
           <button
             type="button"
             data-testid="landing-register-btn"
@@ -69,8 +56,7 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
           </button>
         </div>
 
-        {/* Home Indicator bar for mobile gesture area */}
-        <div className="w-32 h-1 bg-zinc-300 rounded-full mt-10 opacity-60 sm:hidden" />
+        <div className="w-32 h-1 bg-zinc-300 rounded-full mt-6 opacity-60 sm:hidden" />
       </div>
     </div>
   );

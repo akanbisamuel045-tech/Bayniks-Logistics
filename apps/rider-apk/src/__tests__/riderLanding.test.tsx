@@ -4,22 +4,23 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { RiderLandingScreen } from '../components/RiderLandingScreen';
 
-describe('RiderLandingScreen (Bolt-Style Welcome First Screen Without Hero Image)', () => {
+describe('RiderLandingScreen (Minimalist Bottom-Action Welcome Screen)', () => {
   afterEach(() => {
     cleanup();
   });
 
-  it('renders Bayniks Driver logo, tagline, and contains NO hero image', () => {
+  it('renders Bayniks Driver logo without hero image, tagline, or partner badge', () => {
     render(<RiderLandingScreen onSignIn={vi.fn()} onRegister={vi.fn()} />);
 
     expect(screen.getByText('Bayniks')).toBeDefined();
     expect(screen.getByText('Driver')).toBeDefined();
-    expect(screen.getByText(/Deliver with Bayniks/i)).toBeDefined();
-    expect(screen.getByText(/Earn extra money delivering/i)).toBeDefined();
+    expect(screen.getByTestId('landing-bottom-actions')).toBeDefined();
 
-    // Ensure the hero image has been completely removed
+    // Ensure removed copy and hero image are absent
+    expect(screen.queryByText(/Deliver with Bayniks/i)).toBeNull();
+    expect(screen.queryByText(/Earn extra money delivering/i)).toBeNull();
+    expect(screen.queryByText(/Nigeria Courier Partner/i)).toBeNull();
     expect(screen.queryByRole('img')).toBeNull();
-    expect(screen.queryByAltText(/Bayniks Courier Dispatch Motorcycle/i)).toBeNull();
   });
 
   it('renders the black Sign In pill button with orange brand accent', () => {
@@ -29,7 +30,6 @@ describe('RiderLandingScreen (Bolt-Style Welcome First Screen Without Hero Image
     const signInBtn = screen.getByTestId('landing-sign-in-btn');
     expect(signInBtn).toBeDefined();
     expect(signInBtn.textContent).toContain('Sign in');
-
     expect(signInBtn.className).toContain('bg-[#18181B]');
     expect(signInBtn.className).toContain('text-white');
 
