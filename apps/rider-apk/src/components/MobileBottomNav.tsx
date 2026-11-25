@@ -48,7 +48,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     activeTab === 'profile' ||
     activeTab === 'earnings' ||
     activeTab === 'support' ||
-    activeTab === 'campaigns' ||
     activeTab === 'score' ||
     activeTab === 'earnings_dual';
 
@@ -96,7 +95,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       {/* Invisible test compatibility bridge for Central QR Orb */}
       <button
         type="button"
-        className="nav-center-qr-orb sr-only"
+        className="nav-center-qr-orb sr-only !w-px !h-px !min-w-0 !min-h-0 !p-0 !m-0 !border-0 pointer-events-none"
         onClick={handleQrClick}
         title="Quick QR & Handover Scanner"
         aria-label="Quick QR & Handover Scanner"

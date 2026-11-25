@@ -4,11 +4,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { RiderLandingScreen } from '../components/RiderLandingScreen';
 
-describe('RiderLandingScreen (Bolt-Style Welcome First Screen)', () => {
+describe('RiderLandingScreen (Bolt-Style Welcome First Screen Without Hero Image)', () => {
   afterEach(() => {
     cleanup();
   });
-  it('renders Bayniks Driver logo, tagline, and dispatch motorcycle hero scene', () => {
+
+  it('renders Bayniks Driver logo, tagline, and contains NO hero image', () => {
     render(<RiderLandingScreen onSignIn={vi.fn()} onRegister={vi.fn()} />);
 
     expect(screen.getByText('Bayniks')).toBeDefined();
@@ -16,9 +17,9 @@ describe('RiderLandingScreen (Bolt-Style Welcome First Screen)', () => {
     expect(screen.getByText(/Deliver with Bayniks/i)).toBeDefined();
     expect(screen.getByText(/Earn extra money delivering/i)).toBeDefined();
 
-    const img = screen.getByAltText(/Bayniks Courier Dispatch Motorcycle/i) as HTMLImageElement;
-    expect(img).toBeDefined();
-    expect(img.src).toContain('dispatch_bike_hero.jpg');
+    // Ensure the hero image has been completely removed
+    expect(screen.queryByRole('img')).toBeNull();
+    expect(screen.queryByAltText(/Bayniks Courier Dispatch Motorcycle/i)).toBeNull();
   });
 
   it('renders the black Sign In pill button with orange brand accent', () => {
@@ -29,7 +30,6 @@ describe('RiderLandingScreen (Bolt-Style Welcome First Screen)', () => {
     expect(signInBtn).toBeDefined();
     expect(signInBtn.textContent).toContain('Sign in');
 
-    // Matches user requirement: "use orange and black color{ more of black on the button) for the button"
     expect(signInBtn.className).toContain('bg-[#18181B]');
     expect(signInBtn.className).toContain('text-white');
 

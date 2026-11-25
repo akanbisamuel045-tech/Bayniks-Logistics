@@ -96,7 +96,7 @@ export const RiderEarningsSheet: React.FC<RiderEarningsSheetProps> = ({ isOpen, 
             <div className="flex items-center justify-between text-xs text-zinc-600">
               <span className="font-bold uppercase tracking-wider">Today&apos;s Take-Home</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold border border-emerald-200">
-                ● 100% Retained (0% Commission Promo)
+                ● 100% Driver Retained
               </span>
             </div>
 

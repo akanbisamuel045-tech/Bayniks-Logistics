@@ -186,7 +186,7 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-xs py-1 border-t border-zinc-100 text-emerald-700 bg-emerald-50/60 p-2 rounded-xl">
-                  <span>Compensated by Bayniks (Promo Discount)</span>
+                  <span>Platform Fare Adjustment</span>
                   <span className="font-mono font-black text-emerald-700">
                     +₦{currentTrip.platformCompensatedNaira.toLocaleString('en-NG', { minimumFractionDigits: 2 })}
                   </span>

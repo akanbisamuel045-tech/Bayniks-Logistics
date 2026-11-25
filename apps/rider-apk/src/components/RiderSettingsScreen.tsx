@@ -65,7 +65,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Profile Card Header */}
         <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
-          <div className="w-13 h-13 rounded-full bg-emerald-600 text-white font-black text-xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-xl flex items-center justify-center shrink-0">
             {riderName ? riderName.slice(0, 1).toUpperCase() : 'E'}
           </div>
           <div className="min-w-0 flex-1">

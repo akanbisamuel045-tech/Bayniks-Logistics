@@ -41,10 +41,8 @@ export interface RiderCockpitMapHomeProps {
   onOpenSafety: () => void;
   onOpenFullMap: () => void;
   onOpenEarnings: () => void;
-  onOpenRewards: () => void;
   onOpenScheduledOrders: () => void;
   onOpenVerification?: (mode?: 'qr' | 'otp') => void;
-  onOpenCampaigns?: () => void;
   onOpenDriverScore?: (subTab?: 'score' | 'activity') => void;
 }
 
@@ -53,10 +51,8 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   onOpenSafety,
   onOpenFullMap,
   onOpenEarnings,
-  onOpenRewards,
   onOpenScheduledOrders,
   onOpenVerification,
-  onOpenCampaigns,
   onOpenDriverScore,
 }) => {
   const {
@@ -350,7 +346,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
         )}
 
         {/* Google watermark */}
-        <div className="absolute left-4 bottom-3 pointer-events-none select-none z-10">
+        <div className="absolute left-[68px] bottom-5 pointer-events-none select-none z-10">
           <span className="text-[11px] font-bold text-zinc-500/80 tracking-wider">Google</span>
         </div>
 
@@ -699,57 +695,8 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           </div>
         ) : (
           <>
-            {/* CARD 1: ACTIVE CAMPAIGN MILESTONE CARD (Frames #1 - #4) */}
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                playKeypadChime();
-                if (onOpenCampaigns) onOpenCampaigns();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  if (onOpenCampaigns) onOpenCampaigns();
-                }
-              }}
-              className="w-full bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-zinc-200/80 rounded-2xl p-3.5 space-y-2 cursor-pointer shadow-2xs transition-all active:scale-[0.99]"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  Rush
-                </span>
-                <span className="text-zinc-500 font-semibold">Today, 07:00-11:59</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-black text-zinc-900 tracking-tight">
-                    ₦1500 MORNING BONUS
-                  </h4>
-                  <div className="text-[11px] text-zinc-500 font-medium">
-                    Base: Warri • Trips: 0/6 • Hours: 0h/4h
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-zinc-400 shrink-0" />
-              </div>
-              <div className="flex items-center justify-between text-[11px] font-bold text-purple-700 pt-1 border-t border-zinc-200/60">
-                <span>View all conditions</span>
-                <span className="text-zinc-400 font-normal">Min 85% accept</span>
-              </div>
-            </div>
-
-            {/* Quick Navigation Links: View all campaigns & Destination Mode */}
-            <div className="flex justify-between items-center px-1">
-              <button
-                type="button"
-                onClick={() => {
-                  playKeypadChime();
-                  if (onOpenCampaigns) onOpenCampaigns();
-                }}
-                className="text-xs font-bold text-purple-700 hover:text-purple-900 transition cursor-pointer"
-              >
-                View all campaigns &gt;
-              </button>
+            {/* Quick Navigation Link: Destination Mode */}
+            <div className="flex justify-end items-center px-1">
               <button
                 type="button"
                 onClick={() => {

@@ -12,42 +12,35 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
 }) => {
   return (
     <div
-      className="relative w-full h-full min-h-screen flex flex-col justify-between bg-zinc-100 select-none overflow-hidden animate-fadeIn"
+      className="relative w-full h-full min-h-screen flex flex-col justify-center items-center bg-white px-6 py-10 sm:px-8 select-none overflow-hidden animate-fadeIn"
       data-testid="rider-landing-screen"
     >
-      {/* Top 60%: High-Angle Dispatch Bike Outdoor Scene */}
-      <div className="relative flex-1 w-full min-h-[55vh] max-h-[64vh] overflow-hidden bg-zinc-200">
-        <img
-          src="/dispatch_bike_hero.jpg"
-          alt="Bayniks Courier Dispatch Motorcycle"
-          className="w-full h-full object-cover object-center"
-          loading="eager"
-        />
+      {/* Centered Minimalist Typography-First Welcome Container */}
+      <div className="w-full max-w-sm flex flex-col items-center text-center">
+        {/* Region / Partner Pill */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200/80 text-[11px] font-bold text-zinc-600 uppercase tracking-wider mb-6">
+          <span>🇳🇬</span>
+          <span>Nigeria Courier Partner</span>
+        </div>
 
-        {/* Subtle top vignette for status bar readability */}
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/25 to-transparent pointer-events-none" />
-      </div>
-
-      {/* Bottom 40%: Crisp White Bottom Sheet matching Bolt Welcome Layout */}
-      <div className="relative z-10 w-full bg-white rounded-t-[36px] px-6 pt-7 pb-8 sm:px-8 sm:pt-8 sm:pb-10 shadow-2xl flex flex-col items-center text-center -mt-8 border-t border-zinc-100/60">
-        {/* Brand Logo: Bayniks (Orange) + Driver (Black) matching Bolt (Green) + Driver (Black) */}
-        <div className="flex items-center justify-center gap-1.5 mb-2.5">
-          <span className="text-3xl font-black text-[#FF5722] tracking-tight">
+        {/* Brand Logo: Bayniks (Orange) + Driver (Black) */}
+        <div className="flex items-center justify-center gap-1.5 mb-3">
+          <span className="text-4xl font-black text-[#FF5722] tracking-tight">
             Bayniks
           </span>
-          <span className="text-3xl font-black text-[#18181B] tracking-tight">
+          <span className="text-4xl font-black text-[#18181B] tracking-tight">
             Driver
           </span>
         </div>
 
-        {/* Value Proposition Headline matching Bolt layout */}
-        <div className="text-[#18181B] font-extrabold text-[19px] leading-snug tracking-tight mb-7">
+        {/* Value Proposition Headline */}
+        <div className="text-[#18181B] font-extrabold text-[19px] leading-snug tracking-tight mb-10">
           <p>Deliver with Bayniks.</p>
           <p>Earn extra money delivering.</p>
         </div>
 
         {/* Action Buttons */}
-        <div className="w-full space-y-3.5 max-w-sm">
+        <div className="w-full space-y-3.5">
           {/* Button 1: Sign in — Primary Black Button with Orange Brand Accent */}
           <button
             type="button"
@@ -77,11 +70,10 @@ export const RiderLandingScreen: React.FC<RiderLandingScreenProps> = ({
         </div>
 
         {/* Home Indicator bar for mobile gesture area */}
-        <div className="w-32 h-1 bg-zinc-300 rounded-full mt-6 opacity-60 sm:hidden" />
+        <div className="w-32 h-1 bg-zinc-300 rounded-full mt-10 opacity-60 sm:hidden" />
       </div>
     </div>
   );
 };
 
 export default RiderLandingScreen;
-

@@ -3,6 +3,8 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { RiderNavigationDrawer } from '../components/RiderNavigationDrawer';
+import { RiderCockpitMapHome } from '../components/RiderCockpitMapHome';
+import { RiderInboxScreen } from '../components/RiderInboxScreen';
 import { RiderEarningsSheet } from '../components/RiderEarningsSheet';
 import { RiderChatSheet } from '../components/RiderChatSheet';
 import { RiderSupportSheet } from '../components/RiderSupportSheet';
@@ -32,11 +34,10 @@ describe('Rider App Bayniks Design System & Customer Parity Suite', () => {
     cleanup();
   });
 
-  describe('1. RiderNavigationDrawer', () => {
-    it('renders rider profile, verified badge, and all workspace navigation items', () => {
+  describe('1. RiderNavigationDrawer (Without Settings & Bonuses)', () => {
+    it('renders rider profile, score stats, and workspace menu links without Settings or Campaigns', () => {
       const mockClose = vi.fn();
       const mockSelectView = vi.fn();
-      const mockToggleSunlight = vi.fn();
 
       render(
         <RiderNavigationDrawer
@@ -44,44 +45,54 @@ describe('Rider App Bayniks Design System & Customer Parity Suite', () => {
           onClose={mockClose}
           activeView="radar"
           onSelectView={mockSelectView}
-          isSunlightMode={false}
-          onToggleSunlightMode={mockToggleSunlight}
         />
       );
 
-      // Verify Rider name and verified badge
+      // Verify Rider name, courier badge, and score stats
       expect(screen.getByText('Tariq Danladi')).toBeDefined();
-      expect(screen.getByText(/Verified/i)).toBeDefined();
-      expect(screen.getByText(/4.95/)).toBeDefined();
+      expect(screen.getByText(/BAYNIKS COURIER/i)).toBeDefined();
+      expect(screen.getByText(/Driver Score/i)).toBeDefined();
+      expect(screen.getByText(/Acceptance rate/i)).toBeDefined();
 
-      // Verify navigation items
-      expect(screen.getByText(/Radar Dispatch Map/i)).toBeDefined();
-      expect(screen.getByText(/Shift Earnings & Payouts/i)).toBeDefined();
-      expect(screen.getByText(/Customer Live Chat/i)).toBeDefined();
-      expect(screen.getByText(/24\/7 Safety & SOS Support/i)).toBeDefined();
-      expect(screen.getByText(/Rider Profile & Vehicle/i)).toBeDefined();
+      // Verify permitted sidebar navigation items
+      expect(screen.getByText(/^Earnings$/i)).toBeDefined();
+      expect(screen.getByText(/Trip history/i)).toBeDefined();
+      expect(screen.getByText(/Scheduled rides/i)).toBeDefined();
+      expect(screen.getByText(/Driver Portal/i)).toBeDefined();
+      expect(screen.getByText(/Privacy/i)).toBeDefined();
 
-      // Click on Shift Earnings
-      fireEvent.click(screen.getByText(/Shift Earnings & Payouts/i));
+      // Verify Settings, Campaigns, and Bronze bonus tier are removed from sidebar
+      expect(screen.queryByTestId('drawer-settings-btn')).toBeNull();
+      expect(screen.queryByText(/^Settings$/i)).toBeNull();
+      expect(screen.queryByText(/Campaigns/i)).toBeNull();
+      expect(screen.queryByText(/Bronze/i)).toBeNull();
+
+      // Click on Earnings
+      fireEvent.click(screen.getByText(/^Earnings$/i));
       expect(mockSelectView).toHaveBeenCalledWith('earnings');
     });
 
-    it('toggles sunlight mode when clicked', () => {
-      const mockToggleSunlight = vi.fn();
-
+    it('renders Cockpit Home and Inbox without any bonus or campaign cards', () => {
       render(
-        <RiderNavigationDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          activeView="radar"
-          onSelectView={vi.fn()}
-          isSunlightMode={false}
-          onToggleSunlightMode={mockToggleSunlight}
-        />
+        <>
+          <RiderCockpitMapHome
+            onOpenDrawer={vi.fn()}
+            onOpenSafety={vi.fn()}
+            onOpenFullMap={vi.fn()}
+            onOpenEarnings={vi.fn()}
+            onOpenScheduledOrders={vi.fn()}
+          />
+          <RiderInboxScreen />
+        </>
       );
 
-      fireEvent.click(screen.getByText(/Sunlight High-Contrast Mode/i));
-      expect(mockToggleSunlight).toHaveBeenCalled();
+      expect(screen.queryByText(/MORNING BONUS/i)).toBeNull();
+      expect(screen.queryByText(/Weekend Super Bonus/i)).toBeNull();
+      expect(screen.queryByText(/View all campaigns/i)).toBeNull();
+      expect(screen.queryByText(/^Campaigns$/i)).toBeNull();
+      expect(screen.queryByText(/^Rush$/i)).toBeNull();
+      expect(screen.getByText(/Trips towards destination/i)).toBeDefined();
+      expect(screen.getByText(/Today's earnings/i)).toBeDefined();
     });
   });
 

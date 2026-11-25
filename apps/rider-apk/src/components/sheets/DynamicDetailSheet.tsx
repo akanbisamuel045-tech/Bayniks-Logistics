@@ -717,7 +717,7 @@ export const DynamicDetailSheet: React.FC<DynamicDetailSheetProps> = ({
                 1.4x Surge in Yaba Tech Hub
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                Earn +₦1,250 additional bonus per drop in Yaba Corridor.
+                High demand rate active across Yaba Corridor (1.4x Surge).
               </div>
             </div>
 

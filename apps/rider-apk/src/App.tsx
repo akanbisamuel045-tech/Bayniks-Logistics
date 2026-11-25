@@ -22,7 +22,6 @@ import { RiderNavigationDrawer, DrawerNavTarget } from './components/RiderNaviga
 import { RiderCockpitMapHome } from './components/RiderCockpitMapHome';
 import { RiderInboxScreen } from './components/RiderInboxScreen';
 import { RiderSettingsScreen } from './components/RiderSettingsScreen';
-import { RiderCampaignsScreen } from './components/RiderCampaignsScreen';
 import { DriverScoreActivityScreen } from './components/DriverScoreActivityScreen';
 import { RiderEarningsDualScreen } from './components/RiderEarningsDualScreen';
 import { VirtualDebtTopUpModal } from './components/sheets/VirtualDebtTopUpModal';
@@ -132,8 +131,6 @@ export function App() {
       setActiveTab('inbox');
     } else if (viewParam === 'settings') {
       setActiveTab('settings');
-    } else if (viewParam === 'campaigns') {
-      setActiveTab('campaigns');
     } else if (viewParam === 'score') {
       setActiveTab('score');
     } else if (viewParam === 'earnings_dual') {
@@ -302,8 +299,6 @@ export function App() {
     } else if (target === 'auth') {
       setAuthModalMode('login');
       setAuthModalOpen(true);
-    } else if (target === 'campaigns') {
-      setActiveTab('campaigns');
     } else if (target === 'scheduled') {
       setActiveTab('history');
       showToast('0 open scheduled delivery requests');
@@ -329,7 +324,7 @@ export function App() {
         setActiveTab(tab);
       }}
     >
-      {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Campaigns, Score, Earnings Dual or KYC */}
+      {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Score, Earnings Dual or KYC */}
       <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
@@ -356,12 +351,6 @@ export function App() {
                   onOpenEarnings={() => {
                     setActiveTab('earnings_dual');
                   }}
-                  onOpenRewards={() => {
-                    setActiveTab('campaigns');
-                  }}
-                  onOpenCampaigns={() => {
-                    setActiveTab('campaigns');
-                  }}
                   onOpenDriverScore={() => {
                     setActiveTab('score');
                   }}
@@ -378,7 +367,6 @@ export function App() {
 
             {activeTab === 'inbox' && (
               <RiderInboxScreen
-                onOpenCampaigns={() => setActiveTab('campaigns')}
                 onOpenEarnings={() => setActiveTab('earnings_dual')}
               />
             )}
@@ -407,10 +395,6 @@ export function App() {
                 }}
                 onOpenDrawer={() => setDrawerOpen(true)}
               />
-            )}
-
-            {activeTab === 'campaigns' && (
-              <RiderCampaignsScreen onBack={() => setActiveTab('home')} />
             )}
 
             {activeTab === 'score' && (

@@ -22,7 +22,6 @@ export type RiderTab =
   | 'kyc'
   | 'inbox'
   | 'settings'
-  | 'campaigns'
   | 'score'
   | 'earnings_dual';
 

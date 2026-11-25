@@ -7,6 +7,7 @@ import { RiderAuthModal } from '../components/RiderAuthModal';
 import { RiderKycScreen } from '../components/RiderKycScreen';
 import { DeliveryHistoryScreen } from '../components/DeliveryHistoryScreen';
 import { RiderNavigationDrawer } from '../components/RiderNavigationDrawer';
+import { RiderSettingsScreen } from '../components/RiderSettingsScreen';
 
 const testDeliveries = [
   {
@@ -351,7 +352,7 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       expect(drawer.className).not.toContain('fixed');
     });
 
-    it('renders left drawer with rider profile header and categorized links', () => {
+    it('renders left drawer with rider profile header and excludes Settings and Campaigns', () => {
       render(
         <RiderNavigationDrawer
           isOpen={true}
@@ -362,12 +363,16 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
 
       expect(screen.getByText(/BAYNIKS COURIER/i)).toBeDefined();
       expect(screen.getByText(/Babajide Adeleke/i)).toBeDefined();
-      expect(screen.getByText(/Cockpit & Mission Radar/i)).toBeDefined();
-      expect(screen.getByText(/Delivery History & Waybills/i)).toBeDefined();
-      expect(screen.getByText(/KYC & Regulatory Compliance/i)).toBeDefined();
-      expect(screen.getByText(/Earnings & Wallet/i)).toBeDefined();
-      expect(screen.getByText(/Roadside Emergency SOS/i)).toBeDefined();
-      expect(screen.getByText(/Sign Out of Rider App/i)).toBeDefined();
+      expect(screen.getByText(/^Earnings$/i)).toBeDefined();
+      expect(screen.getByText(/Trip history/i)).toBeDefined();
+      expect(screen.getByText(/Scheduled rides/i)).toBeDefined();
+      expect(screen.getByText(/Driver Portal/i)).toBeDefined();
+      expect(screen.getByText(/Privacy/i)).toBeDefined();
+
+      expect(screen.queryByText(/^Settings$/i)).toBeNull();
+      expect(screen.queryByTestId('drawer-settings-btn')).toBeNull();
+      expect(screen.queryByText(/Campaigns/i)).toBeNull();
+      expect(screen.queryByText(/Bronze/i)).toBeNull();
     });
 
     it('navigates to target view when menu item is clicked', () => {
@@ -381,27 +386,25 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
         />
       );
 
-      const historyLink = screen.getByRole('button', { name: /Delivery History & Waybills/i });
+      const historyLink = screen.getByRole('button', { name: /Trip history/i });
       fireEvent.click(historyLink);
 
       expect(handleClose).toHaveBeenCalled();
       expect(handleNavigate).toHaveBeenCalledWith('history');
     });
 
-    it('triggers logout from drawer and updates store', () => {
-      const handleClose = vi.fn();
+    it('triggers logout cleanly from Settings Account screen and updates store', () => {
       render(
-        <RiderNavigationDrawer
-          isOpen={true}
-          onClose={handleClose}
-          onNavigate={vi.fn()}
+        <RiderSettingsScreen
+          onOpenKyc={vi.fn()}
+          onOpenSupport={vi.fn()}
         />
       );
 
-      const logoutBtn = screen.getByRole('button', { name: /Sign Out of Rider App/i });
+      fireEvent.click(screen.getByText(/^Account$/i));
+      const logoutBtn = screen.getByRole('button', { name: /Log out/i });
       fireEvent.click(logoutBtn);
 
-      expect(handleClose).toHaveBeenCalled();
       expect(useRiderStore.getState().isLoggedIn).toBe(false);
       expect(useRiderStore.getState().riderStatus).toBe('offline');
     });
