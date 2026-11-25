@@ -288,48 +288,43 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
   });
 
   /* -------------------------------------------------------------
-   * 3. Delivery History & Electronic Waybill
+   * 3. Ride History & Trip Detail Receipt
    * ----------------------------------------------------------- */
   describe('3. Delivery History & Electronic Waybill', () => {
-    it('renders delivery history list with summary metrics in Naira', () => {
+    it('renders Ride history list with store records formatted in Naira', () => {
       render(<DeliveryHistoryScreen onBack={vi.fn()} />);
 
-      expect(screen.getByText(/Delivery History/i)).toBeDefined();
-      expect(screen.getByText(/Total Deliveries/i)).toBeDefined();
-      expect(screen.getByText(/Total Earned/i)).toBeDefined();
-      expect(screen.getByText(/#LGS-849201/i)).toBeDefined();
+      expect(screen.getByText(/^Ride history$/i)).toBeDefined();
+      expect(screen.getByText(/Otigba Street, Computer Village, Ikeja/i)).toBeDefined();
+      expect(screen.getByText(/₦5,000/i)).toBeDefined();
+      expect(screen.getAllByText(/Journey finished/i).length).toBeGreaterThan(0);
     });
 
-    it('filters deliveries by period (Today vs All Time)', () => {
+    it('opens full-screen Trip Detail view on clicking a ride row', () => {
       render(<DeliveryHistoryScreen onBack={vi.fn()} />);
 
-      const todayChip = screen.getByRole('button', { name: /^Today$/i });
-      fireEvent.click(todayChip);
+      const firstRow = screen.getByTestId('ride-row-LGS-849201');
+      fireEvent.click(firstRow);
 
-      expect(screen.getByText(/#LGS-849201/i)).toBeDefined();
+      expect(screen.getByTestId('trip-receipt-modal')).toBeDefined();
+      expect(screen.getByText(/Cash payment/i)).toBeDefined();
+      expect(screen.getByText(/Customer paid/i)).toBeDefined();
+      expect(screen.getByText(/Compensated by Bayniks/i)).toBeDefined();
+      expect(screen.getByRole('button', { name: /Get help with ride/i })).toBeDefined();
     });
 
-    it('searches deliveries by tracking code query', () => {
+    it('opens Support -> Ride issues and navigates to Get help with something else', () => {
       render(<DeliveryHistoryScreen onBack={vi.fn()} />);
 
-      const searchInput = screen.getByPlaceholderText(/Search tracking code/i);
-      fireEvent.change(searchInput, { target: { value: 'LGS-620481' } });
+      fireEvent.click(screen.getByTestId('ride-row-LGS-849201'));
+      fireEvent.click(screen.getByTestId('get-help-with-ride-btn'));
 
-      expect(screen.getByText(/#LGS-620481/i)).toBeDefined();
-      expect(screen.queryByText(/#LGS-849201/i)).toBeNull();
-    });
+      expect(screen.getByText(/^Ride issues$/i)).toBeDefined();
+      expect(screen.getByText(/My Bayniks Driver app crashed/i)).toBeDefined();
 
-    it('opens Electronic Waybill receipt modal on click', () => {
-      render(<DeliveryHistoryScreen onBack={vi.fn()} />);
-
-      const viewWaybillBtns = screen.getAllByRole('button', {
-        name: /View Electronic Waybill & Breakdown/i,
-      });
-      fireEvent.click(viewWaybillBtns[0]!);
-
-      expect(screen.getByText(/Electronic Waybill #/i)).toBeDefined();
-      expect(screen.getByText(/Total Net Credited to Wallet/i)).toBeDefined();
-      expect(screen.getByRole('button', { name: /Download PDF Waybill Receipt/i })).toBeDefined();
+      fireEvent.click(screen.getByTestId('support-issue-other'));
+      expect(screen.getByText(/Get help with something else/i)).toBeDefined();
+      expect(screen.getByText(/Driving with Bayniks/i)).toBeDefined();
     });
   });
 

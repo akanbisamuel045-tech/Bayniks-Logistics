@@ -331,7 +331,7 @@ export function App() {
       }}
     >
       {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Score, Earnings Dual or KYC */}
-      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || activeTab === 'earnings_dual' || activeTab === 'earnings' || activeTab === 'score' || showLanding ? '!p-0' : ''}`}>
+      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || activeTab === 'history' || activeTab === 'earnings_dual' || activeTab === 'earnings' || activeTab === 'score' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
             onSignIn={() => {
