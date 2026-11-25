@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Car,
-  Navigation,
-  User,
-  Settings as SettingsIcon,
-  HelpCircle,
-  ChevronRight,
-  LogOut,
-  FileText,
-  Share2,
-  Globe,
-  Radio,
-  Plus,
-  Check,
-  X,
-  ExternalLink,
-  Shield,
   ArrowLeft,
+  Car,
+  Check,
+  ChevronRight,
+  Gift,
+  HelpCircle,
+  LogOut,
+  Navigation,
+  Plus,
+  Settings as SettingsIcon,
+  User,
+  X,
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { playKeypadChime } from '../utils/audioChimes';
@@ -27,563 +22,990 @@ export interface RiderSettingsScreenProps {
   onOpenDrawer?: () => void;
 }
 
+type SettingsView =
+  | 'main'
+  | 'vehicles'
+  | 'add_vehicle'
+  | 'navigation'
+  | 'default_navigator'
+  | 'account'
+  | 'documents_portal'
+  | 'driver_portal'
+  | 'app_settings'
+  | 'quick_access'
+  | 'auto_confirm'
+  | 'theme'
+  | 'language';
+
+interface VehicleOption {
+  id: string;
+  plate: string;
+  description: string;
+}
+
+const INITIAL_VEHICLES: VehicleOption[] = [
+  { id: 'veh-1', plate: 'FST476FB', description: 'Toyota Corolla 2004, Silver' },
+  { id: 'veh-2', plate: 'KJA921BD', description: 'Bajaj Boxer 150cc, Red' },
+  { id: 'veh-3', plate: 'LSR304AP', description: 'TVS HLX Plus 125cc, Black' },
+];
+
+const LANGUAGE_OPTIONS = [
+  'English, United Kingdom, GB',
+  'English, Nigeria, NG',
+  'Nigerian Pidgin',
+];
+
+/** Clean toggle switch rendered in Black (#18181B) and Atomic Orange (#FF5722). */
+const SettingsToggle: React.FC<{
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+  testId?: string;
+}> = ({ checked, onChange, label, testId }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-label={label}
+    data-testid={testId}
+    onClick={() => {
+      playKeypadChime();
+      onChange(!checked);
+    }}
+    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none ${
+      checked ? 'bg-[#18181B]' : 'bg-zinc-300'
+    }`}
+  >
+    <span
+      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-xs transition duration-200 mt-0.5 ${
+        checked ? 'translate-x-[22px] bg-[#FF5722]' : 'translate-x-0.5 bg-white'
+      }`}
+    />
+  </button>
+);
+
+/** Selection radio ring styled in Black & Atomic Orange. */
+const RadioIndicator: React.FC<{ selected: boolean }> = ({ selected }) => (
+  <span
+    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${
+      selected ? 'border-[5px] border-[#18181B] bg-[#FF5722]' : 'border-2 border-zinc-300 bg-white'
+    }`}
+    aria-hidden="true"
+  />
+);
+
+/** Reusable centered top bar for Settings sub-screens. */
+const SubScreenHeader: React.FC<{
+  title: string;
+  onBack: () => void;
+  closeIcon?: 'arrow' | 'x';
+  backTestId?: string;
+}> = ({ title, onBack, closeIcon = 'arrow', backTestId }) => (
+  <header className="px-4 py-3.5 bg-white border-b border-zinc-100 flex items-center justify-between shrink-0">
+    <button
+      type="button"
+      onClick={onBack}
+      aria-label={closeIcon === 'x' ? 'Close' : 'Back'}
+      data-testid={backTestId}
+      className="w-9 h-9 -ml-1.5 rounded-full flex items-center justify-center text-[#18181B] hover:bg-zinc-100 active:scale-95 transition-all"
+    >
+      {closeIcon === 'x' ? <X size={20} /> : <ArrowLeft size={20} />}
+    </button>
+    <h2 className="text-[16.5px] font-bold text-[#18181B] tracking-tight">{title}</h2>
+    <div className="w-9" />
+  </header>
+);
+
 export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
   onOpenKyc,
   onOpenSupport,
-  onOpenDrawer,
 }) => {
-  const { riderName, plateNumber, logoutRider, showToast, kycStatus, autoConfirm, setAutoConfirm } = useRiderStore();
+  const {
+    riderName,
+    riderUser,
+    plateNumber,
+    logoutRider,
+    showToast,
+    kycStatus,
+    autoConfirm,
+    setAutoConfirm,
+  } = useRiderStore();
 
-  const [activeModal, setActiveModal] = useState<'vehicles' | 'navigation' | 'account' | 'app_settings' | 'auto_confirm' | 'theme' | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<'system' | 'dark' | 'light'>('light');
+  const [view, setView] = useState<SettingsView>('main');
+  const [vehicles, setVehicles] = useState<VehicleOption[]>(INITIAL_VEHICLES);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('veh-1');
+  const [newPlate, setNewPlate] = useState('');
+  const [newModel, setNewModel] = useState('');
 
-  // Settings State matching Bolt screen recording
-  const [selectedVehicle, setSelectedVehicle] = useState('FST476FB - Toyota Corolla 2004, Silver');
-  const [defaultNavApp, setDefaultNavApp] = useState<'google' | 'waze' | 'in_app'>('google');
+  const [defaultNavApp, setDefaultNavApp] = useState<'google' | 'waze'>('google');
+  const [navDraft, setNavDraft] = useState<'google' | 'waze'>('google');
   const [navAutoStart, setNavAutoStart] = useState(false);
   const [realtimeTraffic, setRealtimeTraffic] = useState(true);
-  const [quickAccessWidget, setQuickAccessWidget] = useState(true);
+
+  const [quickIconOn, setQuickIconOn] = useState(true);
+  const [quickWidgetOn, setQuickWidgetOn] = useState(true);
+  const [selectedTheme, setSelectedTheme] = useState<'System default' | 'Dark' | 'Light'>('Light');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('English, United Kingdom, GB');
+
+  const activeVehicle = vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0]!;
+  const displayName = riderName || riderUser?.fullName || 'Evans King';
+  const displayPhone = riderUser?.phone || '+2347033129971';
+  const displayEmail = riderUser?.email || 'evans@bayniks.ng';
+  const inviteCode = 'EVANSK1043';
 
   const handleLogout = () => {
     playKeypadChime();
-    setActiveModal(null);
+    setView('main');
     logoutRider();
     showToast('Signed out successfully');
   };
 
-  return (
-    <div
-      className="w-full h-full flex flex-col bg-[#F8FAFC] text-zinc-900 select-none overflow-hidden"
-      data-testid="rider-settings-screen"
-    >
-      {/* Top Header */}
-      <div className="shrink-0 bg-white border-b border-zinc-200 px-5 py-3.5 flex items-center justify-between">
-        <h2 className="text-lg font-black text-zinc-900 tracking-tight">Settings</h2>
-        <span className="text-xs font-bold text-zinc-400">Hub</span>
-      </div>
+  const handleAddVehicleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const plate = newPlate.trim().toUpperCase();
+    const desc = newModel.trim();
+    if (!plate || !desc) {
+      showToast('Enter both plate number and vehicle details');
+      return;
+    }
+    const created: VehicleOption = {
+      id: `veh-${Date.now()}`,
+      plate,
+      description: desc,
+    };
+    setVehicles((prev) => [...prev, created]);
+    setSelectedVehicleId(created.id);
+    setNewPlate('');
+    setNewModel('');
+    setView('vehicles');
+    showToast(`Added and selected ${plate}`);
+  };
 
-      {/* Main Settings Menu Body (Frames #57 - #78) */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Profile Card Header */}
-        <div className="bg-white border border-zinc-200/90 rounded-2xl p-4 flex items-center gap-3.5 shadow-2xs">
-          <div className="w-12 h-12 rounded-full bg-emerald-600 text-white font-black text-xl flex items-center justify-center shrink-0">
-            {riderName ? riderName.slice(0, 1).toUpperCase() : 'E'}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-black text-zinc-900 truncate">
-              {riderName || 'Evans King'}
-            </h3>
-            <div className="text-xs text-zinc-500 font-semibold truncate">+234 703 312 991</div>
-            <div className="text-xs text-zinc-400 truncate font-medium">evanskings@gmail.com</div>
+  /* ------------------------------------------------------------------
+   * FULL-SCREEN SUB-VIEWS MATCHING REFERENCE VIDEO
+   * ---------------------------------------------------------------- */
+  if (view === 'vehicles') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-vehicles-view"
+      >
+        <SubScreenHeader
+          title="Vehicles"
+          onBack={() => setView('main')}
+          backTestId="vehicles-back-btn"
+        />
+
+        <div className="flex-1 overflow-y-auto pb-24">
+          <div className="bg-white divide-y divide-zinc-100">
+            {vehicles.map((veh) => {
+              const isSelected = veh.id === activeVehicle.id;
+              return (
+                <button
+                  key={veh.id}
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setSelectedVehicleId(veh.id);
+                    showToast(`Active vehicle: ${veh.plate}`);
+                  }}
+                  data-testid={`vehicle-option-${veh.plate}`}
+                  className="w-full px-5 py-4 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-bold text-[#18181B]">{veh.plate}</p>
+                    <p className="text-[13px] text-zinc-500 mt-0.5 truncate">{veh.description}</p>
+                  </div>
+                  <RadioIndicator selected={isSelected} />
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Settings Navigation List (Categorised like Bolt) */}
-        <div className="bg-white border border-zinc-200/90 rounded-2xl overflow-hidden shadow-2xs divide-y divide-zinc-100">
-          {/* 1. Vehicles */}
+        <button
+          type="button"
+          onClick={() => {
+            playKeypadChime();
+            setView('add_vehicle');
+          }}
+          data-testid="add-new-vehicle-btn"
+          className="absolute bottom-6 right-5 bg-[#18181B] text-white px-5 py-3 rounded-full shadow-lg flex items-center gap-2 text-[14px] font-semibold active:scale-95 transition-transform"
+        >
+          <Plus size={17} className="text-[#FF5722]" />
+          <span>Add new vehicle</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (view === 'add_vehicle') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-add-vehicle-view"
+      >
+        <SubScreenHeader
+          title="Add new vehicle"
+          onBack={() => setView('vehicles')}
+          closeIcon="x"
+        />
+        <form onSubmit={handleAddVehicleSubmit} className="p-5 space-y-4 bg-white">
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-semibold uppercase tracking-wide text-zinc-500">
+              Plate number
+            </label>
+            <input
+              type="text"
+              value={newPlate}
+              onChange={(e) => setNewPlate(e.target.value)}
+              placeholder="e.g. LSR908KY"
+              className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 text-[14px] focus:outline-none focus:border-[#18181B]"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-semibold uppercase tracking-wide text-zinc-500">
+              Make, model, year & colour
+            </label>
+            <input
+              type="text"
+              value={newModel}
+              onChange={(e) => setNewModel(e.target.value)}
+              placeholder="e.g. Bajaj Boxer 2024, Black"
+              className="w-full px-3.5 py-3 rounded-xl border border-zinc-200 text-[14px] focus:outline-none focus:border-[#18181B]"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-3.5 rounded-full bg-[#18181B] text-white text-[14.5px] font-semibold hover:bg-zinc-800 active:scale-[0.99] transition-all"
+          >
+            Save vehicle
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  if (view === 'navigation') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-navigation-view"
+      >
+        <SubScreenHeader
+          title="Navigation"
+          onBack={() => setView('main')}
+          backTestId="navigation-back-btn"
+        />
+        <div className="bg-white divide-y divide-zinc-100">
           <button
             type="button"
             onClick={() => {
               playKeypadChime();
-              setActiveModal('vehicles');
+              setNavDraft(defaultNavApp);
+              setView('default_navigator');
             }}
-            className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition cursor-pointer text-left"
+            data-testid="default-navigation-row"
+            className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
           >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <Car size={20} className="text-zinc-700 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-zinc-900">Vehicles</div>
-                <div className="text-xs text-zinc-400 truncate">{selectedVehicle}</div>
-              </div>
+            <div>
+              <p className="text-[15px] font-medium text-[#18181B]">Default navigation</p>
+              <p className="text-[13px] text-zinc-400 mt-0.5">
+                {defaultNavApp === 'google' ? 'Google maps' : 'Waze'}
+              </p>
             </div>
-            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
+            <ChevronRight size={17} className="text-zinc-400" />
           </button>
 
-          {/* 2. Navigation Preferences */}
-          <button
-            type="button"
-            onClick={() => {
-              playKeypadChime();
-              setActiveModal('navigation');
-            }}
-            className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition cursor-pointer text-left"
-          >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <Navigation size={20} className="text-zinc-700 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-zinc-900">Navigation</div>
-                <div className="text-xs text-zinc-400 truncate">
-                  {defaultNavApp === 'google' ? 'Google Maps' : defaultNavApp === 'waze' ? 'Waze' : 'In-App Navigation'}
+          <div className="px-5 py-4 flex items-center justify-between">
+            <span className="text-[15px] font-medium text-[#18181B]">
+              Navigation auto-start
+            </span>
+            <SettingsToggle
+              checked={navAutoStart}
+              onChange={(next) => {
+                setNavAutoStart(next);
+                showToast(`Navigation auto-start ${next ? 'enabled' : 'disabled'}`);
+              }}
+              label="Navigation auto-start"
+              testId="nav-autostart-switch"
+            />
+          </div>
+
+          <div className="px-5 py-4 flex items-center justify-between">
+            <span className="text-[15px] font-medium text-[#18181B]">
+              Real-time traffic
+            </span>
+            <SettingsToggle
+              checked={realtimeTraffic}
+              onChange={(next) => {
+                setRealtimeTraffic(next);
+                showToast(`Real-time traffic ${next ? 'enabled' : 'disabled'}`);
+              }}
+              label="Real-time traffic"
+              testId="realtime-traffic-switch"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'default_navigator') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-default-navigator-view"
+      >
+        <SubScreenHeader
+          title="Default navigator"
+          onBack={() => setView('navigation')}
+          closeIcon="x"
+        />
+        <div className="flex-1 flex flex-col justify-between">
+          <div>
+            <p className="bg-white px-6 py-4 text-[13px] text-zinc-500 text-center leading-relaxed">
+              Please select your default navigation to reach it faster while driving with Bayniks
+            </p>
+            <div className="bg-white divide-y divide-zinc-100 mt-1">
+              {[
+                { id: 'google' as const, label: 'Google maps' },
+                { id: 'waze' as const, label: 'Waze' },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setNavDraft(option.id);
+                  }}
+                  data-testid={`navigator-option-${option.id}`}
+                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+                >
+                  <span className="text-[15px] font-medium text-[#18181B]">
+                    {option.label}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-zinc-100 text-[#FF5722] text-[11px] font-semibold">
+                      Recommended
+                    </span>
+                    <RadioIndicator selected={navDraft === option.id} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-5 bg-white border-t border-zinc-100">
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setDefaultNavApp(navDraft);
+                setView('navigation');
+                showToast(`Default navigation: ${navDraft === 'google' ? 'Google maps' : 'Waze'}`);
+              }}
+              data-testid="default-navigator-done-btn"
+              className="w-full py-3.5 rounded-full bg-[#18181B] text-white text-[15px] font-semibold hover:bg-zinc-800 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <span>Done</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF5722]" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'account') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-account-view"
+      >
+        <SubScreenHeader
+          title="Account"
+          onBack={() => setView('main')}
+          backTestId="account-back-btn"
+        />
+        <div className="flex-1 overflow-y-auto space-y-2.5">
+          <div className="bg-white divide-y divide-zinc-100">
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('documents_portal');
+              }}
+              data-testid="account-documents-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <span className="text-[15px] font-medium text-[#18181B]">Documents</span>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('driver_portal');
+              }}
+              data-testid="account-driver-portal-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <span className="text-[15px] font-medium text-[#18181B]">Driver Portal</span>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+          </div>
+
+          <div className="bg-white">
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                showToast(`Referral code copied: ${inviteCode}`);
+              }}
+              data-testid="account-invite-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <div className="flex items-center gap-3.5">
+                <span className="w-8 h-8 rounded-full bg-[#18181B] text-[#FF5722] flex items-center justify-center shrink-0">
+                  <Gift size={16} />
+                </span>
+                <div>
+                  <p className="text-[15px] font-medium text-[#18181B]">
+                    Invite friends to drive
+                  </p>
+                  <p className="text-[12.5px] text-zinc-400 mt-0.5">
+                    Share your code {inviteCode}
+                  </p>
                 </div>
               </div>
-            </div>
-            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
-          </button>
+              <ChevronRight size={17} className="text-zinc-400 shrink-0" />
+            </button>
+          </div>
 
-          {/* 3. Account & KYC Documents */}
+          <div className="bg-white">
+            <button
+              type="button"
+              onClick={handleLogout}
+              data-testid="account-logout-row"
+              className="w-full px-5 py-4 text-left text-[15px] font-semibold text-[#FF5722] hover:bg-zinc-50 transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'documents_portal') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-documents-portal-view"
+      >
+        <header className="px-4 py-3 bg-[#18181B] text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setView('account')}
+              aria-label="Close documents"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+            <span className="text-[13px] font-medium text-zinc-300">
+              partners.bayniks.ng
+            </span>
+          </div>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FF5722] text-white">
+            Bayniks Driver
+          </span>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="bg-white rounded-2xl p-4 border border-zinc-200/70 space-y-1">
+            <h3 className="text-[18px] font-bold text-[#18181B]">My Documents</h3>
+            <p className="text-[12.5px] text-zinc-500">
+              Here are documents associated with your driver profile.
+            </p>
+          </div>
+
+          {[
+            {
+              title: "Driver's License",
+              desc: 'Provide a clear driver license showing license number, full name, and birth date.',
+              file: 'DL-VERIFIED-EFR10537AA03.jpg',
+              uploaded: '08/12/2020',
+            },
+            {
+              title: "Driver's profile photo",
+              desc: 'Clear portrait picture of yourself looking forward with good lighting.',
+              file: 'SELFIE-PORTRAIT-2026.jpg',
+              uploaded: '02/08/2022',
+            },
+            {
+              title: 'Exterior Photo of your Vehicle',
+              desc: 'Clear exterior photo showing front and plate number.',
+              file: `${activeVehicle.plate}-EXTERIOR.jpg`,
+              uploaded: '02/08/2022',
+            },
+          ].map((doc) => (
+            <div
+              key={doc.title}
+              className="bg-white rounded-2xl p-4 border border-zinc-200/70 space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <h4 className="text-[15px] font-bold text-[#18181B]">{doc.title}</h4>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#18181B] text-[#FF5722]">
+                  {kycStatus === 'approved' ? 'Verified' : 'Uploaded'}
+                </span>
+              </div>
+              <p className="text-[12.5px] text-zinc-500">{doc.desc}</p>
+              <p className="text-[12px] font-medium text-zinc-700">{doc.file}</p>
+              <p className="text-[11px] text-zinc-400">Uploaded: {doc.uploaded}</p>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => {
+              setView('main');
+              onOpenKyc();
+            }}
+            data-testid="open-full-kyc-btn"
+            className="w-full py-3.5 rounded-full bg-[#18181B] text-white text-[14px] font-semibold flex items-center justify-center gap-2"
+          >
+            <Plus size={16} className="text-[#FF5722]" />
+            <span>Upload or verify document</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'driver_portal') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-driver-portal-view"
+      >
+        <header className="px-4 py-3 bg-[#18181B] text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setView('account')}
+              aria-label="Close portal"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+            <span className="text-[13px] font-medium text-zinc-300">
+              partners.bayniks.ng/profile
+            </span>
+          </div>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#FF5722] text-white">
+            Bayniks Driver
+          </span>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="bg-white rounded-2xl p-4 border border-zinc-200/70 space-y-3">
+            <div>
+              <h3 className="text-[18px] font-bold text-[#18181B]">Profile</h3>
+              <p className="text-[12.5px] text-zinc-500">
+                Check your driver profile details associated with Bayniks.
+              </p>
+            </div>
+            {[
+              { label: 'Full name', value: displayName },
+              { label: 'Email', value: displayEmail },
+              { label: 'Phone', value: displayPhone },
+              { label: 'Active vehicle', value: `${plateNumber || activeVehicle.plate} • ${activeVehicle.description}` },
+              { label: 'Billing address', value: 'Sixth Street, Warri / Lagos Dispatch Zone' },
+            ].map((field) => (
+              <div key={field.label} className="space-y-1">
+                <p className="text-[12px] font-semibold text-zinc-500">{field.label}</p>
+                <div className="px-3.5 py-2.5 rounded-xl bg-[#F4F4F5] text-[13.5px] font-medium text-[#18181B]">
+                  {field.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'app_settings') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-app-settings-view"
+      >
+        <SubScreenHeader
+          title="App settings"
+          onBack={() => setView('main')}
+          backTestId="app-settings-back-btn"
+        />
+
+        <div className="flex-1 overflow-y-auto space-y-2.5">
+          <div className="bg-white divide-y divide-zinc-100">
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('quick_access');
+              }}
+              data-testid="app-settings-quick-access-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <div>
+                <p className="text-[15px] font-medium text-[#18181B]">Quick access</p>
+                <p className="text-[13px] text-zinc-400 mt-0.5">
+                  Icon {quickIconOn ? 'On' : 'Off'} / Widget {quickWidgetOn ? 'On' : 'Off'}
+                </p>
+              </div>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('auto_confirm');
+              }}
+              data-testid="app-settings-autoconfirm-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <div>
+                <p className="text-[15px] font-medium text-[#18181B]">Auto-Confirm</p>
+                <p className="text-[13px] text-zinc-400 mt-0.5">
+                  {autoConfirm ? 'On' : 'Off'}
+                </p>
+              </div>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+          </div>
+
+          <div className="bg-white divide-y divide-zinc-100">
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('theme');
+              }}
+              data-testid="app-settings-theme-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <div>
+                <p className="text-[15px] font-medium text-[#18181B]">Theme</p>
+                <p className="text-[13px] text-zinc-400 mt-0.5">{selectedTheme}</p>
+              </div>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setView('language');
+              }}
+              data-testid="app-settings-language-row"
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <div>
+                <p className="text-[15px] font-medium text-[#18181B]">Language</p>
+                <p className="text-[13px] text-zinc-400 mt-0.5">{selectedLanguage}</p>
+              </div>
+              <ChevronRight size={17} className="text-zinc-400" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'quick_access') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-quick-access-view"
+      >
+        <SubScreenHeader
+          title="Quick access"
+          onBack={() => setView('app_settings')}
+        />
+        <div className="bg-white divide-y divide-zinc-100">
+          <div className="px-5 py-4 flex items-center justify-between">
+            <span className="text-[15px] font-medium text-[#18181B]">Floating icon</span>
+            <SettingsToggle
+              checked={quickIconOn}
+              onChange={setQuickIconOn}
+              label="Floating icon"
+            />
+          </div>
+          <div className="px-5 py-4 flex items-center justify-between">
+            <span className="text-[15px] font-medium text-[#18181B]">Widget</span>
+            <SettingsToggle
+              checked={quickWidgetOn}
+              onChange={setQuickWidgetOn}
+              label="Widget"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'auto_confirm') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-white flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-autoconfirm-view"
+      >
+        <SubScreenHeader
+          title="Auto-Confirm"
+          onBack={() => setView('app_settings')}
+        />
+        <div className="p-5 space-y-6">
+          <div className="flex items-center justify-between">
+            <span className="text-[15.5px] font-medium text-[#18181B]">Auto-Confirm</span>
+            <SettingsToggle
+              checked={autoConfirm}
+              onChange={(next) => {
+                setAutoConfirm(next);
+                showToast(`Auto-Confirm ${next ? 'On' : 'Off'}`);
+              }}
+              label="Auto-Confirm"
+              testId="autoconfirm-switch"
+            />
+          </div>
+          <div className="space-y-3 text-[13.5px] text-zinc-500 leading-relaxed">
+            <p>Incoming trip requests will be confirmed automatically.</p>
+            <p>Auto-Confirm will be disabled when you decline, cancel or miss a trip request.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'theme') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-theme-view"
+      >
+        <SubScreenHeader
+          title="Theme"
+          onBack={() => setView('app_settings')}
+        />
+        <div className="bg-white divide-y divide-zinc-100">
+          {(['System default', 'Dark', 'Light'] as const).map((themeOption) => (
+            <button
+              key={themeOption}
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setSelectedTheme(themeOption);
+                setView('app_settings');
+                showToast(`Theme set to ${themeOption}`);
+              }}
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <span className="text-[15px] font-medium text-[#18181B]">{themeOption}</span>
+              <RadioIndicator selected={selectedTheme === themeOption} />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'language') {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#F4F4F5] flex flex-col select-none animate-fadeIn text-[#18181B]"
+        data-testid="settings-language-view"
+      >
+        <SubScreenHeader
+          title="Language"
+          onBack={() => setView('app_settings')}
+        />
+        <div className="bg-white divide-y divide-zinc-100">
+          {LANGUAGE_OPTIONS.map((lang) => (
+            <button
+              key={lang}
+              type="button"
+              onClick={() => {
+                playKeypadChime();
+                setSelectedLanguage(lang);
+                setView('app_settings');
+                showToast(`Language updated to ${lang}`);
+              }}
+              className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+            >
+              <span className="text-[15px] font-medium text-[#18181B]">{lang}</span>
+              {selectedLanguage === lang && (
+                <Check size={17} className="text-[#FF5722]" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ------------------------------------------------------------------
+   * MAIN SETTINGS ROOT PAGE (MATCHING FRAME #10 IN REFERENCE VIDEO)
+   * ---------------------------------------------------------------- */
+  return (
+    <div
+      className="min-h-full pb-28 bg-[#F4F4F5] text-[#18181B] flex flex-col justify-between select-none animate-fadeIn"
+      data-testid="rider-settings-screen"
+    >
+      <div>
+        {/* Centered Rider Identity Header */}
+        <header className="bg-white px-5 pt-6 pb-4 text-center">
+          <h1 className="text-[18px] font-bold text-[#18181B] tracking-tight">
+            {displayName}
+          </h1>
+          <p className="text-[12.5px] text-zinc-500 mt-1">{displayPhone}</p>
+          <p className="text-[12.5px] text-zinc-500">{displayEmail}</p>
+        </header>
+
+        {/* Clean 5-Item Edge-to-Edge List */}
+        <div className="bg-white divide-y divide-zinc-100 border-t border-zinc-100">
           <button
             type="button"
             onClick={() => {
               playKeypadChime();
-              setActiveModal('account');
+              setView('vehicles');
             }}
-            className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition cursor-pointer text-left"
+            data-testid="settings-vehicles-row"
+            className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 active:bg-zinc-100/70 transition-colors"
           >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <User size={20} className="text-zinc-700 shrink-0" />
+            <div className="flex items-center gap-4 min-w-0">
+              <Car size={20} className="text-[#18181B] shrink-0" />
               <div className="min-w-0">
-                <div className="text-sm font-bold text-zinc-900">Account</div>
-                <div className="text-xs text-zinc-400 truncate">
-                  Documents • Driver Portal • Invite
-                </div>
+                <p className="text-[15px] font-medium text-[#18181B]">Vehicles</p>
+                <p className="text-[12.5px] text-zinc-400 truncate mt-0.5">
+                  {activeVehicle.plate} {activeVehicle.description.split(',')[0]}
+                </p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
+            <ChevronRight size={17} className="text-zinc-400 shrink-0" />
           </button>
 
-          {/* 4. App Settings */}
           <button
             type="button"
             onClick={() => {
               playKeypadChime();
-              setActiveModal('app_settings');
+              setView('navigation');
             }}
-            className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition cursor-pointer text-left"
+            data-testid="settings-navigation-row"
+            className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 active:bg-zinc-100/70 transition-colors"
           >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <SettingsIcon size={20} className="text-zinc-700 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-zinc-900">App settings</div>
-                <div className="text-xs text-zinc-400 truncate">
-                  Auto-confirm • Theme • Language
-                </div>
-              </div>
+            <div className="flex items-center gap-4 min-w-0">
+              <Navigation size={20} className="text-[#18181B] shrink-0" />
+              <p className="text-[15px] font-medium text-[#18181B]">Navigation</p>
             </div>
-            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
+            <ChevronRight size={17} className="text-zinc-400 shrink-0" />
           </button>
 
-          {/* 5. Support */}
+          <button
+            type="button"
+            onClick={() => {
+              playKeypadChime();
+              setView('account');
+            }}
+            data-testid="settings-account-row"
+            className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 active:bg-zinc-100/70 transition-colors"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <User size={20} className="text-[#18181B] shrink-0" />
+              <p className="text-[15px] font-medium text-[#18181B]">Account</p>
+            </div>
+            <ChevronRight size={17} className="text-zinc-400 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playKeypadChime();
+              setView('app_settings');
+            }}
+            data-testid="settings-app-settings-row"
+            className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 active:bg-zinc-100/70 transition-colors"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <SettingsIcon size={20} className="text-[#18181B] shrink-0" />
+              <p className="text-[15px] font-medium text-[#18181B]">App settings</p>
+            </div>
+            <ChevronRight size={17} className="text-zinc-400 shrink-0" />
+          </button>
+
           <button
             type="button"
             onClick={() => {
               playKeypadChime();
               onOpenSupport();
             }}
-            className="w-full p-4 flex items-center justify-between hover:bg-zinc-50 transition cursor-pointer text-left"
+            data-testid="settings-support-row"
+            className="w-full px-5 py-3.5 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 active:bg-zinc-100/70 transition-colors"
           >
-            <div className="flex items-center gap-3.5 min-w-0">
-              <HelpCircle size={20} className="text-zinc-700 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-zinc-900">Support</div>
-                <div className="text-xs text-zinc-400 truncate">
-                  24/7 Hotline & Emergency SOS
-                </div>
-              </div>
+            <div className="flex items-center gap-4 min-w-0">
+              <HelpCircle size={20} className="text-[#18181B] shrink-0" />
+              <p className="text-[15px] font-medium text-[#18181B]">Support</p>
             </div>
-            <ChevronRight size={18} className="text-zinc-400 shrink-0" />
+            <ChevronRight size={17} className="text-zinc-400 shrink-0" />
           </button>
         </div>
 
-        {/* Cross-Sell Promotional Banner (Frame #58) */}
-        <div className="bg-[#4338CA] text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
-          <div>
-            <div className="text-xs font-bold text-indigo-200">Want to request a delivery?</div>
-            <div className="text-sm font-black mt-0.5">Get Bayniks Customer App</div>
-          </div>
-          <ExternalLink size={18} className="text-indigo-200" />
-        </div>
+        {/* Centered App Version */}
+        <p className="text-center text-[12px] text-zinc-400 font-medium pt-6 pb-4">
+          App version DA.44.1
+        </p>
 
-        {/* Direct Logout Button on Settings Page */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          data-testid="settings-logout-btn"
-          className="w-full py-3.5 px-4 rounded-2xl bg-red-50 hover:bg-red-100/80 border border-red-200/80 text-red-600 font-extrabold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
-        >
-          <LogOut size={18} strokeWidth={2.2} />
-          <span>Log out</span>
-        </button>
-
-        {/* Version Footer */}
-        <div className="text-center pt-2 text-[11px] text-zinc-400 font-semibold">
-          App version DA.44.1 (Bayniks Lagos Build 2026)
+        {/* Direct Logout Button Preserved on Settings Page */}
+        <div className="px-4 pb-3">
+          <button
+            type="button"
+            onClick={handleLogout}
+            data-testid="settings-logout-btn"
+            className="w-full py-3 px-4 rounded-xl bg-white border border-zinc-200 hover:bg-zinc-50 text-[#FF5722] font-semibold text-[14px] flex items-center justify-center gap-2 transition-colors active:scale-[0.99]"
+          >
+            <LogOut size={16} />
+            <span>Log out</span>
+          </button>
         </div>
       </div>
 
-      {/* =========================================================================
-       * SUB-MODAL 1: VEHICLES MANAGEMENT (Frame #60)
-       * ========================================================================= */}
-      {activeModal === 'vehicles' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85%] flex flex-col overflow-hidden animate-slideUp">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-sm font-black text-zinc-900">Vehicles</h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="p-4 space-y-3">
-              {[
-                'FST476FB - Toyota Corolla 2004, Silver',
-                'KJA921BD - Bajaj Boxer 150cc, Red',
-                'LSR304AP - TVS HLX Plus 125cc, Black',
-              ].map((veh) => (
-                <div
-                  key={veh}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    playKeypadChime();
-                    setSelectedVehicle(veh);
-                    showToast(`Active vehicle switched to ${veh.split('-')[0]}`);
-                  }}
-                  className={`w-full p-4 rounded-2xl border flex items-center justify-between transition cursor-pointer ${
-                    selectedVehicle === veh
-                      ? 'border-emerald-500 bg-emerald-50/40 text-zinc-950 font-bold'
-                      : 'border-zinc-200 bg-white text-zinc-700'
-                  }`}
-                >
-                  <span className="text-xs truncate">{veh}</span>
-                  {selectedVehicle === veh && (
-                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                      <Check size={13} strokeWidth={2.8} />
-                    </span>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => {
-                  playKeypadChime();
-                  showToast('Redirecting to Vehicle Registration Inspection...');
-                }}
-                className="w-full py-3.5 border-2 border-dashed border-zinc-300 hover:border-zinc-400 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-zinc-700 transition"
-              >
-                <Plus size={16} />
-                <span>Add new vehicle</span>
-              </button>
-            </div>
+      {/* Bottom Black & Atomic Orange Passenger Promo Banner */}
+      <div className="px-4 pt-2 pb-4">
+        <button
+          type="button"
+          onClick={() => {
+            playKeypadChime();
+            showToast('Opening Bayniks Customer App...');
+          }}
+          data-testid="settings-passenger-banner"
+          className="w-full bg-[#18181B] text-white px-4 py-3.5 rounded-xl flex items-center justify-between text-left hover:bg-zinc-800 active:scale-[0.99] transition-all"
+        >
+          <div>
+            <p className="text-[14.5px] font-bold text-white leading-snug">
+              Want to request a trip?
+            </p>
+            <p className="text-[12.5px] font-medium text-[#FF5722] mt-0.5">
+              Get passenger app
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-       * SUB-MODAL 2: NAVIGATION SETTINGS (Frames #62 - #67)
-       * ========================================================================= */}
-      {activeModal === 'navigation' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85%] flex flex-col overflow-hidden animate-slideUp">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-sm font-black text-zinc-900">Navigation Preferences</h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <div className="text-xs font-extrabold uppercase text-zinc-400 mb-2">Default App</div>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['google', 'waze', 'in_app'] as const).map((app) => (
-                    <button
-                      key={app}
-                      type="button"
-                      onClick={() => {
-                        playKeypadChime();
-                        setDefaultNavApp(app);
-                      }}
-                      className={`p-3 rounded-xl border text-xs font-bold capitalize transition ${
-                        defaultNavApp === app
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
-                          : 'border-zinc-200 bg-white text-zinc-600'
-                      }`}
-                    >
-                      {app === 'in_app' ? 'In-App' : app}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80">
-                <div>
-                  <div className="text-xs font-bold text-zinc-900">Navigation auto-start</div>
-                  <div className="text-[11px] text-zinc-500">Launch navigation immediately on job accept</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={navAutoStart}
-                  onChange={(e) => setNavAutoStart(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-600 cursor-pointer"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80">
-                <div>
-                  <div className="text-xs font-bold text-zinc-900">Real-time traffic</div>
-                  <div className="text-[11px] text-zinc-500">Live traffic congestion layer</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={realtimeTraffic}
-                  onChange={(e) => setRealtimeTraffic(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-600 cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-       * SUB-MODAL 3: ACCOUNT & DOCUMENTS (Frames #68 - #75)
-       * ========================================================================= */}
-      {activeModal === 'account' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85%] flex flex-col overflow-hidden animate-slideUp">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-sm font-black text-zinc-900">Account & Regulatory Compliance</h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveModal(null);
-                  onOpenKyc();
-                }}
-                className="w-full p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-800 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText size={18} className="text-emerald-600" />
-                  <div className="text-left">
-                    <div>Documents & Regulatory Compliance</div>
-                    <div className="text-[10px] text-emerald-600 font-semibold">
-                      {kycStatus === 'approved' ? 'All Documents Verified' : 'KYC Verification In Progress'}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-zinc-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => showToast('Opening Web Driver Portal...')}
-                className="w-full p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-800 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <Globe size={18} className="text-zinc-700" />
-                  <span>Driver Portal</span>
-                </div>
-                <ExternalLink size={16} className="text-zinc-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => showToast('Referral code copied: BAYNIKS-2026')}
-                className="w-full p-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-800 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <Share2 size={18} className="text-zinc-700" />
-                  <div className="text-left">
-                    <div>Invite friends to drive</div>
-                    <div className="text-[10px] text-zinc-400 font-normal">Share your code BAYNIKS-2026</div>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-zinc-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full p-4 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-200/80 flex items-center justify-between text-xs font-bold text-red-600 transition mt-4"
-              >
-                <div className="flex items-center gap-3">
-                  <LogOut size={18} />
-                  <span>Log out</span>
-                </div>
-                <ChevronRight size={16} className="text-red-400" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-       * SUB-MODAL 4: APP SETTINGS (Frames #77 - #78)
-       * ========================================================================= */}
-      {activeModal === 'app_settings' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85%] flex flex-col overflow-hidden animate-slideUp">
-            <div className="p-4 border-b border-zinc-200 flex items-center justify-between">
-              <h3 className="text-sm font-black text-zinc-900">App Settings</h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="p-4 space-y-3">
-              {/* Quick access */}
-              <div className="flex items-center justify-between p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80">
-                <div>
-                  <div className="text-xs font-bold text-zinc-900">Quick access</div>
-                  <div className="text-[11px] text-zinc-500">Lock On / Widget On</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={quickAccessWidget}
-                  onChange={(e) => setQuickAccessWidget(e.target.checked)}
-                  className="w-5 h-5 accent-emerald-600 cursor-pointer"
-                />
-              </div>
-
-              {/* Auto-Confirm row -> Opens dedicated Auto-Confirm sub-page */}
-              <button
-                type="button"
-                onClick={() => {
-                  playKeypadChime();
-                  setActiveModal('auto_confirm');
-                }}
-                className="w-full p-3.5 bg-zinc-50 hover:bg-zinc-100 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-left transition cursor-pointer"
-              >
-                <div>
-                  <div className="text-xs font-bold text-zinc-900">Auto-Confirm</div>
-                  <div className="text-[11px] text-zinc-500">
-                    {autoConfirm ? 'On' : 'Off'}
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-zinc-400" />
-              </button>
-
-              {/* Theme Selector */}
-              <button
-                type="button"
-                onClick={() => {
-                  playKeypadChime();
-                  setActiveModal('theme');
-                }}
-                className="w-full p-3.5 bg-zinc-50 hover:bg-zinc-100 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-left transition cursor-pointer"
-              >
-                <span className="text-xs font-bold text-zinc-900">Theme</span>
-                <div className="flex items-center gap-1 text-zinc-500 text-xs font-semibold">
-                  <span className="capitalize">{selectedTheme}</span>
-                  <ChevronRight size={16} className="text-zinc-400" />
-                </div>
-              </button>
-
-              {/* Language */}
-              <div className="p-3.5 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex items-center justify-between text-xs font-bold text-zinc-900">
-                <span>Language</span>
-                <span className="text-zinc-500">English, United Kingdom, GB</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-       * SUB-MODAL 5: DEDICATED AUTO-CONFIRM PAGE (Frames #2 - #11)
-       * ========================================================================= */}
-      {activeModal === 'auto_confirm' && (
-        <div className="absolute inset-0 z-50 bg-white flex flex-col animate-slideUp">
-          <div className="p-4 border-b border-zinc-200 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveModal('app_settings')}
-              className="w-9 h-9 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-700"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h3 className="text-base font-black text-zinc-900">Auto-Confirm</h3>
-          </div>
-
-          <div className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <span className="text-base font-bold text-zinc-900">Auto-Confirm</span>
-              <input
-                type="checkbox"
-                checked={autoConfirm}
-                onChange={(e) => {
-                  setAutoConfirm(e.target.checked);
-                  showToast(`Auto-Confirm ${e.target.checked ? 'Enabled' : 'Disabled'}`);
-                }}
-                className="w-6 h-6 accent-[#00A859] cursor-pointer"
-              />
-            </div>
-
-            <div className="space-y-3 text-xs text-zinc-500 leading-relaxed">
-              <p>Incoming trip requests will be confirmed automatically.</p>
-              <p>Auto-Confirm will be disabled when you decline, cancel or miss a trip request.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-       * SUB-MODAL 6: THEME PICKER MODAL (Frame #18)
-       * ========================================================================= */}
-      {activeModal === 'theme' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl p-5 space-y-4 animate-slideUp">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
-              <h3 className="text-sm font-black text-zinc-900">Theme</h3>
-              <button
-                type="button"
-                onClick={() => setActiveModal('app_settings')}
-                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-600"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {[
-                { id: 'system' as const, label: 'System default' },
-                { id: 'dark' as const, label: 'Dark' },
-                { id: 'light' as const, label: 'Light' },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => {
-                    playKeypadChime();
-                    setSelectedTheme(t.id);
-                    setActiveModal('app_settings');
-                    showToast(`Theme updated to ${t.label}`);
-                  }}
-                  className={`w-full p-4 rounded-2xl flex items-center justify-between text-xs font-bold transition ${
-                    selectedTheme === t.id
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
-                      : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200'
-                  }`}
-                >
-                  <span>{t.label}</span>
-                  {selectedTheme === t.id && <Check size={18} className="text-emerald-600" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+          <ChevronRight size={18} className="text-[#FF5722] shrink-0" />
+        </button>
+      </div>
     </div>
   );
 };
 
 export default RiderSettingsScreen;
-
