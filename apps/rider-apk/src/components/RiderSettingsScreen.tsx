@@ -46,6 +46,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
 
   const handleLogout = () => {
     playKeypadChime();
+    setActiveModal(null);
     logoutRider();
     showToast('Signed out successfully');
   };
@@ -191,6 +192,17 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
           </div>
           <ExternalLink size={18} className="text-indigo-200" />
         </div>
+
+        {/* Direct Logout Button on Settings Page */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          data-testid="settings-logout-btn"
+          className="w-full py-3.5 px-4 rounded-2xl bg-red-50 hover:bg-red-100/80 border border-red-200/80 text-red-600 font-extrabold text-sm flex items-center justify-center gap-2 shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+        >
+          <LogOut size={18} strokeWidth={2.2} />
+          <span>Log out</span>
+        </button>
 
         {/* Version Footer */}
         <div className="text-center pt-2 text-[11px] text-zinc-400 font-semibold">

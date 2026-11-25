@@ -393,7 +393,7 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
       expect(handleNavigate).toHaveBeenCalledWith('history');
     });
 
-    it('triggers logout cleanly from Settings Account screen and updates store', () => {
+    it('renders direct Log out button on Settings page and triggers logout cleanly', () => {
       render(
         <RiderSettingsScreen
           onOpenKyc={vi.fn()}
@@ -401,12 +401,14 @@ describe('Rider App: Auth, KYC, Delivery History & Left Drawer Suite', () => {
         />
       );
 
-      fireEvent.click(screen.getByText(/^Account$/i));
-      const logoutBtn = screen.getByRole('button', { name: /Log out/i });
-      fireEvent.click(logoutBtn);
+      const directLogoutBtn = screen.getByTestId('settings-logout-btn');
+      expect(directLogoutBtn).toBeDefined();
+      expect(directLogoutBtn.textContent).toContain('Log out');
+      fireEvent.click(directLogoutBtn);
 
       expect(useRiderStore.getState().isLoggedIn).toBe(false);
       expect(useRiderStore.getState().riderStatus).toBe('offline');
+      expect(useRiderStore.getState().activeTab).toBe('home');
     });
   });
 });

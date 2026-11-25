@@ -795,6 +795,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
       riderUser: null,
       authToken: null,
       riderStatus: 'offline',
+      activeTab: 'home',
       isAuthModalOpen: true,
       isDrawerOpen: false,
     });
