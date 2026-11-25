@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Star, CheckCircle2, Sparkles, MessageSquare } from 'lucide-react';
-import { playMissionAcceptChime, playKeypadChime } from '../../utils/audioChimes';
+import { Star } from 'lucide-react';
+import { playKeypadChime, playMissionAcceptChime } from '../../utils/audioChimes';
 
 export interface RatePassengerModalProps {
   isOpen: boolean;
@@ -8,39 +8,44 @@ export interface RatePassengerModalProps {
   onConfirmRating: (rating: number, comment: string) => void;
 }
 
+const LOW_RATING_REASONS = [
+  'Passenger did not pay for the trip',
+  'Passenger was misbehaving',
+  'Passenger messed up my car',
+] as const;
+
 export const RatePassengerModal: React.FC<RatePassengerModalProps> = ({
   isOpen,
   passengerName = 'Ebi',
   onConfirmRating,
 }) => {
   const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('Nice ride');
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [comment, setComment] = useState('');
 
   if (!isOpen) return null;
 
-  const quickTags = ['Nice ride', 'Polite passenger', 'On time', 'Clean', 'Great route'];
-
   const handleSubmit = () => {
     playMissionAcceptChime();
-    onConfirmRating(rating, comment.trim());
+    const combinedComment = [selectedReason, comment.trim()].filter(Boolean).join(' • ');
+    onConfirmRating(rating, combinedComment || `Rated ${passengerName} ${rating} stars`);
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-fadeIn"
+      className="absolute inset-0 z-50 bg-white flex flex-col justify-between select-none animate-fadeIn text-[#18181B]"
       data-testid="rate-passenger-modal"
     >
-      <div className="bg-white w-full max-w-[390px] rounded-3xl p-6 shadow-2xl border border-zinc-200 text-center animate-slideUp space-y-6">
-        {/* Title */}
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-zinc-900">Rate passenger</h2>
-          <p className="text-xs text-zinc-500 font-medium mt-0.5">
-            How was your trip with {passengerName}?
-          </p>
+      <div className="px-6 pt-10 flex-1 overflow-y-auto">
+        <div className="text-center">
+          <h2 className="text-[19px] font-bold text-[#18181B] tracking-tight">
+            Rate passenger
+          </h2>
+          <p className="text-[12.5px] text-zinc-400 mt-1">{passengerName}</p>
         </div>
 
-        {/* 5 Interactive Golden Stars */}
-        <div className="flex items-center justify-center gap-2 py-2">
+        {/* 5 Interactive Stars */}
+        <div className="flex items-center justify-center gap-2.5 py-6">
           {[1, 2, 3, 4, 5].map((starIndex) => {
             const isFilled = starIndex <= rating;
             return (
@@ -50,63 +55,77 @@ export const RatePassengerModal: React.FC<RatePassengerModalProps> = ({
                 onClick={() => {
                   playKeypadChime();
                   setRating(starIndex);
+                  if (starIndex >= 4) {
+                    setSelectedReason(null);
+                  }
                 }}
-                className="p-1 text-amber-400 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
+                className="p-1 hover:scale-110 active:scale-95 transition-transform cursor-pointer"
                 aria-label={`${starIndex} Star`}
               >
                 <Star
-                  size={36}
-                  fill={isFilled ? '#FBBF24' : 'none'}
-                  stroke="#FBBF24"
-                  strokeWidth={2}
+                  size={34}
+                  fill={isFilled ? '#FF5722' : 'none'}
+                  stroke={isFilled ? '#FF5722' : '#A1A1AA'}
+                  strokeWidth={1.8}
                 />
               </button>
             );
           })}
         </div>
 
-        {/* Comment Input */}
-        <div className="space-y-2 text-left">
-          <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            Comment (Optional)
-          </label>
+        {/* Issue Radios When Rating < 4 Stars (Matching Video Frame #216) */}
+        {rating <= 3 && (
+          <div className="space-y-3 pb-6" data-testid="low-rating-reasons">
+            {LOW_RATING_REASONS.map((reason) => {
+              const isSelected = selectedReason === reason;
+              return (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => {
+                    playKeypadChime();
+                    setSelectedReason(isSelected ? null : reason);
+                  }}
+                  className="w-full py-1.5 flex items-center gap-3.5 text-left"
+                >
+                  <span
+                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      isSelected
+                        ? 'border-[5px] border-[#18181B] bg-[#FF5722]'
+                        : 'border-2 border-[#18181B]/60 bg-white'
+                    }`}
+                  />
+                  <span className="text-[14px] text-[#18181B] font-medium">
+                    {reason}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Underline Comment Input */}
+        <div className="pt-2">
           <input
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl text-xs font-semibold text-zinc-900 focus:outline-none focus:border-[#00A859] transition-colors"
+            placeholder="Add a comment"
+            className="w-full py-2.5 text-center border-b border-zinc-200 focus:border-[#18181B] bg-transparent text-[14px] text-[#18181B] placeholder:text-zinc-400 focus:outline-none transition-colors"
           />
-
-          {/* Quick Tag Chips */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {quickTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  playKeypadChime();
-                  setComment(tag);
-                }}
-                className={`text-[10px] font-bold px-2.5 py-1 rounded-xl transition-colors cursor-pointer ${
-                  comment === tag
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
-                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 border border-zinc-200'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
         </div>
+      </div>
 
-        {/* Confirm Button */}
+      {/* Bottom Pill Confirm Button */}
+      <div className="p-5 bg-white">
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full py-4 rounded-2xl bg-[#00A859] hover:bg-[#00924C] active:scale-[0.98] text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+          data-testid="rate-passenger-confirm-btn"
+          className="w-full py-3.5 rounded-full bg-[#18181B] hover:bg-zinc-800 active:scale-[0.98] text-white font-semibold text-[15px] shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
         >
-          Confirm
+          <span>Confirm</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5722]" />
         </button>
       </div>
     </div>
@@ -114,4 +133,3 @@ export const RatePassengerModal: React.FC<RatePassengerModalProps> = ({
 };
 
 export default RatePassengerModal;
-

@@ -52,7 +52,7 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
               Trips towards destination
             </h3>
             <div className="text-xs text-zinc-500 font-semibold mt-0.5">
-              2 of 2 remaining today • <span className="text-emerald-700 underline cursor-pointer">Read more</span>
+              2 of 2 remaining today • <span className="text-[#FF5722] underline cursor-pointer">Read more</span>
             </div>
           </div>
           <button

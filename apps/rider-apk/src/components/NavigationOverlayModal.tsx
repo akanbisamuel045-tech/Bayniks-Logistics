@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  ArrowUp,
-  Volume2,
-  Mic,
-  Compass,
-  X,
-  Navigation,
-  ExternalLink,
-  Layers,
-} from 'lucide-react';
+import { ArrowUp, Compass, Mic, Navigation, Volume2, X } from 'lucide-react';
 import { playKeypadChime } from '../utils/audioChimes';
 
 export interface NavigationOverlayModalProps {
@@ -30,58 +21,61 @@ export const NavigationOverlayModal: React.FC<NavigationOverlayModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#1F2937] text-white flex flex-col justify-between select-none animate-fadeIn"
+      className="absolute inset-0 z-50 bg-[#18181B] text-white flex flex-col justify-between select-none animate-fadeIn"
       data-testid="navigation-overlay-modal"
     >
-      {/* Top Green Turn-by-Turn Header (Google Maps Style) */}
-      <div className="bg-[#15803D] px-4 py-3.5 shadow-lg flex items-center justify-between border-b border-emerald-600/50">
+      {/* Top Turn-by-Turn Header in Black & Atomic Orange */}
+      <div className="bg-[#18181B] px-4 py-3.5 shadow-lg flex items-center justify-between border-b border-zinc-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-white text-[#15803D] flex items-center justify-center font-black shadow-md">
-            <ArrowUp size={24} strokeWidth={3} />
+          <div className="w-10 h-10 rounded-xl bg-[#FF5722] text-white flex items-center justify-center shadow-md">
+            <ArrowUp size={22} strokeWidth={3} />
           </div>
           <div>
-            <div className="text-base font-black tracking-tight flex items-center gap-1.5">
-              <span>Head east</span>
-            </div>
-            <div className="text-xs text-emerald-100 font-medium truncate max-w-[200px]">
+            <div className="text-[16px] font-bold tracking-tight">Head east</div>
+            <div className="text-[12px] text-zinc-400 truncate max-w-[195px]">
               Towards {destinationAddress}
             </div>
           </div>
         </div>
 
-        {/* Action icons: Sound, Search, Mic */}
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="w-9 h-9 rounded-full bg-emerald-800/60 hover:bg-emerald-850 flex items-center justify-center text-white transition-colors"
+            className="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-colors"
             aria-label="Sound"
           >
-            <Volume2 size={18} />
+            <Volume2 size={17} />
           </button>
           <button
             type="button"
-            className="w-9 h-9 rounded-full bg-emerald-800/60 hover:bg-emerald-850 flex items-center justify-center text-white transition-colors"
+            className="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-white transition-colors"
             aria-label="Voice"
           >
-            <Mic size={18} />
+            <Mic size={17} />
           </button>
         </div>
       </div>
 
-      {/* Center Simulated Vector Road Canvas with Floating Bolt Bubble */}
-      <div className="relative flex-1 bg-[#242F3E] overflow-hidden flex items-center justify-center">
-        {/* Simulated Road Grid SVG */}
-        <svg className="absolute inset-0 w-full h-full opacity-60 pointer-events-none">
+      {/* Center Map Canvas with Floating Bayniks Return Orb */}
+      <div className="relative flex-1 bg-[#F4F4F5] overflow-hidden flex items-center justify-center">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
           <path
             d="M 100 0 L 100 800 M 250 0 L 250 800 M 0 250 L 500 250 M 0 450 L 500 450"
-            stroke="#374151"
-            strokeWidth="8"
-          />
-          {/* Active Navigation Polyline (Blue) */}
-          <path
-            d="M 180 550 L 180 320 L 280 320"
-            stroke="#3B82F6"
+            stroke="#FFFFFF"
             strokeWidth="10"
+          />
+          <path
+            d="M 180 550 L 180 320 L 290 320"
+            stroke="#18181B"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+          <path
+            d="M 180 550 L 180 320 L 290 320"
+            stroke="#FF5722"
+            strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
@@ -90,67 +84,64 @@ export const NavigationOverlayModal: React.FC<NavigationOverlayModalProps> = ({
 
         {/* Vehicle Arrow Marker */}
         <div className="relative z-10 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full bg-[#3B82F6] text-white flex items-center justify-center shadow-2xl border-4 border-white animate-pulse">
+          <div className="w-12 h-12 rounded-full bg-[#18181B] text-[#FF5722] flex items-center justify-center shadow-xl border-4 border-white">
             <Navigation size={22} className="rotate-45" fill="currentColor" />
           </div>
-          <div className="text-[11px] font-black bg-black/70 px-2 py-0.5 rounded-full mt-1.5 backdrop-blur-sm">
+          <div className="text-[11px] font-bold bg-[#18181B] text-white px-2.5 py-0.5 rounded-full mt-1.5">
             Current Location
           </div>
         </div>
 
-        {/* Floating Quick-Switch "Bolt" Bubble (Frame #44-#46) */}
+        {/* Floating Quick-Switch Bayniks Orb */}
         <button
           type="button"
           onClick={() => {
             playKeypadChime();
             onClose();
           }}
-          className="absolute top-6 left-4 z-20 w-14 h-14 rounded-full bg-white text-[#00A859] font-black text-xs flex flex-col items-center justify-center shadow-2xl border-2 border-[#00A859] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-          aria-label="Return to Bolt App"
+          className="absolute top-5 left-4 z-20 w-14 h-14 rounded-full bg-[#18181B] text-white font-bold text-xs flex flex-col items-center justify-center shadow-2xl border-2 border-[#FF5722] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+          aria-label="Return to Bayniks App"
         >
-          <span className="text-[14px] leading-tight font-black tracking-tight">Bolt</span>
-          <span className="text-[8px] uppercase tracking-wider font-bold text-zinc-500">Return</span>
+          <span className="text-[11.5px] leading-tight font-black text-[#FF5722]">Bayniks</span>
+          <span className="text-[8px] uppercase tracking-wider text-zinc-300">Return</span>
         </button>
 
-        {/* Compass Needle */}
-        <div className="absolute top-6 right-4 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center">
-          <Compass size={20} className="text-red-400" />
+        {/* Compass */}
+        <div className="absolute top-5 right-4 z-20 w-10 h-10 rounded-full bg-white shadow-md border border-zinc-200 text-[#18181B] flex items-center justify-center">
+          <Compass size={19} className="text-[#FF5722]" />
         </div>
       </div>
 
-      {/* Bottom Turn-by-Turn Card with Speedometer & ETA */}
-      <div className="bg-[#111827] px-5 py-4 border-t border-gray-800 flex items-center justify-between shadow-2xl">
-        {/* Speedometer */}
-        <div className="text-center pr-4 border-r border-gray-800">
-          <span className="block text-2xl font-black text-white">0</span>
-          <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+      {/* Bottom Turn-by-Turn Card */}
+      <div className="bg-white text-[#18181B] px-5 py-4 border-t border-zinc-200 flex items-center justify-between shadow-2xl">
+        <div className="text-center pr-4 border-r border-zinc-200">
+          <span className="block text-[22px] font-black leading-none">0</span>
+          <span className="block text-[10px] font-semibold text-zinc-400 uppercase mt-1">
             km/h
           </span>
         </div>
 
-        {/* ETA & Distance */}
         <div className="flex-1 px-4 text-center">
-          <div className="text-lg font-black text-white flex items-center justify-center gap-1.5">
+          <div className="text-[16px] font-bold flex items-center justify-center gap-1.5">
             <span>{etaMins} min</span>
-            <span className="text-gray-500">•</span>
-            <span className="text-emerald-400 font-bold">{distanceText}</span>
+            <span className="text-zinc-300">•</span>
+            <span className="text-[#FF5722] font-bold">{distanceText}</span>
           </div>
-          <div className="text-xs text-gray-400 truncate max-w-[190px] mx-auto mt-0.5">
+          <div className="text-[12px] text-zinc-500 truncate max-w-[190px] mx-auto mt-0.5">
             {destinationAddress}
           </div>
         </div>
 
-        {/* Close / Return Button */}
         <button
           type="button"
           onClick={() => {
             playKeypadChime();
             onClose();
           }}
-          className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-300 hover:text-white transition-colors cursor-pointer"
+          className="w-10 h-10 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-[#18181B] transition-colors cursor-pointer"
           aria-label="Exit Navigation"
         >
-          <X size={20} />
+          <X size={19} />
         </button>
       </div>
     </div>
@@ -158,4 +149,3 @@ export const NavigationOverlayModal: React.FC<NavigationOverlayModalProps> = ({
 };
 
 export default NavigationOverlayModal;
-

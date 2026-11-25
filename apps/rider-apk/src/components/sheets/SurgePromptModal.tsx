@@ -21,7 +21,7 @@ export const SurgePromptModal: React.FC<SurgePromptModalProps> = ({
       data-testid="surge-prompt-modal"
     >
       <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center space-y-4 animate-scaleUp">
-        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs">
+        <div className="w-16 h-16 rounded-full bg-[#18181B] text-[#FF5722] flex items-center justify-center shadow-xs">
           <TrendingUp size={30} strokeWidth={2.4} />
         </div>
 

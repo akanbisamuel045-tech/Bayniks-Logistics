@@ -162,6 +162,9 @@ export function App() {
       setHandoverVerifyMode(modeQ === 'otp' ? 'otp' : 'qr');
       setIsHandoverVerifyOpen(true);
     } else if (viewParam === 'offer') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
+      setActiveTab('home');
       triggerDemoOffer();
     } else if (viewParam === 'confirm_price') {
       useRiderStore.setState({
@@ -183,6 +186,7 @@ export function App() {
 
     if (phaseParam) {
       useRiderStore.setState({
+        isLoggedIn: true,
         tripPhase: phaseParam as any,
         riderStatus: 'busy',
         activeOrder: {
@@ -468,9 +472,9 @@ export function App() {
         }}
       />
 
-      {/* 30-Second Incoming Offer Modal */}
+      {/* 30-Second Incoming Offer Modal (shown only when away from Home Cockpit) */}
       <DispatchOfferSheet
-        isOpen={Boolean(incomingOffer)}
+        isOpen={Boolean(incomingOffer) && activeTab !== 'home'}
         onAccept={() => {
           if (incomingOffer) {
             acceptOffer(incomingOffer.orderId);
