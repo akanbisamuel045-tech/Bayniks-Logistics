@@ -70,6 +70,7 @@ export function App() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [detailSheetType, setDetailSheetType] = useState<DynamicDetailSheetType>('personal');
+  const [scoreActivityInitialTab, setScoreActivityInitialTab] = useState<'score' | 'activity'>('activity');
   const [authModalMode, setAuthModalMode] = useState<'welcome' | 'login_options' | 'login' | 'register' | 'otp_method' | 'otp'>('login');
   const [forceLandingView, setForceLandingView] = useState(false);
 
@@ -132,6 +133,15 @@ export function App() {
     } else if (viewParam === 'settings') {
       setActiveTab('settings');
     } else if (viewParam === 'score') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
+      const tabQ = params.get('tab');
+      setScoreActivityInitialTab(tabQ === 'activity' ? 'activity' : 'score');
+      setActiveTab('score');
+    } else if (viewParam === 'activity' || viewParam === 'confirm_rate') {
+      useRiderStore.setState({ isLoggedIn: true });
+      setForceLandingView(false);
+      setScoreActivityInitialTab('activity');
       setActiveTab('score');
     } else if (viewParam === 'earnings' || viewParam === 'earnings_dual' || viewParam === 'balances') {
       useRiderStore.setState({ isLoggedIn: true });
@@ -311,7 +321,7 @@ export function App() {
 
   return (
     <MobileAppShell
-      hideNav={isFullMapOpen || activeTab === 'kyc' || activeTab === 'earnings_dual' || activeTab === 'earnings' || showLanding}
+      hideNav={isFullMapOpen || activeTab === 'kyc' || activeTab === 'earnings_dual' || activeTab === 'earnings' || activeTab === 'score' || showLanding}
       onOpenQr={() => {
         setHandoverVerifyMode('qr');
         setIsHandoverVerifyOpen(true);
@@ -321,7 +331,7 @@ export function App() {
       }}
     >
       {/* Scrollable Mobile Viewport Stage: Landing, Cockpit, Inbox, Rides, Settings, Score, Earnings Dual or KYC */}
-      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || activeTab === 'earnings_dual' || activeTab === 'earnings' || showLanding ? '!p-0' : ''}`}>
+      <main className={`mobile-scroll-stage ${activeTab === 'kyc' || activeTab === 'home' || activeTab === 'earnings_dual' || activeTab === 'earnings' || activeTab === 'score' || showLanding ? '!p-0' : ''}`}>
         {showLanding ? (
           <RiderLandingScreen
             onSignIn={() => {
@@ -347,7 +357,8 @@ export function App() {
                   onOpenEarnings={() => {
                     setActiveTab('earnings_dual');
                   }}
-                  onOpenDriverScore={() => {
+                  onOpenDriverScore={(subTab) => {
+                    setScoreActivityInitialTab(subTab === 'score' ? 'score' : 'activity');
                     setActiveTab('score');
                   }}
                   onOpenScheduledOrders={() => {
@@ -394,7 +405,10 @@ export function App() {
             )}
 
             {activeTab === 'score' && (
-              <DriverScoreActivityScreen onBack={() => setActiveTab('home')} />
+              <DriverScoreActivityScreen
+                initialTab={scoreActivityInitialTab}
+                onBack={() => setActiveTab('home')}
+              />
             )}
 
             {(activeTab === 'earnings_dual' || activeTab === 'earnings') && (
