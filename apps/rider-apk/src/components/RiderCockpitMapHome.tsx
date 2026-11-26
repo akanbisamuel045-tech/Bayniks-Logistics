@@ -14,8 +14,8 @@ import {
   Minus,
   Navigation,
   Plus,
+  Search,
   Share2,
-  Shield,
   SlidersHorizontal,
   User,
   X,
@@ -28,9 +28,16 @@ import { SurgePromptModal } from './sheets/SurgePromptModal';
 import { ContactOptionsSheet } from './sheets/ContactOptionsSheet';
 import { ConfirmPriceModal } from './sheets/ConfirmPriceModal';
 import { RatePassengerModal } from './sheets/RatePassengerModal';
+import { MapLocationSearchSheet } from './sheets/MapLocationSearchSheet';
 import { NavigationOverlayModal } from './NavigationOverlayModal';
 import { RiderChatSheet } from './RiderChatSheet';
 import { BayniksLiveMap } from './map/BayniksLiveMap';
+import {
+  CURATED_NIGERIA_PLACES,
+  MapSearchPlace,
+  requestRealDeviceLocation,
+  watchRealDeviceLocation,
+} from '../utils/locationSearch';
 
 export interface RiderCockpitMapHomeProps {
   onOpenDrawer: () => void;
@@ -68,6 +75,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
     setPreferredMapEngine,
     currentLocation,
     currentBearing,
+    setCurrentLocation,
     dispatchRadiusKm,
     setDispatchRadiusKm,
     waitingSecondsLeft,
@@ -92,9 +100,43 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   const [isNavOverlayOpen, setIsNavOverlayOpen] = useState(false);
   const [isRatePassengerOpen, setIsRatePassengerOpen] = useState(false);
   const [isRouteDetailsOpen, setIsRouteDetailsOpen] = useState(false);
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
+  const [searchedPlace, setSearchedPlace] = useState<MapSearchPlace | null>(null);
   const [stopNewRequests, setStopNewRequests] = useState(false);
   const [autoConfirmProgress, setAutoConfirmProgress] = useState(100);
   const [recenterNonce, setRecenterNonce] = useState(0);
+
+  // Sync currentLocation with the rider's real device GPS location on mount and live movement
+  useEffect(() => {
+    let active = true;
+    requestRealDeviceLocation().then((fix) => {
+      if (active && fix) {
+        setCurrentLocation({ lat: fix.lat, lng: fix.lng }, fix.heading, fix.speed, fix.accuracy);
+      }
+    });
+    const stopWatch = watchRealDeviceLocation((fix) => {
+      if (active) {
+        setCurrentLocation({ lat: fix.lat, lng: fix.lng }, fix.heading, fix.speed, fix.accuracy);
+      }
+    });
+    return () => {
+      active = false;
+      stopWatch();
+    };
+  }, [setCurrentLocation]);
+
+  const handleSyncRealGps = async () => {
+    setSearchedPlace(null);
+    const fix = await requestRealDeviceLocation();
+    if (fix) {
+      setCurrentLocation({ lat: fix.lat, lng: fix.lng }, fix.heading, fix.speed, fix.accuracy);
+      setRecenterNonce((n) => n + 1);
+      showToast('Centered on your real current GPS location');
+    } else {
+      setRecenterNonce((n) => n + 1);
+      showToast('GPS centered on dispatch bike');
+    }
+  };
 
   const googleKeyConfigured = Boolean(
     ((import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '').trim()
@@ -225,12 +267,16 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
 
           <button
             type="button"
-            onClick={onOpenSafety}
-            title="Safety & SOS Toolkit"
-            aria-label="Safety & SOS Toolkit"
+            onClick={() => {
+              playKeypadChime();
+              setIsSearchSheetOpen(true);
+            }}
+            title="Search locations on map"
+            aria-label="Search locations on map"
+            data-testid="home-map-search-btn"
             className="w-10 h-10 rounded-full bg-zinc-100 text-[#18181B] flex items-center justify-center active:scale-95 transition-all cursor-pointer hover:bg-zinc-200"
           >
-            <Shield size={18} strokeWidth={2.2} />
+            <Search size={19} strokeWidth={2.3} />
           </button>
         </div>
       )}
@@ -241,19 +287,66 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       <div className="relative flex-1 w-full bg-[#F4F4F5] overflow-hidden min-h-[250px]">
         <BayniksLiveMap
           riderLocation={currentLocation}
+          focusLocation={!showActiveRoute && searchedPlace ? searchedPlace.coords : undefined}
           riderBearing={currentBearing}
           pickupLocation={showActiveRoute ? pickupCoord : undefined}
           pickupLabel={showActiveRoute ? pickupAddress.split(',')[0] : undefined}
-          dropoffLocation={showActiveRoute ? dropoffCoord : undefined}
-          dropoffLabel={showActiveRoute ? dropoffAddress.split(',')[0] : undefined}
-          routeOrigin={showActiveRoute ? routeOriginCoord : undefined}
-          routeTarget={showActiveRoute ? routeTargetCoord : undefined}
+          dropoffLocation={
+            showActiveRoute
+              ? dropoffCoord
+              : searchedPlace
+              ? searchedPlace.coords
+              : undefined
+          }
+          dropoffLabel={
+            showActiveRoute
+              ? dropoffAddress.split(',')[0]
+              : searchedPlace
+              ? searchedPlace.label
+              : undefined
+          }
+          routeOrigin={
+            showActiveRoute
+              ? routeOriginCoord
+              : searchedPlace
+              ? currentLocation
+              : undefined
+          }
+          routeTarget={
+            showActiveRoute
+              ? routeTargetCoord
+              : searchedPlace
+              ? searchedPlace.coords
+              : undefined
+          }
           showRadar={isOnline && !hasActiveDelivery && !incomingOffer}
           radarRadiusKm={dispatchRadiusKm}
           recenterNonce={recenterNonce}
-          zoom={showActiveRoute ? 14 : 13.5}
+          fitRouteBounds={Boolean(!showActiveRoute && searchedPlace)}
+          zoom={showActiveRoute || searchedPlace ? 14 : 13.5}
           testId="cockpit-live-map"
         />
+
+        {/* Searched Map Pin Banner Chip */}
+        {!showActiveRoute && searchedPlace && (
+          <div
+            className="absolute top-3.5 left-16 right-16 z-20 bg-[#18181B] text-white px-3.5 py-2 rounded-full shadow-lg flex items-center justify-between gap-2 animate-fadeIn"
+            data-testid="searched-location-pill"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#FF5722] shrink-0" />
+              <span className="text-[12px] font-semibold truncate">{searchedPlace.address}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSearchedPlace(null)}
+              aria-label="Clear searched location"
+              className="text-zinc-400 hover:text-white shrink-0"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Catchment Radar Radius Control (- 2KM +) */}
         {isOnline && !hasActiveDelivery && !incomingOffer && (
@@ -379,15 +472,16 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
               {!hasActiveDelivery ? (
                 <button
                   type="button"
-                  onClick={onOpenSafety}
-                  title="Safety & SOS Toolkit"
-                  aria-label="Safety & SOS Toolkit"
-                  className="w-11 h-11 rounded-full bg-white text-[#18181B] shadow-md border border-zinc-100 flex flex-col items-center justify-center active:scale-95 transition-all cursor-pointer hover:bg-zinc-50"
+                  onClick={() => {
+                    playKeypadChime();
+                    setIsSearchSheetOpen(true);
+                  }}
+                  title="Search locations on map"
+                  aria-label="Search locations on map"
+                  data-testid="home-map-search-btn"
+                  className="w-11 h-11 rounded-full bg-white text-[#18181B] shadow-md border border-zinc-100 flex items-center justify-center active:scale-95 transition-all cursor-pointer hover:bg-zinc-50"
                 >
-                  <Shield size={18} strokeWidth={2.2} />
-                  <span className="text-[7.5px] font-black tracking-wider text-zinc-600 uppercase leading-none mt-0.5">
-                    SCAN
-                  </span>
+                  <Search size={19} strokeWidth={2.3} />
                 </button>
               ) : (
                 <>
@@ -442,8 +536,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
                 type="button"
                 onClick={() => {
                   playKeypadChime();
-                  setRecenterNonce((n) => n + 1);
-                  showToast('GPS centered on dispatch bike');
+                  handleSyncRealGps();
                 }}
                 title="Center location"
                 aria-label="Center location"
@@ -955,7 +1048,27 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       <DestinationModeSheet
         isOpen={isDestinationSheetOpen}
         onClose={() => setIsDestinationSheetOpen(false)}
-        onSelectDestination={(dest) => setDestinationModeAddress(dest)}
+        onSelectDestination={(dest) => {
+          setDestinationModeAddress(dest);
+          const matched = CURATED_NIGERIA_PLACES.find(
+            (p) => p.address.toLowerCase() === dest.toLowerCase()
+          );
+          if (matched) {
+            setSearchedPlace(matched);
+          }
+        }}
+        onOpenSearch={() => setIsSearchSheetOpen(true)}
+      />
+
+      {/* Interactive Map Location Search Sheet */}
+      <MapLocationSearchSheet
+        isOpen={isSearchSheetOpen}
+        onClose={() => setIsSearchSheetOpen(false)}
+        onSelectPlace={(place) => {
+          setSearchedPlace(place);
+          showToast(`Showing ${place.address} on map`);
+        }}
+        onUseRealLocation={handleSyncRealGps}
       />
 
       {/* Higher Rates Prompt Modal */}

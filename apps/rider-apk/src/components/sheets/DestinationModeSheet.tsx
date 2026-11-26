@@ -10,26 +10,29 @@ import {
 } from 'lucide-react';
 import { playKeypadChime } from '../../utils/audioChimes';
 import { useRiderStore } from '../../store/riderStore';
+import { FAVOURITE_SAVED_PLACE, HOME_SAVED_PLACE } from '../../utils/locationSearch';
 
 export interface DestinationModeSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectDestination: (destName: string) => void;
+  onOpenSearch?: () => void;
 }
 
 export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
   isOpen,
   onClose,
   onSelectDestination,
+  onOpenSearch,
 }) => {
   const { showToast } = useRiderStore();
 
   if (!isOpen) return null;
 
   const destinations = [
-    { id: 'home', label: 'Home', address: 'Bendel Estate, Warri', icon: Home },
-    { id: 'fav', label: 'Favourite', address: 'Jakpa Road, Effurun', icon: Star },
-    { id: 'shell', label: 'Shell Guest House', address: 'Edjeba, Warri', icon: MapPin },
+    { id: 'home', label: HOME_SAVED_PLACE.label, address: HOME_SAVED_PLACE.address, icon: Home },
+    { id: 'fav', label: FAVOURITE_SAVED_PLACE.label, address: FAVOURITE_SAVED_PLACE.address, icon: Star },
+    { id: 'vi', label: 'Victoria Island', address: 'Victoria Island Towers, Lagos', icon: MapPin },
   ];
 
   const handleSelect = (dest: { label: string; address: string }) => {
@@ -98,7 +101,12 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
             type="button"
             onClick={() => {
               playKeypadChime();
-              showToast('Type address to set custom corridor destination...');
+              if (onOpenSearch) {
+                onClose();
+                onOpenSearch();
+              } else {
+                showToast('Tap the map search icon to choose a custom destination');
+              }
             }}
             className="w-full py-3.5 border-2 border-dashed border-zinc-300 hover:border-zinc-400 rounded-2xl flex items-center justify-center gap-2 text-xs font-bold text-zinc-700 transition cursor-pointer"
           >

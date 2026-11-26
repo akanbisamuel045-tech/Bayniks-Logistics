@@ -16,6 +16,7 @@ import {
 
 export interface BayniksLiveMapProps {
   riderLocation: LatLng;
+  focusLocation?: LatLng;
   riderBearing?: number;
   riderLabel?: string;
   pickupLocation?: LatLng;
@@ -121,6 +122,7 @@ function createMarkerElement(
 /** Google Maps Imperative Overlay syncing Polyline, Radar Circle, and Markers to `useMap()`. */
 const GoogleMapsOverlays: React.FC<{
   riderLocation: LatLng;
+  focusLocation?: LatLng;
   pickupLocation?: LatLng;
   dropoffLocation?: LatLng;
   routePath: LatLng[];
@@ -131,6 +133,7 @@ const GoogleMapsOverlays: React.FC<{
   fitRouteBounds: boolean;
 }> = ({
   riderLocation,
+  focusLocation,
   pickupLocation,
   dropoffLocation,
   routePath,
@@ -246,10 +249,10 @@ const GoogleMapsOverlays: React.FC<{
       routePath.forEach((pt) => bounds.extend(pt));
       map.fitBounds(bounds, 42);
     } else {
-      map.panTo(riderLocation);
+      map.panTo(focusLocation || riderLocation);
       map.setZoom(zoom);
     }
-  }, [map, riderLocation, zoom, recenterNonce, fitRouteBounds, routePath]);
+  }, [map, riderLocation, focusLocation, zoom, recenterNonce, fitRouteBounds, routePath]);
 
   return null;
 };
@@ -257,6 +260,7 @@ const GoogleMapsOverlays: React.FC<{
 /** Interactive MapLibre GL JS Vector Map Renderer (Engine #2). */
 const MapLibreVectorCanvas: React.FC<{
   riderLocation: LatLng;
+  focusLocation?: LatLng;
   riderBearing: number;
   riderLabel?: string;
   pickupLocation?: LatLng;
@@ -274,6 +278,7 @@ const MapLibreVectorCanvas: React.FC<{
   fitRouteBounds: boolean;
 }> = ({
   riderLocation,
+  focusLocation,
   riderBearing,
   riderLabel,
   pickupLocation,
@@ -532,7 +537,7 @@ const MapLibreVectorCanvas: React.FC<{
         map.fitBounds(bounds, { padding: 42, duration: 400 });
       } else {
         map.easeTo({
-          center: toLngLatArray(riderLocation),
+          center: toLngLatArray(focusLocation || riderLocation),
           zoom,
           pitch,
           bearing: pitch > 0 ? riderBearing : 0,
@@ -542,7 +547,7 @@ const MapLibreVectorCanvas: React.FC<{
     } catch {
       // Camera resize guard
     }
-  }, [riderLocation, zoom, pitch, riderBearing, recenterNonce, fitRouteBounds, routePath]);
+  }, [riderLocation, focusLocation, zoom, pitch, riderBearing, recenterNonce, fitRouteBounds, routePath]);
 
   if (!webGLAvailable) {
     return (
@@ -575,6 +580,7 @@ const MapLibreVectorCanvas: React.FC<{
 
 export const BayniksLiveMap: React.FC<BayniksLiveMapProps> = ({
   riderLocation,
+  focusLocation,
   riderBearing = 0,
   riderLabel,
   pickupLocation,
@@ -658,7 +664,7 @@ export const BayniksLiveMap: React.FC<BayniksLiveMapProps> = ({
       {activeEngine === 'google' ? (
         <APIProvider apiKey={googleApiKey} onError={() => setGoogleAuthFailed(true)}>
           <GoogleMap
-            defaultCenter={riderLocation}
+            defaultCenter={focusLocation || riderLocation}
             defaultZoom={zoom}
             gestureHandling={interactive ? 'greedy' : 'none'}
             disableDefaultUI={true}
@@ -667,6 +673,7 @@ export const BayniksLiveMap: React.FC<BayniksLiveMapProps> = ({
           >
             <GoogleMapsOverlays
               riderLocation={riderLocation}
+              focusLocation={focusLocation}
               pickupLocation={pickupLocation}
               dropoffLocation={dropoffLocation}
               routePath={routePath}
@@ -681,6 +688,7 @@ export const BayniksLiveMap: React.FC<BayniksLiveMapProps> = ({
       ) : (
         <MapLibreVectorCanvas
           riderLocation={riderLocation}
+          focusLocation={focusLocation}
           riderBearing={riderBearing}
           riderLabel={riderLabel}
           pickupLocation={pickupLocation}
