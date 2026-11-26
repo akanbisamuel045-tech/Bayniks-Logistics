@@ -129,6 +129,8 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
     kycStatus,
     autoConfirm,
     setAutoConfirm,
+    preferredMapEngine,
+    setPreferredMapEngine,
   } = useRiderStore();
 
   const [view, setView] = useState<SettingsView>('main');
@@ -315,6 +317,34 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
               </p>
             </div>
             <ChevronRight size={17} className="text-zinc-400" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playKeypadChime();
+              const nextEngine = preferredMapEngine === 'google' ? 'maplibre' : 'google';
+              setPreferredMapEngine(nextEngine);
+              showToast(
+                nextEngine === 'google'
+                  ? 'In-app map engine: #1 Google Maps (with MapLibre auto-fallback)'
+                  : 'In-app map engine: #2 Bayniks Vector (MapLibre GL)'
+              );
+            }}
+            data-testid="settings-map-engine-row"
+            className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+          >
+            <div>
+              <p className="text-[15px] font-medium text-[#18181B]">In-app map engine</p>
+              <p className="text-[13px] text-zinc-400 mt-0.5">
+                {preferredMapEngine === 'google'
+                  ? 'Google Maps (#1 Primary)'
+                  : 'MapLibre Vector (#2 Open-Source)'}
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-[#18181B] text-[#FF5722] text-[11px] font-bold">
+              Switch
+            </span>
           </button>
 
           <div className="px-5 py-4 flex items-center justify-between">

@@ -30,6 +30,7 @@ import { ConfirmPriceModal } from './sheets/ConfirmPriceModal';
 import { RatePassengerModal } from './sheets/RatePassengerModal';
 import { NavigationOverlayModal } from './NavigationOverlayModal';
 import { RiderChatSheet } from './RiderChatSheet';
+import { BayniksLiveMap } from './map/BayniksLiveMap';
 
 export interface RiderCockpitMapHomeProps {
   onOpenDrawer: () => void;
@@ -63,6 +64,10 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
     advanceTripPhase,
     completeCurrentTrip,
     autoConfirm,
+    preferredMapEngine,
+    setPreferredMapEngine,
+    currentLocation,
+    currentBearing,
     dispatchRadiusKm,
     setDispatchRadiusKm,
     waitingSecondsLeft,
@@ -89,6 +94,25 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   const [isRouteDetailsOpen, setIsRouteDetailsOpen] = useState(false);
   const [stopNewRequests, setStopNewRequests] = useState(false);
   const [autoConfirmProgress, setAutoConfirmProgress] = useState(100);
+  const [recenterNonce, setRecenterNonce] = useState(0);
+
+  const googleKeyConfigured = Boolean(
+    ((import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || '').trim()
+  );
+
+  const pickupCoord = activeOrder?.pickup?.location || { lat: 6.5882, lng: 3.3489 };
+  const dropoffCoord = isDestinationUpdated
+    ? { lat: 6.578, lng: 3.356 }
+    : activeOrder?.stops?.[0]?.dropoffLocation || { lat: 6.5655, lng: 3.368 };
+  const showActiveRoute = hasActiveDelivery || Boolean(incomingOffer);
+  const routeOriginCoord =
+    tripPhase === 'in_transit' || tripPhase === 'at_dropoff'
+      ? pickupCoord
+      : currentLocation;
+  const routeTargetCoord =
+    tripPhase === 'in_transit' || tripPhase === 'at_dropoff'
+      ? dropoffCoord
+      : pickupCoord;
 
   const pickupAddress = activeOrder?.pickup?.address || '78 Airport Road, Warri 330102';
   const pickupLandmark =
@@ -212,160 +236,24 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
       )}
 
       {/* =====================================================================
-       * 1. INTERACTIVE MAP CANVAS (Light Vector Street Map + Black/Orange)
+       * 1. REAL INTERACTIVE MAP CANVAS (#1 Google Maps + #2 MapLibre GL JS)
        * ===================================================================== */}
       <div className="relative flex-1 w-full bg-[#F4F4F5] overflow-hidden min-h-[250px]">
-        <svg
-          className="absolute inset-0 w-full h-full object-cover"
-          viewBox="0 0 400 480"
-          preserveAspectRatio="xMidYMid slice"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <radialGradient id="bike-gps-glow-light" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#FF5722" stopOpacity="0.26" />
-              <stop offset="70%" stopColor="#FF5722" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#FF5722" stopOpacity="0" />
-            </radialGradient>
-            <radialGradient id="radar-wave-orange" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#FF5722" stopOpacity="0.16" />
-              <stop offset="75%" stopColor="#FF5722" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#FF5722" stopOpacity="0.01" />
-            </radialGradient>
-          </defs>
-
-          {/* Clean Light Urban Road Network */}
-          <rect width="400" height="480" fill="#F2F3F5" />
-          <path d="M 0 110 L 400 110" stroke="#FFFFFF" strokeWidth="14" />
-          <path d="M 0 240 L 400 240" stroke="#E4E4E7" strokeWidth="22" />
-          <path d="M 0 370 L 400 370" stroke="#FFFFFF" strokeWidth="16" />
-          <path d="M 120 0 L 120 480" stroke="#FFFFFF" strokeWidth="16" />
-          <path d="M 230 0 L 230 480" stroke="#E4E4E7" strokeWidth="24" />
-          <path d="M 340 0 L 340 480" stroke="#FFFFFF" strokeWidth="12" />
-          <path d="M 10 30 L 390 420" stroke="#FFFFFF" strokeWidth="14" />
-          <path d="M 10 30 L 390 420" stroke="#FF5722" strokeWidth="4" strokeOpacity="0.28" strokeDasharray="8 6" />
-          <path d="M 30 450 L 370 20" stroke="#FFFFFF" strokeWidth="12" />
-
-          {/* Active Route Polyline in Black + Atomic Orange */}
-          {(hasActiveDelivery || incomingOffer) && (
-            <>
-              <path
-                d={
-                  tripPhase === 'in_transit' || tripPhase === 'at_dropoff'
-                    ? 'M 200 240 L 200 165 L 115 110'
-                    : 'M 200 240 Q 230 180 265 135'
-                }
-                stroke="#18181B"
-                strokeWidth="9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <path
-                d={
-                  tripPhase === 'in_transit' || tripPhase === 'at_dropoff'
-                    ? 'M 200 240 L 200 165 L 115 110'
-                    : 'M 200 240 Q 230 180 265 135'
-                }
-                stroke="#FF5722"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </>
-          )}
-
-          {/* Concentric Atomic Orange + Black Radar Catchment Wave when Online */}
-          {isOnline && !hasActiveDelivery && (
-            <g transform="translate(200, 240)">
-              <circle
-                cx="0"
-                cy="0"
-                r={dispatchRadiusKm * 32}
-                fill="url(#radar-wave-orange)"
-                className="animate-pulse"
-              />
-              <circle
-                cx="0"
-                cy="0"
-                r={dispatchRadiusKm * 32}
-                fill="none"
-                stroke="#18181B"
-                strokeWidth="1.5"
-                strokeDasharray="5 4"
-                opacity="0.55"
-              />
-              <circle
-                cx="0"
-                cy="0"
-                r={dispatchRadiusKm * 18}
-                fill="none"
-                stroke="#FF5722"
-                strokeWidth="1.2"
-                opacity="0.5"
-              />
-            </g>
-          )}
-
-          {/* Warri / Effurun Corridor Markers (Black + Atomic Orange) */}
-          <g transform="translate(82, 95)">
-            <circle cx="0" cy="0" r="7" fill="#18181B" />
-            <circle cx="0" cy="0" r="2.5" fill="#FF5722" />
-            <text x="11" y="3.5" fill="#18181B" fontSize="9" fontWeight="700" fontFamily="sans-serif">
-              Shoprite Delta Mall
-            </text>
-          </g>
-
-          <g transform="translate(262, 130)">
-            <circle cx="0" cy="0" r="7" fill="#FF5722" />
-            <circle cx="0" cy="0" r="2.5" fill="#FFFFFF" />
-            <text x="11" y="3.5" fill="#18181B" fontSize="9" fontWeight="700" fontFamily="sans-serif">
-              78 Airport Road
-            </text>
-          </g>
-
-          <g transform="translate(245, 275)">
-            <circle cx="0" cy="0" r="6.5" fill="#18181B" />
-            <text x="10" y="3" fill="#52525B" fontSize="8" fontWeight="600" fontFamily="sans-serif">
-              NNPC Junior Staff Club
-            </text>
-          </g>
-
-          {/* Top-Down Dispatch Bike Icon (Black + Atomic Orange) */}
-          <g transform="translate(200, 240)">
-            <circle cx="0" cy="0" r="26" fill="url(#bike-gps-glow-light)" />
-            <ellipse cx="1" cy="5" rx="10" ry="18" fill="#000000" opacity="0.2" />
-            <rect
-              x="-6"
-              y="5"
-              width="12"
-              height="12"
-              rx="2.5"
-              fill="#18181B"
-              stroke="#FF5722"
-              strokeWidth="1.2"
-            />
-            <text
-              x="0"
-              y="13.5"
-              fill="#FF5722"
-              fontSize="6.5"
-              fontWeight="900"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              B
-            </text>
-            <rect x="-4" y="-7" width="8" height="13" rx="3" fill="#18181B" />
-            <ellipse cx="0" cy="-7" rx="3.5" ry="5" fill="#27272A" />
-            <path d="M-11 -12 L 11 -12" stroke="#52525B" strokeWidth="1.8" strokeLinecap="round" />
-            <circle cx="-11" cy="-12" r="1.5" fill="#18181B" />
-            <circle cx="11" cy="-12" r="1.5" fill="#18181B" />
-            <rect x="-2" y="-21" width="4" height="10" rx="1.5" fill="#18181B" />
-            <ellipse cx="0" cy="-14" rx="2.5" ry="1.5" fill="#FF5722" />
-          </g>
-        </svg>
+        <BayniksLiveMap
+          riderLocation={currentLocation}
+          riderBearing={currentBearing}
+          pickupLocation={showActiveRoute ? pickupCoord : undefined}
+          pickupLabel={showActiveRoute ? pickupAddress.split(',')[0] : undefined}
+          dropoffLocation={showActiveRoute ? dropoffCoord : undefined}
+          dropoffLabel={showActiveRoute ? dropoffAddress.split(',')[0] : undefined}
+          routeOrigin={showActiveRoute ? routeOriginCoord : undefined}
+          routeTarget={showActiveRoute ? routeTargetCoord : undefined}
+          showRadar={isOnline && !hasActiveDelivery && !incomingOffer}
+          radarRadiusKm={dispatchRadiusKm}
+          recenterNonce={recenterNonce}
+          zoom={showActiveRoute ? 14 : 13.5}
+          testId="cockpit-live-map"
+        />
 
         {/* Catchment Radar Radius Control (- 2KM +) */}
         {isOnline && !hasActiveDelivery && !incomingOffer && (
@@ -438,12 +326,31 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
           </div>
         )}
 
-        {/* Map Watermark */}
-        <div className="absolute left-16 bottom-3.5 pointer-events-none select-none z-10">
-          <span className="text-[11px] font-bold text-zinc-500/80 tracking-wide">
-            Bayniks Maps
+        {/* Map Engine Quick-Switch Badge (#1 Google Maps <-> #2 MapLibre Vector) */}
+        <button
+          type="button"
+          onClick={() => {
+            playKeypadChime();
+            const nextEngine = preferredMapEngine === 'google' ? 'maplibre' : 'google';
+            setPreferredMapEngine(nextEngine);
+            showToast(
+              nextEngine === 'google'
+                ? googleKeyConfigured
+                  ? 'Switched to Google Maps (#1)'
+                  : 'Google Maps (#1) selected • using MapLibre (#2) until API key is set'
+                : 'Switched to MapLibre GL Vector (#2)'
+            );
+          }}
+          data-testid="cockpit-map-engine-pill"
+          className="absolute left-16 bottom-3 z-20 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs border border-zinc-200 shadow-xs flex items-center gap-1.5 text-[10.5px] font-bold text-[#18181B] hover:bg-white cursor-pointer"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5722]" />
+          <span>
+            {preferredMapEngine === 'google' && googleKeyConfigured
+              ? 'Google Maps'
+              : 'Bayniks • MapLibre'}
           </span>
-        </div>
+        </button>
 
         {/* FLOATING TOP BUTTONS (when Offline OR during Active Delivery) */}
         {(!isOnline || hasActiveDelivery) && (
@@ -535,6 +442,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
                 type="button"
                 onClick={() => {
                   playKeypadChime();
+                  setRecenterNonce((n) => n + 1);
                   showToast('GPS centered on dispatch bike');
                 }}
                 title="Center location"

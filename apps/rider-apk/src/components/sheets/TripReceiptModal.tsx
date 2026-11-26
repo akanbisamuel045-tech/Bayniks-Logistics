@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { playKeypadChime } from '../../utils/audioChimes';
 import { useRiderStore } from '../../store/riderStore';
+import { BayniksLiveMap } from '../map/BayniksLiveMap';
 
 export interface TripReceiptData {
   id: string;
@@ -314,60 +315,49 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
           </div>
         </section>
 
-        {/* Clean Vector Map Preview Box (Black + Atomic Orange Route) */}
+        {/* Real Dual-Engine Map Route Preview (Google Maps #1 / MapLibre #2) */}
         <div
           className="h-44 w-full bg-[#F4F4F5] relative overflow-hidden border-y border-zinc-100"
           data-testid="trip-detail-map"
         >
-          <svg
-            viewBox="0 0 400 180"
-            className="w-full h-full"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            {/* Light neutral street grid */}
-            <path
-              d="M0 45 L400 30 M0 110 L400 95 M0 155 L400 140 M75 0 L65 180 M185 0 L195 180 M305 0 L285 180"
-              stroke="#FFFFFF"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              d="M20 75 Q140 60 245 85 T385 55"
-              stroke="#E4E4E7"
-              strokeWidth="6"
-              fill="none"
-            />
+          <BayniksLiveMap
+            riderLocation={
+              mapCityLabel.toLowerCase().includes('lagos')
+                ? { lat: 6.555, lng: 3.385 }
+                : { lat: 5.545, lng: 5.758 }
+            }
+            pickupLocation={
+              mapCityLabel.toLowerCase().includes('lagos')
+                ? { lat: 6.5933, lng: 3.3421 }
+                : { lat: 5.5345, lng: 5.7524 }
+            }
+            pickupLabel={currentTrip.pickupAddress.split(',')[0]}
+            dropoffLocation={
+              mapCityLabel.toLowerCase().includes('lagos')
+                ? { lat: 6.4281, lng: 3.4219 }
+                : { lat: 5.5688, lng: 5.7834 }
+            }
+            dropoffLabel={currentTrip.dropoffAddress.split(',')[0]}
+            routeOrigin={
+              mapCityLabel.toLowerCase().includes('lagos')
+                ? { lat: 6.5933, lng: 3.3421 }
+                : { lat: 5.5345, lng: 5.7524 }
+            }
+            routeTarget={
+              mapCityLabel.toLowerCase().includes('lagos')
+                ? { lat: 6.4281, lng: 3.4219 }
+                : { lat: 5.5688, lng: 5.7834 }
+            }
+            interactive={false}
+            fitRouteBounds={true}
+            zoom={13}
+            testId="trip-receipt-live-map"
+          />
 
-            {/* Route path: Black base + Atomic Orange overlay */}
-            <path
-              d="M 88 118 Q 185 112, 240 82 T 326 62"
-              stroke="#18181B"
-              strokeWidth="4"
-              strokeLinecap="round"
-              fill="none"
-            />
-            <path
-              d="M 88 118 Q 185 112, 240 82 T 326 62"
-              stroke="#FF5722"
-              strokeWidth="2"
-              strokeDasharray="6 4"
-              strokeLinecap="round"
-              fill="none"
-            />
-
-            {/* Pickup marker (Black) */}
-            <circle cx="88" cy="118" r="8" fill="#18181B" />
-            <circle cx="88" cy="118" r="3" fill="#FFFFFF" />
-
-            {/* Dropoff marker (Atomic Orange) */}
-            <circle cx="326" cy="62" r="9" fill="#FF5722" />
-            <circle cx="326" cy="62" r="3.5" fill="#FFFFFF" />
-          </svg>
-
-          <span className="absolute top-3 left-1/2 -translate-x-1/2 text-[13px] font-semibold text-zinc-500 tracking-wide">
+          <span className="absolute top-2.5 left-1/2 -translate-x-1/2 text-[12px] font-bold text-[#18181B] bg-white/90 px-2.5 py-0.5 rounded-full shadow-xs pointer-events-none">
             {mapCityLabel}
           </span>
-          <span className="absolute bottom-2 left-3 text-[11px] font-bold text-zinc-500/80 bg-white/85 px-1.5 py-0.5 rounded">
+          <span className="absolute bottom-2 left-3 text-[10.5px] font-bold text-zinc-600 bg-white/90 px-2 py-0.5 rounded shadow-xs pointer-events-none">
             Bayniks Maps
           </span>
         </div>

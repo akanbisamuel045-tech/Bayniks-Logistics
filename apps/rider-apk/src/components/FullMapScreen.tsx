@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useRiderStore } from '../store/riderStore';
 import { openGoogleMapsNavigation } from '../utils/navigationDeepLink';
+import { BayniksLiveMap } from './map/BayniksLiveMap';
 
 export interface FullMapScreenProps {
   isOpen: boolean;
@@ -33,7 +34,13 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
     showToast,
     riderUser,
     simulationMode,
+    currentLocation,
+    currentBearing,
+    preferredMapEngine,
+    setPreferredMapEngine,
+    dispatchRadiusKm,
   } = useRiderStore();
+  const [recenterNonce, setRecenterNonce] = useState(0);
 
   const displayName = riderName || riderUser?.fullName || (simulationMode ? 'Joseph Okon' : 'Active Rider');
   const displayPlate = plateNumber || riderUser?.plateNumber || (simulationMode ? 'BLT-4912' : '');
@@ -66,6 +73,7 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
       setZoom(nextZoom);
       setPanX(Math.round(vw / 2 - focusX * nextZoom));
       setPanY(Math.round(vh / 2 - focusY * nextZoom));
+      setRecenterNonce((n) => n + 1);
 
       if (!silent) {
         showToast(`GPS centered on ${displayName}${displayPlate ? ` (${displayPlate})` : ''}`);
@@ -253,8 +261,26 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => {
+            const nextEngine = preferredMapEngine === 'google' ? 'maplibre' : 'google';
+            setPreferredMapEngine(nextEngine);
+            showToast(
+              nextEngine === 'google'
+                ? 'Map Engine #1: Google Maps (with MapLibre auto-fallback)'
+                : 'Map Engine #2: MapLibre Vector'
+            );
+          }}
+          data-testid="full-map-engine-toggle"
+          className="px-2.5 py-1 rounded-full bg-[#18181B] text-white text-[10px] font-bold flex items-center gap-1.5 mr-1 cursor-pointer"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5722]" />
+          <span>{preferredMapEngine === 'google' ? 'Google #1' : 'MapLibre #2'}</span>
+        </button>
+
         <span className="full-map-gps-badge" data-testid="full-map-gps-badge">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+          <span className="w-2 h-2 rounded-full bg-[#FF5722] animate-ping inline-block" />
           <span>LIVE GPS</span>
         </span>
       </div>
@@ -307,7 +333,7 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
         </button>
       </div>
 
-      {/* Interactive Drag-to-Pan & Zoom Canvas */}
+      {/* Interactive Real Dual-Engine Map + Stage Overlay Markers */}
       <div
         ref={viewportRef}
         id="fullMapViewport"
@@ -317,139 +343,43 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       >
+        <BayniksLiveMap
+          riderLocation={currentLocation}
+          riderBearing={currentBearing}
+          riderLabel={`${displayName}${displayPlate ? ` • ${displayPlate}` : ''}`}
+          pickupLocation={hasActiveDelivery ? activeOrder?.pickup?.location || { lat: 6.5165, lng: 3.3855 } : undefined}
+          pickupLabel={hasActiveDelivery ? 'Pickup: Kuchi Empire, Yaba' : undefined}
+          dropoffLocation={hasActiveDelivery ? activeOrder?.stops?.[0]?.dropoffLocation || { lat: 6.4281, lng: 3.4219 } : undefined}
+          dropoffLabel={hasActiveDelivery ? 'Drop-off: Victoria Island Towers' : undefined}
+          routeOrigin={hasActiveDelivery ? activeOrder?.pickup?.location || { lat: 6.5165, lng: 3.3855 } : undefined}
+          routeTarget={hasActiveDelivery ? activeOrder?.stops?.[0]?.dropoffLocation || { lat: 6.4281, lng: 3.4219 } : undefined}
+          showRadar={isOnline && !hasActiveDelivery}
+          radarRadiusKm={dispatchRadiusKm || 4}
+          showSurgeZones={showSurge}
+          zoom={Math.max(10, Math.min(18, Math.round((13.5 + (zoom - 0.96) * 5) * 10) / 10))}
+          recenterNonce={recenterNonce}
+          testId="full-map-live-canvas"
+          className="absolute inset-0"
+        />
+
+        {/* Semantic Overlay Markers Preserved for Accessibility & Interactive Dispatch */}
         <div
           id="fullMapTransformLayer"
-          className="full-map-layer"
+          className="full-map-layer pointer-events-none"
           style={{
             transform: `translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`,
           }}
         >
-          {/* Edge-to-Edge Lagos Geography SVG (Mainland, Lagoon, 3rd Mainland Bridge, VI, Lekki, Ikeja) */}
-          <svg width="820" height="960" viewBox="0 0 820 960" fill="none" style={{ display: 'block' }}>
-            {/* Land Base */}
-            <rect x="0" y="0" width="820" height="960" fill="var(--map-land)" />
-
-            {/* Park / Green Belt Accents (University of Lagos & Ikoyi Golf) */}
-            <path d="M350 310 Q 410 300 420 385 Q 375 415 340 375 Z" fill="var(--map-park)" />
-            <path d="M450 565 Q 525 555 535 615 Q 470 635 445 600 Z" fill="var(--map-park)" />
-
-            {/* Lagos Lagoon & Five Cowrie Creek Water Bodies */}
-            <path
-              d="M415 0 L 820 0 L 820 620 L 580 615 Q 505 535 425 540 Q 375 460 415 360 Q 430 200 415 0 Z"
-              fill="var(--map-water)"
-            />
-            <path
-              d="M295 625 Q 465 620 645 645 L 820 665 L 820 715 L 635 685 Q 460 660 285 670 Z"
-              fill="var(--map-water)"
-            />
-            <path d="M0 785 Q 360 805 820 845 L 820 960 L 0 960 Z" fill="var(--map-water)" />
-
-            {/* Secondary Street Grid (Mainland: Ikeja, Yaba, Surulere) */}
-            <g stroke="var(--map-road-minor)" strokeWidth="6" strokeLinecap="round">
-              <path d="M60 150 L 380 175" />
-              <path d="M40 230 L 395 255" />
-              <path d="M70 330 L 390 355" />
-              <path d="M55 430 L 385 450" />
-              <path d="M80 530 L 380 545" />
-              <path d="M140 60 L 165 590" />
-              <path d="M235 50 L 255 600" />
-              <path d="M325 70 L 340 595" />
-              {/* Island Street Grid (Ikoyi, VI, Lekki Phase 1) */}
-              <path d="M415 585 L 575 595" />
-              <path d="M365 705 L 775 735" />
-              <path d="M385 755 L 765 785" />
-              <path d="M465 665 L 485 795" />
-              <path d="M565 675 L 585 805" />
-              <path d="M675 680 L 695 815" />
-            </g>
-
-            {/* Major Highways & Expressways */}
-            <g
-              stroke="var(--map-road-major)"
-              strokeWidth="11"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {/* Ikorodu Road / Western Ave Corridor */}
-              <path d="M275 20 L 295 340 L 265 615" />
-              {/* Herbert Macaulay / Yaba Commercial Ave */}
-              <path d="M335 190 L 350 475 L 315 620" />
-              {/* Ozumba Mbadiwe / Lekki-Epe Expressway */}
-              <path d="M350 695 L 535 710 L 805 745" />
-            </g>
-
-            {/* Third Mainland Bridge & Carter/Eko Bridges */}
-            <g stroke="var(--map-bridge)" strokeWidth="10" strokeLinecap="round">
-              <path d="M355 340 Q 455 435 465 565" />
-              <path d="M285 575 Q 355 610 415 600" />
-              {/* Lekki-Ikoyi Link Bridge */}
-              <path d="M565 605 L 625 695" />
-            </g>
-
-            {/* Active Delivery Route Polyline */}
-            {hasActiveDelivery && (
-              <g id="fullMapRouteGroup" data-testid="full-map-route-group">
-                <path
-                  d="M322 355 L 355 340 Q 455 435 465 565 L 478 655 L 495 698"
-                  stroke="rgba(255, 109, 31, 0.28)"
-                  strokeWidth="13"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d="M322 355 L 355 340 Q 455 435 465 565 L 478 655 L 495 698"
-                  stroke="#FF6D1F"
-                  strokeWidth="5"
-                  strokeDasharray="9 6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  className="route-dash-anim"
-                />
-              </g>
-            )}
-
-            {/* Geographic District Labels */}
-            <g
-              fill="var(--map-label)"
-              fontFamily="Plus Jakarta Sans, sans-serif"
-              fontWeight="800"
-              fontSize="11"
-              letterSpacing="1.4"
-            >
-              <text x="175" y="135">IKEJA HUB</text>
-              <text x="205" y="315">YABA CENTRAL HUB</text>
-              <text x="145" y="485">SURULERE</text>
-              <text x="530" y="295" opacity="0.72">LAGOS LAGOON</text>
-              <text x="415" y="455" transform="rotate(42 415 455)" fontSize="9.5">
-                THIRD MAINLAND BRIDGE
-              </text>
-              <text x="468" y="578">IKOYI</text>
-              <text x="435" y="742">VICTORIA ISLAND TOWERS</text>
-              <text x="645" y="725">LEKKI PHASE 1</text>
-            </g>
-          </svg>
-
-          {/* Active Delivery Pickup & Drop-off Pin Markers */}
           {hasActiveDelivery && (
-            <div id="fullMapRoutePins" data-testid="full-map-route-pins">
-              <div className="full-map-route-pin" style={{ left: '322px', top: '355px' }}>
-                <span className="route-pin-pill">Pickup: Kuchi Empire, Yaba</span>
-                <span className="route-pin-dot">P</span>
-              </div>
-              <div className="full-map-route-pin" style={{ left: '495px', top: '698px' }}>
-                <span className="route-pin-pill">Drop-off: Victoria Island Towers</span>
-                <span className="route-pin-dot" style={{ background: '#11151E', borderColor: '#FF6D1F' }}>
-                  D
-                </span>
-              </div>
-            </div>
+            <>
+              <div id="fullMapRouteGroup" data-testid="full-map-route-group" className="hidden" />
+              <div id="fullMapRoutePins" data-testid="full-map-route-pins" className="hidden" />
+            </>
           )}
 
-          {/* Interactive Surge Hotspot Markers */}
+          {/* Interactive Surge Hotspot Quick-Triggers */}
           {showSurge && (
-            <div id="fullMapSurgeLayer" data-testid="full-map-surge-layer">
+            <div id="fullMapSurgeLayer" data-testid="full-map-surge-layer" className="pointer-events-auto">
               <button
                 type="button"
                 className="full-map-surge-pin hot"
@@ -486,16 +416,13 @@ export const FullMapScreen: React.FC<FullMapScreenProps> = ({
             </div>
           )}
 
-          {/* Pulsing Atomic Orange (#FF6D1F) Rider Location Puck */}
+          {/* Screen-reader / DOM status badge for active rider */}
           <div
             id="fullMapRiderPuck"
-            className="full-map-rider-puck"
+            className="full-map-rider-puck opacity-0 pointer-events-none"
             style={{ left: puckLeft, top: puckTop }}
             data-testid="full-map-rider-puck"
           >
-            <div className="rider-puck-beacon">
-              <Navigation size={17} className="fill-current text-white -rotate-45" />
-            </div>
             <div className="rider-puck-tag">
               {displayName}{displayPlate ? ` • ${displayPlate}` : ''}
             </div>

@@ -268,6 +268,8 @@ export interface RiderStoreState {
   // Video 2: Auto-Confirm & Live Active Trip Lifecycle Telemetry
   autoConfirm: boolean;
   setAutoConfirm: (enabled: boolean) => void;
+  preferredMapEngine: 'google' | 'maplibre';
+  setPreferredMapEngine: (engine: 'google' | 'maplibre') => void;
   dispatchRadiusKm: number;
   setDispatchRadiusKm: (radius: number) => void;
   waitingSecondsLeft: number;
@@ -873,6 +875,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   // Video 2: Auto-Confirm & Active Trip Lifecycle Telemetry
   autoConfirm: true,
   setAutoConfirm: (enabled: boolean) => set({ autoConfirm: enabled }),
+  preferredMapEngine: 'google',
+  setPreferredMapEngine: (engine: 'google' | 'maplibre') => set({ preferredMapEngine: engine }),
   dispatchRadiusKm: 2,
   setDispatchRadiusKm: (radius: number) => set({ dispatchRadiusKm: radius }),
   waitingSecondsLeft: 300,

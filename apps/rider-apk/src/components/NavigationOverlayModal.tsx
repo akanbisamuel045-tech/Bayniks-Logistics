@@ -1,6 +1,8 @@
 import React from 'react';
-import { ArrowUp, Compass, Mic, Navigation, Volume2, X } from 'lucide-react';
+import { ArrowUp, Compass, Mic, Volume2, X } from 'lucide-react';
 import { playKeypadChime } from '../utils/audioChimes';
+import { useRiderStore } from '../store/riderStore';
+import { BayniksLiveMap } from './map/BayniksLiveMap';
 
 export interface NavigationOverlayModalProps {
   isOpen: boolean;
@@ -17,7 +19,14 @@ export const NavigationOverlayModal: React.FC<NavigationOverlayModalProps> = ({
   distanceText = '170 m',
   etaMins = 1,
 }) => {
+  const { currentLocation, currentBearing, activeOrder, tripPhase } = useRiderStore();
+
   if (!isOpen) return null;
+
+  const isDropoff = tripPhase === 'in_transit' || tripPhase === 'at_dropoff';
+  const targetCoord = isDropoff
+    ? activeOrder?.stops?.[0]?.dropoffLocation || { lat: 6.5655, lng: 3.368 }
+    : activeOrder?.pickup?.location || { lat: 6.5882, lng: 3.3489 };
 
   return (
     <div
@@ -56,41 +65,19 @@ export const NavigationOverlayModal: React.FC<NavigationOverlayModalProps> = ({
         </div>
       </div>
 
-      {/* Center Map Canvas with Floating Bayniks Return Orb */}
-      <div className="relative flex-1 bg-[#F4F4F5] overflow-hidden flex items-center justify-center">
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          <path
-            d="M 100 0 L 100 800 M 250 0 L 250 800 M 0 250 L 500 250 M 0 450 L 500 450"
-            stroke="#FFFFFF"
-            strokeWidth="10"
-          />
-          <path
-            d="M 180 550 L 180 320 L 290 320"
-            stroke="#18181B"
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-          <path
-            d="M 180 550 L 180 320 L 290 320"
-            stroke="#FF5722"
-            strokeWidth="4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </svg>
-
-        {/* Vehicle Arrow Marker */}
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full bg-[#18181B] text-[#FF5722] flex items-center justify-center shadow-xl border-4 border-white">
-            <Navigation size={22} className="rotate-45" fill="currentColor" />
-          </div>
-          <div className="text-[11px] font-bold bg-[#18181B] text-white px-2.5 py-0.5 rounded-full mt-1.5">
-            Current Location
-          </div>
-        </div>
+      {/* Center Live Dual-Engine Map Canvas with Floating Bayniks Return Orb */}
+      <div className="relative flex-1 bg-[#F4F4F5] overflow-hidden">
+        <BayniksLiveMap
+          riderLocation={currentLocation}
+          riderBearing={currentBearing}
+          dropoffLocation={targetCoord}
+          dropoffLabel={destinationAddress.split(',')[0]}
+          routeOrigin={currentLocation}
+          routeTarget={targetCoord}
+          zoom={16}
+          pitch={52}
+          testId="navigation-live-map"
+        />
 
         {/* Floating Quick-Switch Bayniks Orb */}
         <button
