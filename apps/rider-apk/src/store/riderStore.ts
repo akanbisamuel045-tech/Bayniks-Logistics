@@ -196,7 +196,7 @@ export interface RiderStoreState {
     stopSequenceNumber?: number,
     apiBaseUrl?: string
   ) => Promise<{ success: boolean; error?: string }>;
-  completeCurrentTrip: () => void;
+  completeCurrentTrip: (meta?: { pinUsed?: string; podPhotoUrl?: string }) => void;
   setSimulationMode: (enabled: boolean) => void;
   triggerDemoOffer: () => void;
   fetchShiftSummary: (apiBaseUrl?: string) => Promise<void>;
@@ -1351,10 +1351,20 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   verifyPickupPin: async (pin: string, apiBaseUrl = '') => {
     const { activeOrder, authToken, simulationMode } = get();
     if (!activeOrder) return { success: false, error: 'No active order' };
+    if (!/^\d{4}$/.test(pin.trim())) {
+      return { success: false, error: 'Pickup PIN must be 4 numeric digits' };
+    }
 
     set({ isSubmitting: true });
 
     if (simulationMode || !authToken) {
+      if (pin.trim() === '0000') {
+        set({ isSubmitting: false });
+        return {
+          success: false,
+          error: 'Invalid sender pickup PIN. Confirm 4-digit code with sender.',
+        };
+      }
       set((state) => ({
         tripPhase: 'in_transit',
         activeOrder: state.activeOrder ? { ...state.activeOrder, status: 'in_transit' } : null,
@@ -1370,7 +1380,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ orderId: activeOrder._id, pickupPin: pin }),
+        body: JSON.stringify({ orderId: activeOrder._id, pickupPin: pin.trim() }),
       });
 
       const data = await res.json();
@@ -1400,11 +1410,27 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   ) => {
     const { activeOrder, authToken, simulationMode, completeCurrentTrip } = get();
     if (!activeOrder) return { success: false, error: 'No active order' };
+    if (!/^\d{4}$/.test(pin.trim())) {
+      return { success: false, error: 'Delivery PIN must be 4 numeric digits' };
+    }
+    if (!photoDataUrl) {
+      return { success: false, error: 'Proof of Delivery photo is required' };
+    }
+    if (byteSize <= 0 || byteSize > 300 * 1024) {
+      return { success: false, error: 'POD photo must be under 300KB' };
+    }
 
     set({ isSubmitting: true });
 
     if (simulationMode || !authToken) {
-      completeCurrentTrip();
+      if (pin.trim() === '0000') {
+        set({ isSubmitting: false });
+        return {
+          success: false,
+          error: 'Invalid delivery PIN. Confirm 4-digit code with recipient.',
+        };
+      }
+      completeCurrentTrip({ pinUsed: pin.trim(), podPhotoUrl: photoDataUrl });
       set({ isSubmitting: false });
       return { success: true };
     }
@@ -1419,7 +1445,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
         body: JSON.stringify({
           orderId: activeOrder._id,
           stopSequenceNumber,
-          deliveryPin: pin,
+          deliveryPin: pin.trim(),
           proofOfDeliveryBase64OrUrl: photoDataUrl,
           byteSize,
         }),
@@ -1431,9 +1457,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
         return { success: false, error: data.error || 'Failed to verify delivery PIN' };
       }
 
-      // If order status is delivered, trip is complete
       if (data.order?.status === 'delivered') {
-        completeCurrentTrip();
+        completeCurrentTrip({ pinUsed: pin.trim(), podPhotoUrl: photoDataUrl });
       } else {
         set({ activeOrder: data.order });
       }
@@ -1446,7 +1471,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
   },
 
-  completeCurrentTrip: () => {
+  completeCurrentTrip: (meta) => {
     const { activeOrder, todayEarningsKobo, deliveryHistory, walletBalanceKobo, isDebtLocked } = get();
     const earningsEarned = activeOrder?.riderEarningKobo || 0;
     const isCashOrder =
@@ -1489,7 +1514,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
           tipKobo: 0,
           status: 'delivered',
           proofType: 'pin',
-          pinUsed: '7482',
+          pinUsed: meta?.pinUsed || '7482',
           packageType: activeOrder.stops[0]?.packageDescription || 'Express Cargo',
           recipientName: activeOrder.stops[0]?.recipientName || 'Verified Recipient',
           recipientPhone: activeOrder.stops[0]?.recipientPhone || '+2348000000000',

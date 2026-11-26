@@ -106,9 +106,15 @@ describe('Delivery Workflow Redesign (Video-Exact End-to-End Flow + Black & Atom
     expect(screen.getByTestId('waiting-timer-badge').textContent).toContain('05:00 Waiting');
     expect(screen.getByTestId('start-trip-btn')).toBeDefined();
 
-    // 3. Start Trip -> In Transit with Cash badge & Route details
+    // 3. Start Trip -> Anti-Fraud Pickup PIN Gate -> In Transit with Cash badge & Route details
+    fireEvent.click(screen.getByTestId('start-trip-btn'));
+    const pickupModal = screen.getByTestId('pin-verification-modal');
+    expect(within(pickupModal).getByText('ANTI-FRAUD PICKUP VERIFICATION')).toBeDefined();
+    for (const d of ['4', '8', '2', '9']) {
+      fireEvent.click(within(pickupModal).getByRole('button', { name: d }));
+    }
     await act(async () => {
-      fireEvent.click(screen.getByTestId('start-trip-btn'));
+      fireEvent.click(within(pickupModal).getByTestId('pin-submit-btn'));
     });
 
     expect(useRiderStore.getState().tripPhase).toBe('in_transit');
@@ -118,6 +124,7 @@ describe('Delivery Workflow Redesign (Video-Exact End-to-End Flow + Black & Atom
     // Open Route details and trigger mid-trip destination change + Contact options
     fireEvent.click(screen.getByTestId('route-details-toggle-btn'));
     expect(screen.getByTestId('route-details-sheet')).toBeDefined();
+    expect(screen.getByTestId('route-emergency-sos-btn')).toBeDefined();
     fireEvent.click(screen.getByTestId('route-change-dest-btn'));
     expect(screen.getByTestId('banner-route-updated')).toBeDefined();
     expect(screen.getByText('3 min')).toBeDefined();
@@ -130,9 +137,24 @@ describe('Delivery Workflow Redesign (Video-Exact End-to-End Flow + Black & Atom
     expect(screen.getByText('Call by phone')).toBeDefined();
     fireEvent.click(within(screen.getByTestId('contact-options-sheet')).getByLabelText('Close'));
 
-    // 4. End Trip -> Confirm Price Full-Screen View
+    // 4. End Trip -> Anti-Fraud POD Photo + Delivery PIN Gate -> Confirm Price Full-Screen View
+    fireEvent.click(screen.getByTestId('end-trip-btn'));
+    const dropoffModal = screen.getByTestId('pin-verification-modal');
+    expect(within(dropoffModal).getByText('STOP #1 PROOF OF DELIVERY')).toBeDefined();
+
+    const podFile = new File(['pod-image-bytes'], 'pod.jpg', { type: 'image/jpeg' });
     await act(async () => {
-      fireEvent.click(screen.getByTestId('end-trip-btn'));
+      fireEvent.change(within(dropoffModal).getByTestId('pod-photo-input'), {
+        target: { files: [podFile] },
+      });
+    });
+    expect(within(dropoffModal).getByTestId('pod-photo-compressed-badge')).toBeDefined();
+
+    for (const d of ['7', '4', '8', '2']) {
+      fireEvent.click(within(dropoffModal).getByRole('button', { name: d }));
+    }
+    await act(async () => {
+      fireEvent.click(within(dropoffModal).getByTestId('pin-submit-btn'));
     });
 
     const confirmModal = screen.getByTestId('confirm-price-modal');

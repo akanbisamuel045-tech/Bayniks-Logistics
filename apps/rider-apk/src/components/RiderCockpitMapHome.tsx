@@ -16,6 +16,7 @@ import {
   Plus,
   Search,
   Share2,
+  ShieldAlert,
   SlidersHorizontal,
   User,
   X,
@@ -30,6 +31,7 @@ import { ConfirmPriceModal } from './sheets/ConfirmPriceModal';
 import { RatePassengerModal } from './sheets/RatePassengerModal';
 import { MapLocationSearchSheet } from './sheets/MapLocationSearchSheet';
 import { NavigationOverlayModal } from './NavigationOverlayModal';
+import { PinVerificationModal } from './PinVerificationModal';
 import { RiderChatSheet } from './RiderChatSheet';
 import { BayniksLiveMap } from './map/BayniksLiveMap';
 import {
@@ -69,6 +71,8 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
     acceptOffer,
     declineOffer,
     advanceTripPhase,
+    verifyPickupPin,
+    verifyDeliveryPin,
     completeCurrentTrip,
     autoConfirm,
     preferredMapEngine,
@@ -101,6 +105,10 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
   const [isRatePassengerOpen, setIsRatePassengerOpen] = useState(false);
   const [isRouteDetailsOpen, setIsRouteDetailsOpen] = useState(false);
   const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
+  const [isPinVerifyOpen, setIsPinVerifyOpen] = useState(false);
+  const [pinVerifyMode, setPinVerifyMode] = useState<'pickup' | 'dropoff'>('pickup');
+  const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
+  const [isPinSubmitting, setIsPinSubmitting] = useState(false);
   const [searchedPlace, setSearchedPlace] = useState<MapSearchPlace | null>(null);
   const [stopNewRequests, setStopNewRequests] = useState(false);
   const [autoConfirmProgress, setAutoConfirmProgress] = useState(100);
@@ -750,10 +758,10 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
               {tripPhase === 'at_pickup' && (
                 <button
                   type="button"
-                  onClick={async () => {
-                    playMissionAcceptChime();
-                    await advanceTripPhase();
-                    showToast('Trip started. Proceeding to dropoff destination.');
+                  onClick={() => {
+                    setPinErrorMessage(null);
+                    setPinVerifyMode('pickup');
+                    setIsPinVerifyOpen(true);
                   }}
                   data-testid="start-trip-btn"
                   className="w-full py-3.5 px-5 rounded-xl bg-[#18181B] hover:bg-zinc-800 active:scale-[0.98] text-white font-bold text-[15px] flex items-center justify-between shadow-md transition-all cursor-pointer"
@@ -768,7 +776,9 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    completeCurrentTrip();
+                    setPinErrorMessage(null);
+                    setPinVerifyMode('dropoff');
+                    setIsPinVerifyOpen(true);
                   }}
                   data-testid="end-trip-btn"
                   className="w-full py-3.5 px-5 rounded-xl bg-[#FF5722] hover:bg-[#EA580C] active:scale-[0.98] text-white font-bold text-[15px] flex items-center justify-between shadow-md transition-all cursor-pointer"
@@ -1006,6 +1016,21 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
                 </span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRouteDetailsOpen(false);
+                  onOpenSafety();
+                }}
+                data-testid="route-emergency-sos-btn"
+                className="w-full py-3.5 flex items-center gap-3.5 text-left hover:bg-red-50/60"
+              >
+                <ShieldAlert size={18} className="text-red-600" />
+                <span className="text-[14.5px] font-bold text-red-600">
+                  Emergency SOS &amp; Safety Toolkit
+                </span>
+              </button>
+
               {(tripPhase === 'arriving_pickup' || tripPhase === 'at_pickup') && (
                 <button
                   type="button"
@@ -1138,6 +1163,57 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
         onConfirm={() => {
           setTripPriceConfirmation(null);
           setIsRatePassengerOpen(true);
+        }}
+      />
+
+      {/* Anti-Fraud Pickup PIN & Delivery PIN + POD Photo Verification Modal */}
+      <PinVerificationModal
+        isOpen={isPinVerifyOpen}
+        mode={pinVerifyMode}
+        stopSequenceNumber={1}
+        recipientName={pinVerifyMode === 'pickup' ? 'Sender' : passengerName}
+        isSubmitting={isPinSubmitting}
+        errorMessage={pinErrorMessage}
+        onClearError={() => setPinErrorMessage(null)}
+        onClose={() => {
+          setPinErrorMessage(null);
+          setIsPinVerifyOpen(false);
+        }}
+        onSubmitPickupPin={async (pin) => {
+          setPinErrorMessage(null);
+          setIsPinSubmitting(true);
+          try {
+            const result = await verifyPickupPin(pin);
+            if (result.success) {
+              playMissionAcceptChime();
+              setIsPinVerifyOpen(false);
+              showToast('Pickup PIN verified. Trip started toward dropoff destination.');
+              return true;
+            } else {
+              setPinErrorMessage(result.error || 'Invalid sender pickup PIN.');
+              return false;
+            }
+          } finally {
+            setIsPinSubmitting(false);
+          }
+        }}
+        onSubmitDeliveryPinAndPod={async (pin, photoDataUrl, byteSize) => {
+          setPinErrorMessage(null);
+          setIsPinSubmitting(true);
+          try {
+            const result = await verifyDeliveryPin(pin, photoDataUrl, byteSize);
+            if (result.success) {
+              playMissionAcceptChime();
+              setIsPinVerifyOpen(false);
+              showToast('Delivery PIN & POD verified. Confirm final trip fare.');
+              return true;
+            } else {
+              setPinErrorMessage(result.error || 'Delivery verification failed.');
+              return false;
+            }
+          } finally {
+            setIsPinSubmitting(false);
+          }
         }}
       />
 

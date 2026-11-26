@@ -97,11 +97,11 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
         <div className="p-4 space-y-4 overflow-y-auto hide-scrollbar">
           {/* Incident Confirmation Banner */}
           {reportedIncident && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-800 flex items-center gap-2.5 text-xs animate-in slide-in-from-top">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-[#18181B] border border-[#FF5722] text-white flex items-center gap-2.5 text-xs animate-in slide-in-from-top">
+              <CheckCircle2 className="w-5 h-5 text-[#FF5722] shrink-0" />
               <div>
                 <span className="font-bold">Incident Logged!</span>
-                <p className="text-[11px] text-emerald-700">
+                <p className="text-[11px] text-zinc-300">
                   Dispatch team notified for &quot;{reportedIncident}&quot;. Stand by for phone check-in.
                 </p>
               </div>
@@ -201,17 +201,17 @@ export const RiderSupportSheet: React.FC<RiderSupportSheetProps> = ({ isOpen, on
                 href="https://wa.me/2348002296457"
                 target="_blank"
                 rel="noreferrer"
-                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 border border-emerald-300 shadow-sm transition-colors"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-[#18181B] hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 border border-[#18181B] shadow-sm transition-colors"
               >
-                <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+                <MessageCircle className="w-3.5 h-3.5 text-[#FF5722]" />
                 <span>WhatsApp Ops</span>
               </a>
             </div>
           </div>
 
           {/* Insurance & SLA Banner */}
-          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="p-3 rounded-xl bg-zinc-950 border border-[#FF5722]/30 flex items-center gap-2 text-xs text-zinc-100">
+            <ShieldCheck className="w-4 h-4 text-[#FF5722] shrink-0" />
             <span>
               All registered couriers on duty are covered with ₦500,000 comprehensive cargo and accident indemnity.
             </span>

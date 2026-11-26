@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { compressPodPhotoUnder300KB, CompressedPhotoResult } from '../services/imageCompressor.service';
-import { Camera, ShieldCheck, CheckCircle2, AlertTriangle, X, RefreshCw } from 'lucide-react';
+import { Camera, AlertTriangle, X, RefreshCw } from 'lucide-react';
 
 export interface PinVerificationModalProps {
   isOpen: boolean;
@@ -9,9 +9,10 @@ export interface PinVerificationModalProps {
   recipientName?: string;
   isSubmitting?: boolean;
   errorMessage?: string | null;
+  onClearError?: () => void;
   onClose: () => void;
-  onSubmitPickupPin: (pin: string) => Promise<void>;
-  onSubmitDeliveryPinAndPod: (pin: string, photoDataUrl: string, byteSize: number) => Promise<void>;
+  onSubmitPickupPin: (pin: string) => Promise<boolean | void>;
+  onSubmitDeliveryPinAndPod: (pin: string, photoDataUrl: string, byteSize: number) => Promise<boolean | void>;
 }
 
 export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
@@ -21,6 +22,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
   recipientName = 'Recipient',
   isSubmitting = false,
   errorMessage = null,
+  onClearError,
   onClose,
   onSubmitPickupPin,
   onSubmitDeliveryPinAndPod,
@@ -52,6 +54,8 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
 
   const handleKeyPress = (digit: string) => {
     if (pinDigits.length < 4 && !isSubmitting) {
+      onClearError?.();
+      setPhotoError(null);
       setPinDigits([...pinDigits, digit]);
     }
   };
@@ -64,6 +68,8 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
 
   const handleClear = () => {
     if (!isSubmitting) {
+      onClearError?.();
+      setPhotoError(null);
       setPinDigits([]);
     }
   };
@@ -75,41 +81,35 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
     setIsCompressing(true);
     setPhotoError(null);
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const rawDataUrl = event.target?.result as string;
-        const compressed = await compressPodPhotoUnder300KB(rawDataUrl);
-        setCompressedPhoto(compressed);
-      } catch (err: any) {
-        setPhotoError(err.message || 'Image compression failed');
-      } finally {
-        setIsCompressing(false);
-      }
-    };
-    reader.onerror = () => {
-      setPhotoError('Failed to read image file');
+    try {
+      const compressed = await compressPodPhotoUnder300KB(file);
+      setCompressedPhoto(compressed);
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Image compression failed');
+    } finally {
       setIsCompressing(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async () => {
     if (currentPin.length !== 4) return;
 
+    let ok: boolean | void = true;
     if (mode === 'pickup') {
-      await onSubmitPickupPin(currentPin);
+      ok = await onSubmitPickupPin(currentPin);
     } else {
       if (!compressedPhoto) {
         setPhotoError('Proof of Delivery photo is required before completing delivery');
         return;
       }
-      await onSubmitDeliveryPinAndPod(currentPin, compressedPhoto.dataUrl, compressedPhoto.byteSize);
+      ok = await onSubmitDeliveryPinAndPod(currentPin, compressedPhoto.dataUrl, compressedPhoto.byteSize);
     }
-    // Clean up internal state on submit
+
     setPinDigits([]);
-    setCompressedPhoto(null);
-    setPhotoError(null);
+    if (ok !== false) {
+      setCompressedPhoto(null);
+      setPhotoError(null);
+    }
   };
 
   const isSubmitDisabled =
@@ -119,32 +119,40 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
     isCompressing;
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-3 animate-in fade-in duration-200">
-      <div className="w-full max-w-[390px] bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-zinc-900">
+    <div
+      className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-3 animate-fadeIn"
+      data-testid="pin-verification-modal"
+    >
+      <div className="w-full max-w-[390px] bg-white border-t-2 sm:border-2 border-zinc-200 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto hide-scrollbar text-[#18181B]">
         {/* Header Bar */}
         <div className="flex items-center justify-between pb-2 border-b border-zinc-200">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6D1F]">
+            <span className="text-[10px] font-black uppercase tracking-wider text-[#FF5722]">
               {mode === 'pickup' ? 'ANTI-FRAUD PICKUP VERIFICATION' : `STOP #${stopSequenceNumber} PROOF OF DELIVERY`}
             </span>
-            <h2 className="text-lg font-black text-zinc-900">
+            <h2 className="text-lg font-black text-[#18181B]">
               {mode === 'pickup' ? 'Enter 4-Digit Sender PIN' : `Verify PIN & Photo for ${recipientName}`}
             </h2>
           </div>
           <button
+            type="button"
             onClick={handleClose}
             disabled={isSubmitting}
             aria-label="Close verification modal"
-            className="w-10 h-10 rounded-full bg-zinc-100 text-zinc-600 hover:bg-zinc-200 flex items-center justify-center font-bold text-base transition-colors active:scale-95 shadow-sm"
+            data-testid="pin-close-btn"
+            className="w-10 h-10 rounded-full bg-zinc-100 text-[#18181B] hover:bg-zinc-200 flex items-center justify-center font-bold text-base transition-colors active:scale-95 shadow-xs"
           >
-            <X className="w-5 h-5 text-black" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Error Banner */}
         {(errorMessage || photoError) && (
-          <div className="bg-red-50 border border-red-200 p-3 rounded-xl flex items-start gap-2 text-xs text-red-700">
-            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <div
+            className="bg-zinc-900 border border-[#FF5722] p-3 rounded-xl flex items-start gap-2 text-xs text-white"
+            data-testid="pin-error-banner"
+          >
+            <AlertTriangle className="w-4 h-4 text-[#FF5722] shrink-0 mt-0.5" />
             <span className="font-semibold">{errorMessage || photoError}</span>
           </div>
         )}
@@ -152,14 +160,17 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
         {/* Dropoff Photo POD Upload Section */}
         {mode === 'dropoff' && (
           <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3.5 space-y-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-zinc-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-[#FF6D1F]" />
+            <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
+              <span className="font-bold text-zinc-700 uppercase tracking-wider text-[11px] flex items-center gap-1.5 whitespace-nowrap">
+                <Camera className="w-4 h-4 text-[#FF5722] shrink-0" />
                 <span>Proof of Delivery Photo (&lt;300KB)</span>
               </span>
               {compressedPhoto && (
-                <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                  Compressed: {Math.round(compressedPhoto.byteSize / 1024)} KB ✓
+                <span
+                  className="text-[10px] font-mono font-bold text-[#FF5722] bg-[#18181B] px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0"
+                  data-testid="pod-photo-compressed-badge"
+                >
+                  Compressed: {Math.max(1, Math.round(compressedPhoto.byteSize / 1024))} KB ✓
                 </span>
               )}
             </div>
@@ -174,14 +185,14 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setCompressedPhoto(null)}
-                  className="absolute top-2 right-2 px-2.5 py-1 bg-black/80 hover:bg-black text-white text-[10px] font-bold rounded-lg border border-zinc-600 flex items-center gap-1"
+                  className="absolute top-2 right-2 px-2.5 py-1 bg-[#18181B]/90 hover:bg-black text-white text-[10px] font-bold rounded-lg border border-zinc-700 flex items-center gap-1"
                 >
-                  <RefreshCw className="w-3 h-3" />
+                  <RefreshCw className="w-3 h-3 text-[#FF5722]" />
                   <span>Retake Photo</span>
                 </button>
               </div>
             ) : (
-              <label className="border-2 border-dashed border-zinc-300 hover:border-[#FF6D1F] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-white transition-colors">
+              <label className="border-2 border-dashed border-zinc-300 hover:border-[#FF5722] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-white transition-colors">
                 <input
                   type="file"
                   accept="image/*"
@@ -189,9 +200,10 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                   className="hidden"
                   onChange={handlePhotoSelect}
                   disabled={isCompressing || isSubmitting}
+                  data-testid="pod-photo-input"
                 />
-                <Camera className="w-7 h-7 text-[#FF6D1F]" />
-                <span className="text-xs font-bold text-[#FF6D1F] uppercase">
+                <Camera className="w-7 h-7 text-[#FF5722]" />
+                <span className="text-xs font-bold text-[#18181B] uppercase">
                   {isCompressing ? 'Compressing Image (<300KB)...' : 'Snap or Upload Package Photo'}
                 </span>
                 <span className="text-[10px] text-zinc-500">
@@ -212,7 +224,7 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                 key={idx}
                 className={`w-14 h-16 rounded-2xl border-2 flex items-center justify-center text-2xl font-mono font-black transition-all ${
                   isFilled
-                    ? 'border-[#FF6D1F] bg-orange-50 text-[#FF6D1F] shadow-md shadow-orange-500/10 scale-105'
+                    ? 'border-[#18181B] bg-zinc-50 text-[#FF5722] shadow-md scale-105'
                     : 'border-zinc-200 bg-zinc-100 text-zinc-400'
                 }`}
               >
@@ -230,13 +242,12 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
               type="button"
               onClick={() => handleKeyPress(digit)}
               disabled={isSubmitting || pinDigits.length >= 4}
-              className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900 font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#FF6D1F] active:text-white transition-all active:scale-95 shadow-sm flex items-center justify-center select-none"
+              className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-[#18181B] font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#18181B] active:text-[#FF5722] transition-all active:scale-95 shadow-xs flex items-center justify-center select-none"
             >
               {digit}
             </button>
           ))}
 
-          {/* Clear Button */}
           <button
             type="button"
             onClick={handleClear}
@@ -246,22 +257,20 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
             Clear
           </button>
 
-          {/* Zero Button */}
           <button
             type="button"
             onClick={() => handleKeyPress('0')}
             disabled={isSubmitting || pinDigits.length >= 4}
-            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-900 font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#FF6D1F] active:text-white transition-all active:scale-95 shadow-sm flex items-center justify-center select-none"
+            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-[#18181B] font-mono font-black text-xl hover:bg-zinc-200 active:bg-[#18181B] active:text-[#FF5722] transition-all active:scale-95 shadow-xs flex items-center justify-center select-none"
           >
             0
           </button>
 
-          {/* Backspace Button */}
           <button
             type="button"
             onClick={handleBackspace}
             disabled={isSubmitting || pinDigits.length === 0}
-            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-[#FF6D1F] font-black text-lg hover:bg-zinc-200 active:scale-95 transition-all flex items-center justify-center select-none"
+            className="h-14 rounded-2xl bg-zinc-100 border border-zinc-200 text-[#FF5722] font-black text-lg hover:bg-zinc-200 active:scale-95 transition-all flex items-center justify-center select-none"
           >
             ⌫
           </button>
@@ -272,12 +281,13 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
+          data-testid="pin-submit-btn"
           className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider transition-all flex items-center justify-center shadow-lg ${
             isSubmitDisabled
               ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
               : mode === 'pickup'
-              ? 'bg-[#FF6D1F] hover:bg-orange-600 text-white shadow-orange-500/25 active:scale-98'
-              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 active:scale-98'
+              ? 'bg-[#18181B] hover:bg-black text-white active:scale-[0.98]'
+              : 'bg-[#FF5722] hover:bg-[#EA580C] text-white active:scale-[0.98]'
           }`}
         >
           {isSubmitting

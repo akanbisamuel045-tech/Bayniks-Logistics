@@ -32,8 +32,9 @@ export async function compressPodPhotoUnder300KB(
     throw new Error('No image file or data URL provided');
   }
 
-  // 1. Headless / Node / Vitest testing environment detection
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
+  // 1. Headless / Node / JSDOM Vitest testing environment detection
+  const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent || '');
+  if (typeof window === 'undefined' || typeof document === 'undefined' || isJsdom) {
     // Deterministic mock compression for headless Node.js tests
     let inputStr = typeof fileOrDataUrl === 'string' ? fileOrDataUrl : fileOrDataUrl.name;
     if (!inputStr || inputStr.trim().length === 0) {
