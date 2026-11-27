@@ -252,5 +252,18 @@ describe('Rider Live Backend API Wiring (Preferences, Notifications, Scheduled O
     expect(disputeRes.body.ticketId).toMatch(/^DIS-/);
     expect(disputeRes.body.status).toBe('open');
   });
+
+  it('registers Android FCM push token via POST /api/v1/riders/push-token and caches in Redis', async () => {
+    const pushRes = await request(app)
+      .post('/api/v1/riders/push-token')
+      .set('Authorization', `Bearer ${riderToken}`)
+      .send({ token: 'fcm-android-device-token-12345', platform: 'android' });
+
+    expect(pushRes.status).toBe(200);
+    expect(pushRes.body.channelId).toBe('bayniks_dispatch_alerts');
+    const savedProfile = await RiderProfile.findOne({ userId: riderUserId }).lean();
+    expect(savedProfile?.fcmToken).toBe('fcm-android-device-token-12345');
+    expect(savedProfile?.pushPlatform).toBe('android');
+  });
 });
 

@@ -50,6 +50,9 @@ export interface IRiderProfile extends Document {
     dispatchRadiusKm: number;
     defaultNavApp: 'google' | 'waze';
   };
+  fcmToken?: string;
+  pushPlatform?: 'android' | 'ios' | 'web';
+  pushUpdatedAt?: Date;
   lastLocation: {
     type: 'Point';
     coordinates: [number, number]; // [longitude, latitude] - Golden Rule 4
@@ -194,6 +197,20 @@ export const RiderProfileSchema = new Schema<IRiderProfile>(
       preferredMapEngine: { type: String, enum: ['google', 'maplibre'], default: 'google' },
       dispatchRadiusKm: { type: Number, default: 2, min: 1, max: 25 },
       defaultNavApp: { type: String, enum: ['google', 'waze'], default: 'google' },
+    },
+    fcmToken: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+    pushPlatform: {
+      type: String,
+      enum: ['android', 'ios', 'web'],
+      default: 'android',
+    },
+    pushUpdatedAt: {
+      type: Date,
+      default: undefined,
     },
   },
   {

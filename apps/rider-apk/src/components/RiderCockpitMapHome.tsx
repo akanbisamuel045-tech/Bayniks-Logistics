@@ -34,6 +34,7 @@ import { NavigationOverlayModal } from './NavigationOverlayModal';
 import { PinVerificationModal } from './PinVerificationModal';
 import { RiderChatSheet } from './RiderChatSheet';
 import { BayniksLiveMap } from './map/BayniksLiveMap';
+import { initiateNativePhoneCall, shareLiveTripDetails } from '../services/nativeDevice.service';
 import {
   CURATED_NIGERIA_PLACES,
   MapSearchPlace,
@@ -90,6 +91,7 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
     setTripPriceConfirmation,
     ratePassenger,
     tripsCompletedToday,
+    sendChatMessage,
   } = useRiderStore();
 
   const isOnline = riderStatus === 'available' || riderStatus === 'busy';
@@ -1004,10 +1006,21 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  showToast('Live trip tracking link copied for safety contact');
+                onClick={async () => {
+                  const res = await shareLiveTripDetails({
+                    trackingCode: activeOrder?.trackingCode || 'LGS-LIVE',
+                    recipientName: passengerName,
+                    pickupAddress,
+                    dropoffAddress,
+                  });
+                  showToast(
+                    res.method === 'capacitor' || res.method === 'web_share'
+                      ? 'Shared live trip tracking link'
+                      : `Tracking link copied: ${res.trackingUrl}`
+                  );
                   setIsRouteDetailsOpen(false);
                 }}
+                data-testid="route-share-details-btn"
                 className="w-full py-3.5 flex items-center gap-3.5 text-left hover:bg-zinc-50"
               >
                 <Share2 size={18} className="text-[#18181B]" />
@@ -1115,10 +1128,13 @@ export const RiderCockpitMapHome: React.FC<RiderCockpitMapHomeProps> = ({
         passengerPhone={passengerPhone}
         onSendMessage={() => setIsChatSheetOpen(true)}
         onCallInApp={() => {
-          showToast(`Initiating encrypted VoIP data call to ${passengerName}...`);
+          void sendChatMessage(`📞 Masked VoIP call requested to ${passengerName}`);
+          showToast(`Connecting masked in-app VoIP audio to ${passengerName}...`);
+          setIsChatSheetOpen(true);
         }}
         onCallPhone={() => {
-          showToast(`Dialing cellular phone: ${passengerPhone}`);
+          const telUri = initiateNativePhoneCall(passengerPhone);
+          showToast(`Opening native dialer: ${telUri.replace('tel:', '')}`);
         }}
       />
 

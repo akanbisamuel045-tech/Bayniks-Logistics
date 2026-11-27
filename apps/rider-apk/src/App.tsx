@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRiderStore } from './store/riderStore';
 import { nativeLifecycleService } from './services/nativeLifecycle.service';
+import { registerDispatchPushNotifications } from './services/nativeDevice.service';
 import { io } from 'socket.io-client';
 import { SOCKET_EVENTS, JobNewOffer } from '@logistics/shared-types';
 import { MobileAppShell } from './components/MobileAppShell';
@@ -263,11 +264,14 @@ export function App() {
     };
   }, [setBatteryStatus, showToast]);
 
-  // Socket.io real-time dispatch listener
+  // Socket.io real-time dispatch & FCM Push Notifications listener
   useEffect(() => {
     if (!authToken || simulationMode) return;
 
-    const socketUrl = (import.meta as any).env?.VITE_WS_URL || 'http://localhost:4000';
+    const socketUrl =
+      (import.meta as any).env?.VITE_WS_URL ||
+      (import.meta as any).env?.VITE_API_BASE_URL ||
+      'http://localhost:4000';
     const socket = io(socketUrl, {
       auth: { token: authToken },
       transports: ['websocket', 'polling'],
@@ -281,6 +285,18 @@ export function App() {
     socket.on(SOCKET_EVENTS.JOB_NEW_OFFER, (offer: JobNewOffer) => {
       receiveJobOffer(offer);
     });
+
+    registerDispatchPushNotifications({
+      onToken: (token, platform) => {
+        void useRiderStore.getState().registerPushToken(token, platform);
+      },
+      onJobOfferPush: (offer) => {
+        receiveJobOffer(offer);
+      },
+      onPushError: (msg) => {
+        console.warn('[PushNotifications]', msg);
+      },
+    }).catch(() => {});
 
     return () => {
       socket.disconnect();

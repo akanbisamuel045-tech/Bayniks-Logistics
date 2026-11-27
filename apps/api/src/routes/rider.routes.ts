@@ -937,6 +937,64 @@ riderRouter.get(
   }
 );
 
+/**
+ * POST /api/v1/riders/push-token
+ * Protected: Rider role required.
+ * Stores device FCM / APNs token for background high-priority job offer alerts.
+ */
+riderRouter.post(
+  '/push-token',
+  requireAuth,
+  requireRoles('rider'),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+      const rawPlatform = req.body?.platform;
+      const platform: 'android' | 'ios' | 'web' =
+        rawPlatform === 'ios' || rawPlatform === 'web' ? rawPlatform : 'android';
+
+      if (token.length < 8) {
+        res.status(400).json({ error: 'Valid push notification token is required' });
+        return;
+      }
+
+      const riderUserId = req.user!.id;
+      const updated = await RiderProfile.findOneAndUpdate(
+        { userId: riderUserId },
+        {
+          $set: {
+            fcmToken: token,
+            pushPlatform: platform,
+            pushUpdatedAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      if (!updated) {
+        res.status(404).json({ error: 'Rider profile not found' });
+        return;
+      }
+
+      const redis = getRedisClient();
+      await redis.set(
+        `rider:fcm:${riderUserId}`,
+        JSON.stringify({ token, platform, updatedAt: Date.now() }),
+        'EX',
+        60 * 60 * 24 * 30
+      );
+
+      res.status(200).json({
+        message: 'Push notification token registered for dispatch alerts',
+        platform,
+        channelId: 'bayniks_dispatch_alerts',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 
 /**
  * PATCH /api/v1/admin/riders/:riderUserId/kyc

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { compressPodPhotoUnder300KB, CompressedPhotoResult } from '../services/imageCompressor.service';
+import { captureNativeCameraPhoto } from '../services/nativeDevice.service';
 import { Camera, AlertTriangle, X, RefreshCw } from 'lucide-react';
 
 export interface PinVerificationModalProps {
@@ -86,6 +88,24 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
       setCompressedPhoto(compressed);
     } catch (err: any) {
       setPhotoError(err?.message || 'Image compression failed');
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const handleNativeCameraLabelClick = async (e: React.MouseEvent<HTMLLabelElement>) => {
+    if (!Capacitor.isNativePlatform()) return;
+    e.preventDefault();
+    if (isCompressing || isSubmitting) return;
+    setIsCompressing(true);
+    setPhotoError(null);
+    try {
+      const nativeResult = await captureNativeCameraPhoto('camera');
+      if (nativeResult) {
+        setCompressedPhoto(nativeResult);
+      }
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Camera capture cancelled');
     } finally {
       setIsCompressing(false);
     }
@@ -192,7 +212,10 @@ export const PinVerificationModal: React.FC<PinVerificationModalProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="border-2 border-dashed border-zinc-300 hover:border-[#FF5722] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-white transition-colors">
+              <label
+                onClick={handleNativeCameraLabelClick}
+                className="border-2 border-dashed border-zinc-300 hover:border-[#FF5722] rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-white transition-colors"
+              >
                 <input
                   type="file"
                   accept="image/*"

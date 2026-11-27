@@ -324,6 +324,12 @@ export interface RiderStoreState {
   kycDocuments: KycDocumentData;
   submitKyc: (docs: Partial<KycDocumentData>, apiBaseUrl?: string) => Promise<{ success: boolean; error?: string }>;
   setKycStatus: (status: KycReviewStatus) => void;
+  updateKycDocuments: (docs: Partial<KycDocumentData>) => void;
+
+  // Push Notifications (FCM / APNs)
+  fcmToken: string | null;
+  pushStatus: 'idle' | 'registered' | 'denied' | 'unsupported';
+  registerPushToken: (token: string, platform: 'android' | 'ios' | 'web', apiBaseUrl?: string) => Promise<void>;
 
   // Delivery History
   deliveryHistory: DeliveryHistoryItem[];
@@ -1014,6 +1020,31 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
   },
   setKycStatus: (status) => set({ kycStatus: status }),
+  updateKycDocuments: (docs) =>
+    set((state) => ({
+      kycDocuments: { ...state.kycDocuments, ...docs },
+    })),
+
+  fcmToken: null,
+  pushStatus: 'idle',
+  registerPushToken: async (token, platform, apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    set({ fcmToken: token, pushStatus: 'registered' });
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!authToken || simulationMode || !baseUrl) return;
+    try {
+      await fetch(`${baseUrl}/api/v1/riders/push-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ token, platform }),
+      });
+    } catch {
+      // Non-fatal fallback
+    }
+  },
 
   // Delivery History (Clean production state: 0 records on fresh install)
   deliveryHistory: [],
