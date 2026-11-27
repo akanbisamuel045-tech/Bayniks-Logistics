@@ -500,4 +500,118 @@ orderRouter.post(
   }
 );
 
+/**
+ * POST /api/v1/orders/:orderId/rate-passenger
+ * Protected: Assigned rider submits 1-5 star customer rating & optional feedback.
+ */
+orderRouter.post(
+  '/:orderId/rate-passenger',
+  requireAuth,
+  requireRoles('rider'),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderId } = req.params;
+      const rating = Number(req.body?.rating);
+      const comment = typeof req.body?.comment === 'string' ? req.body.comment.trim() : undefined;
+
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        res.status(400).json({ error: 'Rating must be an integer between 1 and 5' });
+        return;
+      }
+
+      const order = await Order.findOne({
+        $or: [
+          ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+          { trackingCode: orderId?.toUpperCase() },
+        ],
+      });
+
+      if (!order) {
+        res.status(404).json({ error: 'Order not found' });
+        return;
+      }
+
+      if (!order.riderId || order.riderId.toString() !== req.user!.id) {
+        res.status(403).json({ error: 'Unauthorized to rate passenger for this order', code: 'FORBIDDEN' });
+        return;
+      }
+
+      order.passengerRating = {
+        rating,
+        ...(comment ? { comment } : {}),
+        ratedByRiderId: new mongoose.Types.ObjectId(req.user!.id),
+        ratedAt: new Date(),
+      };
+      await order.save();
+
+      res.status(200).json({
+        message: 'Passenger rating recorded',
+        passengerRating: order.passengerRating,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /api/v1/orders/:orderId/disputes
+ * Protected: Opens a trip support / billing dispute ticket attached to an order.
+ */
+orderRouter.post(
+  '/:orderId/disputes',
+  requireAuth,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderId } = req.params;
+      const topic = typeof req.body?.topic === 'string' ? req.body.topic.trim() : '';
+      const details = typeof req.body?.details === 'string' ? req.body.details.trim() : undefined;
+
+      if (!topic) {
+        res.status(400).json({ error: 'Support topic is required' });
+        return;
+      }
+
+      const order = await Order.findOne({
+        $or: [
+          ...(mongoose.isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+          { trackingCode: orderId?.toUpperCase() },
+        ],
+      });
+
+      if (!order) {
+        res.status(404).json({ error: 'Order not found' });
+        return;
+      }
+
+      const isSender = order.senderId.toString() === req.user!.id;
+      const isAssignedRider = order.riderId && order.riderId.toString() === req.user!.id;
+      const isAdmin = req.user!.role === 'admin';
+      if (!isSender && !isAssignedRider && !isAdmin) {
+        res.status(403).json({ error: 'Unauthorized to open dispute for this order', code: 'FORBIDDEN' });
+        return;
+      }
+
+      const ticketId = `DIS-${Date.now().toString().slice(-6)}`;
+      order.disputes.push({
+        riderId: new mongoose.Types.ObjectId(req.user!.id),
+        topic,
+        ...(details ? { details } : {}),
+        status: 'open',
+        createdAt: new Date(),
+      });
+      await order.save();
+
+      res.status(201).json({
+        message: `Support ticket opened for "${topic}"`,
+        ticketId,
+        topic,
+        status: 'open',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 

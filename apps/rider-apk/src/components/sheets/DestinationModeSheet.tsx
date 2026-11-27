@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Home,
   Star,
   MapPin,
   Plus,
-  Info,
+  Pencil,
+  Check,
   ChevronRight,
 } from 'lucide-react';
 import { playKeypadChime } from '../../utils/audioChimes';
@@ -25,14 +26,38 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
   onSelectDestination,
   onOpenSearch,
 }) => {
-  const { showToast } = useRiderStore();
+  const { showToast, savedAddresses, updateSavedAddress } = useRiderStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftAddress, setDraftAddress] = useState('');
 
   if (!isOpen) return null;
 
+  const homeSaved = savedAddresses.find((a) => a.id === 'home') || {
+    id: HOME_SAVED_PLACE.id,
+    label: HOME_SAVED_PLACE.label,
+    address: HOME_SAVED_PLACE.address,
+    lat: HOME_SAVED_PLACE.coords.lat,
+    lng: HOME_SAVED_PLACE.coords.lng,
+  };
+  const favSaved = savedAddresses.find((a) => a.id === 'fav') || {
+    id: FAVOURITE_SAVED_PLACE.id,
+    label: FAVOURITE_SAVED_PLACE.label,
+    address: FAVOURITE_SAVED_PLACE.address,
+    lat: FAVOURITE_SAVED_PLACE.coords.lat,
+    lng: FAVOURITE_SAVED_PLACE.coords.lng,
+  };
+
   const destinations = [
-    { id: 'home', label: HOME_SAVED_PLACE.label, address: HOME_SAVED_PLACE.address, icon: Home },
-    { id: 'fav', label: FAVOURITE_SAVED_PLACE.label, address: FAVOURITE_SAVED_PLACE.address, icon: Star },
-    { id: 'vi', label: 'Victoria Island', address: 'Victoria Island Towers, Lagos', icon: MapPin },
+    { ...homeSaved, icon: Home },
+    { ...favSaved, icon: Star },
+    {
+      id: 'vi',
+      label: 'Victoria Island',
+      address: 'Victoria Island Towers, Lagos',
+      lat: 6.4281,
+      lng: 3.4219,
+      icon: MapPin,
+    },
   ];
 
   const handleSelect = (dest: { label: string; address: string }) => {
@@ -40,6 +65,21 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
     onSelectDestination(dest.address);
     showToast(`Destination set: ${dest.address}. Matching homeward orders only.`);
     onClose();
+  };
+
+  const handleSaveAddressEdit = async (dest: { id: string; label: string; lat: number; lng: number }) => {
+    const trimmed = draftAddress.trim();
+    if (!trimmed) return;
+    playKeypadChime();
+    await updateSavedAddress({
+      id: dest.id,
+      label: dest.label,
+      address: trimmed,
+      lat: dest.lat,
+      lng: dest.lng,
+    });
+    setEditingId(null);
+    showToast(`${dest.label} address saved`);
   };
 
   return (
@@ -69,17 +109,49 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
         </div>
 
         {/* List of Destinations */}
-        <div className="p-4 space-y-2.5">
+        <div className="p-4 space-y-2.5 overflow-y-auto">
           {destinations.map((dest) => {
             const Icon = dest.icon;
+            const isEditable = dest.id === 'home' || dest.id === 'fav';
+            const isEditing = editingId === dest.id;
+
+            if (isEditing) {
+              return (
+                <div
+                  key={dest.id}
+                  className="p-3 rounded-2xl bg-[#F8FAFC] border border-[#FF5722] flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    value={draftAddress}
+                    onChange={(e) => setDraftAddress(e.target.value)}
+                    placeholder={`Enter ${dest.label} address`}
+                    data-testid={`saved-address-input-${dest.id}`}
+                    className="flex-1 bg-white px-3 py-2 rounded-xl border border-zinc-200 text-xs font-medium text-zinc-900 focus:outline-none focus:border-[#18181B]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSaveAddressEdit(dest)}
+                    data-testid={`saved-address-save-${dest.id}`}
+                    className="w-8 h-8 rounded-xl bg-[#18181B] text-[#FF5722] flex items-center justify-center shrink-0"
+                    aria-label={`Save ${dest.label}`}
+                  >
+                    <Check size={15} />
+                  </button>
+                </div>
+              );
+            }
+
             return (
-              <button
+              <div
                 key={dest.id}
-                type="button"
-                onClick={() => handleSelect(dest)}
-                className="w-full p-3.5 rounded-2xl bg-[#F8FAFC] hover:bg-zinc-100 border border-zinc-200/80 flex items-center justify-between text-left transition cursor-pointer active:scale-[0.99]"
+                className="w-full p-3.5 rounded-2xl bg-[#F8FAFC] hover:bg-zinc-100 border border-zinc-200/80 flex items-center justify-between gap-2 transition"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => handleSelect(dest)}
+                  className="flex items-center gap-3.5 min-w-0 flex-1 text-left cursor-pointer"
+                >
                   <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-700 shrink-0">
                     <Icon size={19} />
                   </div>
@@ -91,9 +163,26 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
                       {dest.address}
                     </div>
                   </div>
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  {isEditable && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playKeypadChime();
+                        setEditingId(dest.id);
+                        setDraftAddress(dest.address);
+                      }}
+                      data-testid={`saved-address-edit-${dest.id}`}
+                      aria-label={`Edit ${dest.label}`}
+                      className="w-7 h-7 rounded-lg hover:bg-white flex items-center justify-center text-zinc-400 hover:text-[#18181B]"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  <ChevronRight size={16} className="text-zinc-400" />
                 </div>
-                <ChevronRight size={16} className="text-zinc-400 shrink-0" />
-              </button>
+              </div>
             );
           })}
 
@@ -118,6 +207,3 @@ export const DestinationModeSheet: React.FC<DestinationModeSheetProps> = ({
     </div>
   );
 };
-
-export default DestinationModeSheet;
-

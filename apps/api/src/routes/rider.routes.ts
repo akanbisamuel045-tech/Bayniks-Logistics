@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { User, RiderProfile, Order, Wallet } from '../models';
+import { User, RiderProfile, Order, Wallet, PayoutTransaction } from '../models';
 import { getRedisClient } from '../config/redis';
 import { requireAuth, requireVerified, requireRoles } from '../middleware/auth.middleware';
 import { payoutService } from '../services/payout.service';
@@ -278,20 +278,35 @@ riderRouter.get(
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
-      // 1. Fetch completed orders for today
-      const completedOrders = await Order.find({
-        riderId: riderUserId,
-        status: 'delivered',
-        deliveredAt: { $gte: startOfDay },
-      })
-        .sort({ deliveredAt: -1 })
-        .lean();
+      // 1. Fetch completed orders for today and rolling 28-day window for live analytics & history
+      const fourWeeksAgo = new Date(startOfDay);
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 27);
 
-      // 2. Fetch rider wallet for balance
-      const wallet = await Wallet.findOne({ userId: riderUserId }).lean();
+      const [completedOrders, recentOrders, wallet, profile, recentPayouts, userRecord] =
+        await Promise.all([
+          Order.find({
+            riderId: riderUserId,
+            status: 'delivered',
+            deliveredAt: { $gte: startOfDay },
+          })
+            .sort({ deliveredAt: -1 })
+            .lean(),
+          Order.find({
+            riderId: riderUserId,
+            createdAt: { $gte: fourWeeksAgo },
+          })
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .lean(),
+          Wallet.findOne({ userId: riderUserId }).lean(),
+          RiderProfile.findOne({ userId: riderUserId }).lean(),
+          PayoutTransaction.find({ userId: riderUserId }).sort({ createdAt: -1 }).limit(10).lean(),
+          User.findById(riderUserId).lean(),
+        ]);
+
       const balanceKobo = wallet?.balanceKobo || 0;
 
-      // 3. Compute earnings and metrics
+      // 2. Compute today's metrics & settled trips
       let todayEarningsKobo = 0;
       let totalDistanceKm = 0;
 
@@ -302,6 +317,7 @@ riderRouter.get(
 
         return {
           id: o.trackingCode,
+          orderId: o._id?.toString(),
           time: o.deliveredAt ? new Date(o.deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Earlier',
           from: o.pickup?.landmark || o.pickup?.address || 'Pickup Point',
           to: o.stops?.[0]?.dropoffLandmark || o.stops?.[0]?.dropoffAddress || 'Destination',
@@ -311,22 +327,228 @@ riderRouter.get(
         };
       });
 
-      // 4. Resolve rider profile for bank / vehicle info
-      const profile = await RiderProfile.findOne({ userId: riderUserId }).lean();
+      // 3. Build 4 rolling weekly chart buckets from live MongoDB orders
+      const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const earningsPeriods: Array<{
+        id: string;
+        label: string;
+        totalNaira: number;
+        expensesNaira: number;
+        netNaira: number;
+        yMaxNaira: number;
+        bars: Array<{ label: string; showTick: boolean; totalNaira: number; expensesNaira: number; netNaira: number }>;
+      }> = [];
+      const activityWeeks: Array<{
+        id: string;
+        label: string;
+        totalCompletedTrips: number;
+        totalIncomingTrips: number;
+        totalHoursLabel: string;
+        defaultSelectedDayIdx: number;
+        days: Array<{ day: string; tripsCompleted: number; tripsTotal: number; hoursLabel: string; hoursMinutes: number }>;
+      }> = [];
+
+      const now = new Date();
+      for (let w = 3; w >= 0; w--) {
+        const weekEnd = new Date(now);
+        weekEnd.setHours(23, 59, 59, 999);
+        weekEnd.setDate(now.getDate() - w * 7);
+        const weekStart = new Date(weekEnd);
+        weekStart.setHours(0, 0, 0, 0);
+        weekStart.setDate(weekEnd.getDate() - 6);
+
+        const fmtMD = (d: Date) =>
+          `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const fmtDM = (d: Date) =>
+          `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+        const weekOrders = recentOrders.filter((o: any) => {
+          const ts = new Date(o.deliveredAt || o.createdAt).getTime();
+          return ts >= weekStart.getTime() && ts <= weekEnd.getTime();
+        });
+
+        const dayMap = new Map<
+          string,
+          { totalNaira: number; expensesNaira: number; completed: number; total: number; mins: number }
+        >();
+        for (const dLabel of orderedDays) {
+          dayMap.set(dLabel, { totalNaira: 0, expensesNaira: 0, completed: 0, total: 0, mins: 0 });
+        }
+
+        for (const o of weekOrders as any[]) {
+          const dLabel = dayLabels[new Date(o.deliveredAt || o.createdAt).getDay()] || 'Mon';
+          const bucket = dayMap.get(dLabel)!;
+          bucket.total += 1;
+          if (o.status === 'delivered') {
+            bucket.completed += 1;
+            const totalN = Math.round((o.totalFareKobo || 0) / 100);
+            const feeN = Math.round((o.platformCommissionKobo || 0) / 100);
+            bucket.totalNaira += totalN;
+            bucket.expensesNaira += feeN;
+            bucket.mins += Math.max(12, Math.round((o.estimatedDistanceKm || 2) * 3.5));
+          }
+        }
+
+        const bars = orderedDays.map((dLabel) => {
+          const b = dayMap.get(dLabel)!;
+          return {
+            label: dLabel,
+            showTick: true,
+            totalNaira: b.totalNaira,
+            expensesNaira: b.expensesNaira,
+            netNaira: Math.max(0, b.totalNaira - b.expensesNaira),
+          };
+        });
+
+        const weekTotalNaira = bars.reduce((s, b) => s + b.totalNaira, 0);
+        const weekExpensesNaira = bars.reduce((s, b) => s + b.expensesNaira, 0);
+        const weekNetNaira = Math.max(0, weekTotalNaira - weekExpensesNaira);
+        const maxBar = Math.max(10000, ...bars.map((b) => b.totalNaira));
+
+        earningsPeriods.push({
+          id: `live-w-${w}`,
+          label: `${fmtMD(weekStart)} - ${fmtMD(weekEnd)}`,
+          totalNaira: weekTotalNaira,
+          expensesNaira: weekExpensesNaira,
+          netNaira: weekNetNaira,
+          yMaxNaira: Math.ceil(maxBar / 5000) * 5000,
+          bars,
+        });
+
+        const totalMins = Array.from(dayMap.values()).reduce((s, b) => s + b.mins, 0);
+        const hrs = Math.floor(totalMins / 60);
+        const remMins = totalMins % 60;
+
+        activityWeeks.push({
+          id: `live-act-${w}`,
+          label: `${fmtDM(weekStart)}-${fmtDM(weekEnd)}`,
+          totalCompletedTrips: weekOrders.filter((o: any) => o.status === 'delivered').length,
+          totalIncomingTrips: weekOrders.length,
+          totalHoursLabel: `${hrs}h ${String(remMins).padStart(2, '0')}m`,
+          defaultSelectedDayIdx: Math.max(0, orderedDays.indexOf(dayLabels[now.getDay()] || 'Mon')),
+          days: orderedDays.map((dLabel) => {
+            const b = dayMap.get(dLabel)!;
+            return {
+              day: dLabel,
+              tripsCompleted: b.completed,
+              tripsTotal: b.total,
+              hoursLabel: `${Math.floor(b.mins / 60)}h ${String(b.mins % 60).padStart(2, '0')}m`,
+              hoursMinutes: b.mins,
+            };
+          }),
+        });
+      }
+
+      // 4. Build live trip history & inbox notifications
+      const recentHistory = recentOrders.slice(0, 30).map((o: any) => ({
+        orderId: o._id?.toString(),
+        trackingCode: o.trackingCode,
+        customerName: o.stops?.[0]?.recipientName || o.pickup?.contactName || 'Customer',
+        pickupAddress: o.pickup?.address || 'Pickup Point',
+        dropoffAddress: o.stops?.[0]?.dropoffAddress || 'Destination',
+        distanceKm: o.estimatedDistanceKm || 0,
+        earningKobo: o.riderEarningKobo || 0,
+        totalFareKobo: o.totalFareKobo || 0,
+        commissionKobo: o.platformCommissionKobo || 0,
+        paymentMethod: o.paymentMethod || 'wallet',
+        status: o.status,
+        deliveredAt: (o.deliveredAt || o.createdAt || new Date()).toISOString(),
+        pinUsed: o.stops?.[0]?.deliveryPin || '',
+      }));
+
+      const notifications: Array<{
+        id: string;
+        title: string;
+        date: string;
+        category: 'Safety' | 'Finances' | 'KYC' | 'Dispatch';
+        body: string;
+      }> = [];
+
+      if (wallet?.isDebtLocked || balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO) {
+        notifications.push({
+          id: 'notif-debt-lock',
+          title: 'Cash Commission Debt Limit Reached',
+          date: 'Action required',
+          category: 'Finances',
+          body: 'Clear your commission balance via Paystack to unlock new delivery requests.',
+        });
+      }
+
+      if (profile) {
+        notifications.push({
+          id: `notif-kyc-${profile.kycStatus}`,
+          title:
+            profile.kycStatus === 'approved'
+              ? 'Rider KYC Verification Approved'
+              : profile.kycStatus === 'rejected'
+              ? 'Rider KYC Update Required'
+              : 'Rider KYC Under Review',
+          date: 'Account',
+          category: 'KYC',
+          body:
+            profile.kycStatus === 'approved'
+              ? `Documents verified for ${profile.plateNumber}. You are cleared to receive dispatch offers.`
+              : profile.kycRejectionReason || 'Your submitted courier documents are being reviewed.',
+        });
+      }
+
+      for (const payout of recentPayouts.slice(0, 3) as any[]) {
+        notifications.push({
+          id: `notif-payout-${payout._id}`,
+          title: `Bank Payout ${payout.status === 'success' ? 'Completed' : payout.status}`,
+          date: new Date(payout.createdAt).toLocaleDateString('en-NG'),
+          category: 'Finances',
+          body: `₦${Math.round((payout.amountKobo || 0) / 100).toLocaleString('en-NG')} transfer to ${payout.bankName || 'registered bank'}.`,
+        });
+      }
+
+      const resolvedBank = profile?.bankDetails?.accountNumber
+        ? profile.bankDetails
+        : {
+            bankCode: '058',
+            bankName: 'Guaranty Trust Bank (GTB)',
+            accountNumber: '0123****89',
+            accountName: userRecord?.fullName || req.user?.phone || 'Verified Courier',
+          };
+
+      const resolvedVehicles =
+        profile?.vehicles && profile.vehicles.length > 0
+          ? profile.vehicles
+          : profile
+          ? [
+              {
+                id: 'veh-primary',
+                plate: profile.plateNumber,
+                description: `Bayniks ${profile.vehicleType} dispatch`,
+                isActive: true,
+              },
+            ]
+          : [];
 
       res.status(200).json({
         todayEarningsKobo,
         walletBalanceKobo: balanceKobo,
+        isDebtLocked: Boolean(wallet?.isDebtLocked || balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO),
         tripsCompletedToday: completedOrders.length,
         onTimeSlaPercent: 99.4,
         distanceCoveredKm: Number(totalDistanceKm.toFixed(1)),
-        bankDetails: {
-          bankName: 'Guaranty Trust Bank (GTB)',
-          accountNumber: '0123****89',
-          accountName: req.user?.phone || 'Verified Courier',
+        bankDetails: resolvedBank,
+        homeDepot: profile?.homeDepot || 'Yaba Central',
+        plateNumber: profile?.plateNumber || '',
+        vehicles: resolvedVehicles,
+        savedAddresses: profile?.savedAddresses || [],
+        preferences: profile?.preferences || {
+          autoConfirm: true,
+          preferredMapEngine: 'google',
+          dispatchRadiusKm: 2,
+          defaultNavApp: 'google',
         },
-        plateNumber: profile?.plateNumber || 'KJA-824-XY',
         settledTrips,
+        earningsPeriods,
+        activityWeeks,
+        recentHistory,
+        notifications,
       });
     } catch (error) {
       next(error);
@@ -498,6 +720,216 @@ riderRouter.post(
         message: `Incident '${incidentType}' logged successfully`,
         incidentTicket,
         status: 'investigating',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * PATCH /api/v1/riders/preferences
+ * Protected: Rider role required.
+ * Persists rider contact profile, home depot, Paystack payout bank details,
+ * vehicles, saved Home/Favourite addresses, and dispatch preferences.
+ */
+riderRouter.patch(
+  '/preferences',
+  requireAuth,
+  requireRoles('rider'),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const riderUserId = req.user!.id;
+      const {
+        fullName,
+        email,
+        homeDepot,
+        bankDetails,
+        vehicles,
+        savedAddresses,
+        preferences,
+      } = req.body || {};
+
+      if (typeof fullName === 'string' || typeof email === 'string') {
+        const userUpdate: Record<string, string> = {};
+        if (typeof fullName === 'string' && fullName.trim()) {
+          userUpdate.fullName = fullName.trim();
+        }
+        if (typeof email === 'string' && email.trim()) {
+          userUpdate.email = email.trim().toLowerCase();
+        }
+        if (Object.keys(userUpdate).length > 0) {
+          await User.findByIdAndUpdate(riderUserId, { $set: userUpdate });
+        }
+      }
+
+      const profileUpdate: Record<string, unknown> = {};
+      if (typeof homeDepot === 'string' && homeDepot.trim()) {
+        profileUpdate.homeDepot = homeDepot.trim();
+      }
+      if (bankDetails && typeof bankDetails === 'object') {
+        profileUpdate.bankDetails = {
+          bankCode: String(bankDetails.bankCode || '058'),
+          bankName: String(bankDetails.bankName || 'Guaranty Trust Bank'),
+          accountNumber: String(bankDetails.accountNumber || ''),
+          accountName: String(bankDetails.accountName || ''),
+        };
+      }
+      if (Array.isArray(vehicles)) {
+        const cleanVehicles = vehicles
+          .filter((v) => v && v.plate)
+          .map((v) => ({
+            id: String(v.id || `veh-${Date.now()}`),
+            plate: String(v.plate).trim().toUpperCase(),
+            description: String(v.description || '').trim(),
+            isActive: Boolean(v.isActive),
+          }));
+        profileUpdate.vehicles = cleanVehicles;
+        const activeVeh = cleanVehicles.find((v) => v.isActive) || cleanVehicles[0];
+        if (activeVeh) {
+          profileUpdate.plateNumber = activeVeh.plate;
+        }
+      }
+      if (Array.isArray(savedAddresses)) {
+        profileUpdate.savedAddresses = savedAddresses
+          .filter((a) => a && a.address)
+          .map((a) => ({
+            id: String(a.id || `addr-${Date.now()}`),
+            label: String(a.label || 'Saved Place').trim(),
+            address: String(a.address).trim(),
+            lat: Number(a.lat || 6.5244),
+            lng: Number(a.lng || 3.3792),
+          }));
+      }
+      if (preferences && typeof preferences === 'object') {
+        profileUpdate.preferences = {
+          autoConfirm: Boolean(preferences.autoConfirm ?? true),
+          preferredMapEngine: preferences.preferredMapEngine === 'maplibre' ? 'maplibre' : 'google',
+          dispatchRadiusKm: Math.min(25, Math.max(1, Number(preferences.dispatchRadiusKm || 2))),
+          defaultNavApp: preferences.defaultNavApp === 'waze' ? 'waze' : 'google',
+        };
+      }
+
+      const updatedProfile = await RiderProfile.findOneAndUpdate(
+        { userId: riderUserId },
+        { $set: profileUpdate },
+        { new: true }
+      ).lean();
+
+      res.status(200).json({
+        message: 'Rider preferences and settings saved',
+        profile: updatedProfile,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/riders/notifications
+ * Protected: Rider role required.
+ * Returns live operational notifications (KYC status, debt lock, payouts).
+ */
+riderRouter.get(
+  '/notifications',
+  requireAuth,
+  requireRoles('rider'),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const riderUserId = req.user!.id;
+      const [profile, wallet, recentPayouts] = await Promise.all([
+        RiderProfile.findOne({ userId: riderUserId }).lean(),
+        Wallet.findOne({ userId: riderUserId }).lean(),
+        PayoutTransaction.find({ userId: riderUserId }).sort({ createdAt: -1 }).limit(10).lean(),
+      ]);
+
+      const notifications: Array<{
+        id: string;
+        title: string;
+        date: string;
+        category: string;
+        body: string;
+      }> = [];
+
+      const balanceKobo = wallet?.balanceKobo || 0;
+      if (wallet?.isDebtLocked || balanceKobo <= -MAX_CASH_DEBT_LIMIT_KOBO) {
+        notifications.push({
+          id: 'notif-debt-lock',
+          title: 'Cash Commission Debt Limit Reached',
+          date: 'Action required',
+          category: 'Finances',
+          body: 'Your commission ledger reached the ₦5,000 debt cap. Top up via Paystack to unlock dispatch.',
+        });
+      }
+
+      if (profile) {
+        notifications.push({
+          id: `notif-kyc-${profile.kycStatus}`,
+          title:
+            profile.kycStatus === 'approved'
+              ? 'Rider KYC Verification Approved'
+              : 'Rider KYC Status Update',
+          date: 'Account',
+          category: 'KYC',
+          body:
+            profile.kycStatus === 'approved'
+              ? `Documents verified for ${profile.plateNumber}. Ready for dispatch.`
+              : profile.kycRejectionReason || 'Your KYC review is currently in progress.',
+        });
+      }
+
+      for (const p of recentPayouts as any[]) {
+        notifications.push({
+          id: `notif-payout-${p._id}`,
+          title: `Bank Payout ${p.status === 'success' ? 'Processed' : p.status}`,
+          date: new Date(p.createdAt).toLocaleDateString('en-NG'),
+          category: 'Finances',
+          body: `₦${Math.round((p.amountKobo || 0) / 100).toLocaleString('en-NG')} transfer to ${p.bankName || 'registered bank'}.`,
+        });
+      }
+
+      res.status(200).json({ notifications });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/riders/scheduled-orders
+ * Protected: Rider role required.
+ * Lists upcoming scheduled or searching orders matching the rider vehicle class.
+ */
+riderRouter.get(
+  '/scheduled-orders',
+  requireAuth,
+  requireRoles('rider'),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const profile = await RiderProfile.findOne({ userId: req.user!.id }).lean();
+      const vehicleType = profile?.vehicleType || 'bike';
+
+      const orders = await Order.find({
+        vehicleType,
+        status: 'searching_rider',
+        riderId: null,
+        scheduledFor: { $ne: null },
+      })
+        .sort({ scheduledFor: 1 })
+        .limit(20)
+        .lean();
+
+      res.status(200).json({
+        orders: orders.map((o: any) => ({
+          orderId: o._id.toString(),
+          trackingCode: o.trackingCode,
+          pickupAddress: o.pickup?.address || 'Pickup Point',
+          dropoffAddress: o.stops?.[0]?.dropoffAddress || 'Destination',
+          estimatedDistanceKm: o.estimatedDistanceKm || 0,
+          riderEarningKobo: o.riderEarningKobo || 0,
+          scheduledFor: o.scheduledFor ? new Date(o.scheduledFor).toISOString() : null,
+        })),
       });
     } catch (error) {
       next(error);

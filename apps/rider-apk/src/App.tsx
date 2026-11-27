@@ -25,6 +25,8 @@ import { RiderSettingsScreen } from './components/RiderSettingsScreen';
 import { DriverScoreActivityScreen } from './components/DriverScoreActivityScreen';
 import { RiderEarningsDualScreen } from './components/RiderEarningsDualScreen';
 import { VirtualDebtTopUpModal } from './components/sheets/VirtualDebtTopUpModal';
+import { ScheduledOrdersSheet } from './components/sheets/ScheduledOrdersSheet';
+import { RiderPortalPrivacyModal, InfoSheetMode } from './components/sheets/RiderPortalPrivacyModal';
 import { MockLocationWarningModal } from './components/MockLocationWarningModal';
 import { batteryOptimizationService } from './services/batteryOptimization.service';
 
@@ -54,11 +56,14 @@ export function App() {
     isMockLocationDetected,
     mockLocationReason,
     setMockLocation,
+    hydrateRiderData,
   } = useRiderStore();
 
   // Navigation and Sheet state
   const [isFullMapOpen, setIsFullMapOpen] = useState(false);
   const [isDebtTopUpOpen, setIsDebtTopUpOpen] = useState(false);
+  const [isScheduledOrdersOpen, setIsScheduledOrdersOpen] = useState(false);
+  const [infoSheetMode, setInfoSheetMode] = useState<InfoSheetMode>(null);
   const [isHandoverVerifyOpen, setIsHandoverVerifyOpen] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('view') === 'verify';
@@ -90,6 +95,7 @@ export function App() {
               plateNumber: parsed.riderUser.plateNumber || '',
               simulationMode: false,
             });
+            useRiderStore.getState().hydrateRiderData().catch(() => {});
           }
         }
       }
@@ -310,12 +316,11 @@ export function App() {
       setAuthModalMode('login');
       setAuthModalOpen(true);
     } else if (target === 'scheduled') {
-      setActiveTab('history');
-      showToast('0 open scheduled delivery requests');
+      setIsScheduledOrdersOpen(true);
     } else if (target === 'portal') {
-      showToast('Opening Bayniks Rider Web Portal...');
+      setInfoSheetMode('portal');
     } else if (target === 'privacy') {
-      showToast('Opening Bayniks Privacy Policy...');
+      setInfoSheetMode('privacy');
     } else if ((target as any) === 'settings') {
       setActiveTab('settings');
     }
@@ -366,7 +371,7 @@ export function App() {
                     setActiveTab('score');
                   }}
                   onOpenScheduledOrders={() => {
-                    setActiveTab('history');
+                    setIsScheduledOrdersOpen(true);
                   }}
                   onOpenVerification={(mode) => {
                     setHandoverVerifyMode(mode || 'qr');
@@ -526,10 +531,21 @@ export function App() {
         isOpen={isDebtTopUpOpen}
         onClose={() => setIsDebtTopUpOpen(false)}
         currentBalanceKobo={walletBalanceKobo}
-        onTopUpSuccess={async (amountKobo) => {
-          await topUpWallet(amountKobo);
-          showToast(`Paystack payment of ₦${Math.floor(amountKobo / 100).toLocaleString('en-NG')} confirmed. Account updated!`);
+        onTopUpSuccess={async (amountKobo, paymentRef) => {
+          await topUpWallet(amountKobo, paymentRef);
         }}
+      />
+
+      {/* Live Scheduled Deliveries Sheet */}
+      <ScheduledOrdersSheet
+        isOpen={isScheduledOrdersOpen}
+        onClose={() => setIsScheduledOrdersOpen(false)}
+      />
+
+      {/* Courier Portal & NDPR Privacy Information Sheet */}
+      <RiderPortalPrivacyModal
+        mode={infoSheetMode}
+        onClose={() => setInfoSheetMode(null)}
       />
 
       {/* Feature 7: Anti-Cheat Mock Location (Fake GPS) Warning Modal */}

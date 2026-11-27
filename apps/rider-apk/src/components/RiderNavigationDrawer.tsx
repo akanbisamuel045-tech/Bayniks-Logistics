@@ -86,7 +86,7 @@ export const RiderNavigationDrawer: React.FC<RiderNavigationDrawerProps> = ({
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border border-[#E2DDD5] text-zinc-700 text-[10px] font-black uppercase tracking-wider shadow-2xs">
               <span>🇳🇬</span>
               <span>BAYNIKS COURIER</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-500 ml-0.5" />
+              <span className="w-1 h-1 rounded-full bg-[#FF5722] ml-0.5" />
               <span className="text-zinc-600">4.95 ★</span>
             </div>
             <button

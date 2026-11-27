@@ -131,16 +131,20 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
     setAutoConfirm,
     preferredMapEngine,
     setPreferredMapEngine,
+    vehicles,
+    selectedVehicleId,
+    selectActiveVehicle,
+    addRiderVehicle,
+    defaultNavApp,
+    setDefaultNavApp,
+    saveRiderPreferences,
   } = useRiderStore();
 
   const [view, setView] = useState<SettingsView>('main');
-  const [vehicles, setVehicles] = useState<VehicleOption[]>(INITIAL_VEHICLES);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('veh-1');
   const [newPlate, setNewPlate] = useState('');
   const [newModel, setNewModel] = useState('');
 
-  const [defaultNavApp, setDefaultNavApp] = useState<'google' | 'waze'>('google');
-  const [navDraft, setNavDraft] = useState<'google' | 'waze'>('google');
+  const [navDraft, setNavDraft] = useState<'google' | 'waze'>(defaultNavApp);
   const [navAutoStart, setNavAutoStart] = useState(false);
   const [realtimeTraffic, setRealtimeTraffic] = useState(true);
 
@@ -149,7 +153,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
   const [selectedTheme, setSelectedTheme] = useState<'System default' | 'Dark' | 'Light'>('Light');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('English, United Kingdom, GB');
 
-  const activeVehicle = vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0]!;
+  const activeVehicle = vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0] || INITIAL_VEHICLES[0]!;
   const displayName = riderName || riderUser?.fullName || 'Evans King';
   const displayPhone = riderUser?.phone || '+2347033129971';
   const displayEmail = riderUser?.email || 'evans@bayniks.ng';
@@ -170,13 +174,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
       showToast('Enter both plate number and vehicle details');
       return;
     }
-    const created: VehicleOption = {
-      id: `veh-${Date.now()}`,
-      plate,
-      description: desc,
-    };
-    setVehicles((prev) => [...prev, created]);
-    setSelectedVehicleId(created.id);
+    void addRiderVehicle(plate, desc);
     setNewPlate('');
     setNewModel('');
     setView('vehicles');
@@ -208,7 +206,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
                   type="button"
                   onClick={() => {
                     playKeypadChime();
-                    setSelectedVehicleId(veh.id);
+                    selectActiveVehicle(veh.id);
                     showToast(`Active vehicle: ${veh.plate}`);
                   }}
                   data-testid={`vehicle-option-${veh.plate}`}
@@ -325,6 +323,7 @@ export const RiderSettingsScreen: React.FC<RiderSettingsScreenProps> = ({
               playKeypadChime();
               const nextEngine = preferredMapEngine === 'google' ? 'maplibre' : 'google';
               setPreferredMapEngine(nextEngine);
+              saveRiderPreferences({ preferences: { preferredMapEngine: nextEngine } });
               showToast(
                 nextEngine === 'google'
                   ? 'In-app map engine: #1 Google Maps (with MapLibre auto-fallback)'

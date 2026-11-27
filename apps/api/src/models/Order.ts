@@ -47,6 +47,15 @@ export interface IOrderIncident {
   loggedAt: Date;
 }
 
+export interface IOrderDispute {
+  _id?: Types.ObjectId;
+  riderId: Types.ObjectId;
+  topic: string;
+  details?: string;
+  status: 'open' | 'resolved';
+  createdAt: Date;
+}
+
 export interface IOrder extends Document {
   trackingCode: string;
   senderId: Types.ObjectId;
@@ -73,10 +82,18 @@ export interface IOrder extends Document {
   stops: IOrderStop[];
   encodedRoutePolyline?: string;
   deliveredAt?: Date;
+  scheduledFor?: Date;
   payoutStatus?: 'pending' | 'settled';
   settledAt?: Date;
+  passengerRating?: {
+    rating: number;
+    comment?: string;
+    ratedByRiderId?: Types.ObjectId;
+    ratedAt: Date;
+  };
   messages: IOrderMessage[];
   incidents: IOrderIncident[];
+  disputes: IOrderDispute[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -294,6 +311,15 @@ export const OrderSchema = new Schema<IOrder>(
     settledAt: {
       type: Date,
     },
+    scheduledFor: {
+      type: Date,
+    },
+    passengerRating: {
+      rating: { type: Number, min: 1, max: 5 },
+      comment: { type: String, trim: true, maxlength: 500 },
+      ratedByRiderId: { type: Schema.Types.ObjectId, ref: 'User' },
+      ratedAt: { type: Date },
+    },
     messages: {
       type: [
         new Schema<IOrderMessage>(
@@ -321,6 +347,21 @@ export const OrderSchema = new Schema<IOrder>(
             },
             description: { type: String, required: true, trim: true },
             loggedAt: { type: Date, default: Date.now },
+          },
+          { _id: true }
+        ),
+      ],
+      default: [],
+    },
+    disputes: {
+      type: [
+        new Schema<IOrderDispute>(
+          {
+            riderId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+            topic: { type: String, required: true, trim: true, maxlength: 200 },
+            details: { type: String, trim: true, maxlength: 1000 },
+            status: { type: String, enum: ['open', 'resolved'], default: 'open' },
+            createdAt: { type: Date, default: Date.now },
           },
           { _id: true }
         ),

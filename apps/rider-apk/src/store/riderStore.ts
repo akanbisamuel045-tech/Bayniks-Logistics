@@ -5,11 +5,100 @@ import { backgroundLocationService } from '../services/backgroundLocation.servic
 import { offlineTelemetryQueue } from '../services/offlineTelemetryQueue.service';
 import { checkArrivalProximity } from '../utils/geofenceProximity';
 import { detectMockLocation } from '../utils/mockLocationDetector';
+import { HOME_SAVED_PLACE, FAVOURITE_SAVED_PLACE } from '../utils/locationSearch';
 import {
   playMissionAcceptChime,
   playKeypadChime,
   playErrorChime,
 } from '../utils/audioChimes';
+
+/** Resolves explicit override URL first, then VITE_API_BASE_URL for Capacitor/APK builds. */
+export function resolveApiBaseUrl(override?: string): string {
+  if (override) return override.replace(/\/+$/, '');
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL || '';
+  return typeof envUrl === 'string' ? envUrl.replace(/\/+$/, '') : '';
+}
+
+export interface RiderVehicleOption {
+  id: string;
+  plate: string;
+  description: string;
+  isActive?: boolean;
+}
+
+export interface SavedAddressOption {
+  id: string;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+export interface RiderBankDetails {
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+export interface RiderNotificationItem {
+  id: string;
+  title: string;
+  date: string;
+  category: string;
+  body: string;
+}
+
+export interface ScheduledOrderItem {
+  orderId: string;
+  trackingCode: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  estimatedDistanceKm: number;
+  riderEarningKobo: number;
+  scheduledFor: string | null;
+}
+
+export interface LiveChartBarPoint {
+  label: string;
+  showTick?: boolean;
+  totalNaira: number;
+  expensesNaira: number;
+  netNaira: number;
+}
+
+export interface LiveEarningsPeriod {
+  id: string;
+  label: string;
+  totalNaira: number;
+  expensesNaira: number;
+  netNaira: number;
+  yMaxNaira: number;
+  bars: LiveChartBarPoint[];
+}
+
+export interface LiveDayActivityStat {
+  day: string;
+  tripsCompleted: number;
+  tripsTotal: number;
+  hoursLabel: string;
+  hoursMinutes: number;
+}
+
+export interface LiveActivityWeek {
+  id: string;
+  label: string;
+  totalCompletedTrips: number;
+  totalIncomingTrips: number;
+  totalHoursLabel: string;
+  defaultSelectedDayIdx: number;
+  days: LiveDayActivityStat[];
+}
+
+export interface PaystackBankOption {
+  name: string;
+  code: string;
+}
 
 export type RiderStatus = 'offline' | 'available' | 'busy';
 export type TripPhase = 'idle' | 'arriving_pickup' | 'at_pickup' | 'in_transit' | 'at_dropoff';
@@ -294,7 +383,62 @@ export interface RiderStoreState {
       tripId: string;
     } | null
   ) => void;
-  ratePassenger: (rating: number, comment?: string) => Promise<void>;
+  ratePassenger: (rating: number, comment?: string, apiBaseUrl?: string) => Promise<void>;
+
+  // Live Backend Workspace State & Persistence (Vehicles, Saved Addresses, Bank, Live Analytics, Inbox, Scheduled)
+  lastCompletedOrderId: string | null;
+  bankDetails: RiderBankDetails;
+  homeDepot: string;
+  vehicles: RiderVehicleOption[];
+  selectedVehicleId: string;
+  savedAddresses: SavedAddressOption[];
+  defaultNavApp: 'google' | 'waze';
+  liveEarningsPeriods: LiveEarningsPeriod[] | null;
+  liveActivityWeeks: LiveActivityWeek[] | null;
+  inboxNotifications: RiderNotificationItem[];
+  scheduledOrders: ScheduledOrderItem[];
+  paystackBanks: PaystackBankOption[];
+
+  hydrateRiderData: (apiBaseUrl?: string) => Promise<void>;
+  saveRiderPreferences: (
+    updates: {
+      fullName?: string;
+      email?: string;
+      homeDepot?: string;
+      bankDetails?: RiderBankDetails;
+      vehicles?: RiderVehicleOption[];
+      savedAddresses?: SavedAddressOption[];
+      preferences?: {
+        autoConfirm?: boolean;
+        preferredMapEngine?: 'google' | 'maplibre';
+        dispatchRadiusKm?: number;
+        defaultNavApp?: 'google' | 'waze';
+      };
+    },
+    apiBaseUrl?: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  selectActiveVehicle: (vehicleId: string, apiBaseUrl?: string) => Promise<void>;
+  addRiderVehicle: (plate: string, description: string, apiBaseUrl?: string) => Promise<RiderVehicleOption>;
+  updateSavedAddress: (addr: SavedAddressOption, apiBaseUrl?: string) => Promise<void>;
+  setDefaultNavApp: (app: 'google' | 'waze', apiBaseUrl?: string) => Promise<void>;
+  initializePaystackTopUp: (
+    amountKobo: number,
+    apiBaseUrl?: string
+  ) => Promise<{ success: boolean; reference?: string; authorizationUrl?: string; error?: string }>;
+  fetchPaystackBanks: (apiBaseUrl?: string) => Promise<PaystackBankOption[]>;
+  resolveBankAccount: (
+    accountNumber: string,
+    bankCode: string,
+    apiBaseUrl?: string
+  ) => Promise<{ success: boolean; accountName?: string; error?: string }>;
+  fetchInboxNotifications: (apiBaseUrl?: string) => Promise<void>;
+  fetchScheduledOrders: (apiBaseUrl?: string) => Promise<void>;
+  submitOrderDispute: (
+    orderId: string,
+    topic: string,
+    details?: string,
+    apiBaseUrl?: string
+  ) => Promise<{ success: boolean; ticketId?: string; message: string }>;
 }
 
 /**
@@ -570,9 +714,11 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             riderName: riderUser.fullName,
             plateNumber: riderUser.plateNumber || 'KJA-824-XY',
             authToken: token,
+            simulationMode: false,
             isAuthModalOpen: false,
             isSubmitting: false,
           });
+          get().hydrateRiderData(targetUrl).catch(() => {});
           get().showToast(`Welcome back, ${riderUser.fullName.split(' ')[0]}!`);
           return { success: true };
         }
@@ -739,6 +885,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             isAuthModalOpen: false,
             isSubmitting: false,
           });
+          get().hydrateRiderData(targetUrl).catch(() => {});
           get().showToast('Account verified! Welcome to Bayniks Logistics');
           return { success: true };
         }
@@ -823,7 +970,8 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   submitKyc: async (docs, apiBaseUrl = '') => {
     set({ isSubmitting: true });
     const mergedDocs = { ...get().kycDocuments, ...docs, submittedAt: new Date().toISOString() };
-    if (get().simulationMode || !apiBaseUrl) {
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (get().simulationMode || !baseUrl || !get().authToken) {
       set({
         kycDocuments: mergedDocs,
         kycStatus: 'pending_review',
@@ -834,7 +982,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/riders/onboard`, {
+      const res = await fetch(`${baseUrl}/api/v1/riders/onboard`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -917,9 +1065,94 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   },
   tripPriceConfirmation: null,
   setTripPriceConfirmation: (data) => set({ tripPriceConfirmation: data }),
-  ratePassenger: async (rating: number, comment?: string) => {
-    const { showToast } = get();
-    set({ tripPriceConfirmation: null, isDestinationUpdated: false });
+  lastCompletedOrderId: null,
+  bankDetails: {
+    bankCode: '058',
+    bankName: 'Guaranty Trust Bank',
+    accountNumber: '0148298291',
+    accountName: initialAuth.riderName || 'Courier Rider',
+  },
+  homeDepot: 'Yaba Central',
+  vehicles: [
+    { id: 'veh-1', plate: 'FST476FB', description: 'Toyota Corolla 2004, Silver', isActive: true },
+    { id: 'veh-2', plate: 'KJA921BD', description: 'Bajaj Boxer 150cc, Red', isActive: false },
+    { id: 'veh-3', plate: 'LSR304AP', description: 'TVS HLX Plus 125cc, Black', isActive: false },
+  ],
+  selectedVehicleId: 'veh-1',
+  savedAddresses: [
+    {
+      id: HOME_SAVED_PLACE.id,
+      label: HOME_SAVED_PLACE.label,
+      address: HOME_SAVED_PLACE.address,
+      lat: HOME_SAVED_PLACE.coords.lat,
+      lng: HOME_SAVED_PLACE.coords.lng,
+    },
+    {
+      id: FAVOURITE_SAVED_PLACE.id,
+      label: FAVOURITE_SAVED_PLACE.label,
+      address: FAVOURITE_SAVED_PLACE.address,
+      lat: FAVOURITE_SAVED_PLACE.coords.lat,
+      lng: FAVOURITE_SAVED_PLACE.coords.lng,
+    },
+  ],
+  defaultNavApp: 'google',
+  liveEarningsPeriods: null,
+  liveActivityWeeks: null,
+  inboxNotifications: [
+    {
+      id: 'news-1',
+      title: 'Heavy traffic expected on Third Mainland Bridge',
+      date: 'Today, 08:30',
+      category: 'Traffic',
+      body: 'Maintenance works ongoing between Adeniji Adele and Adekunle. Expect delays or use Ikorodu Road alternative.',
+    },
+    {
+      id: 'news-2',
+      title: 'Weekly Payout Successfully Processed',
+      date: 'Yesterday, 14:00',
+      category: 'Finances',
+      body: 'Your weekly settlement has been transferred to your registered GTBank account.',
+    },
+    {
+      id: 'news-3',
+      title: 'Rainy Season Safety Advisory',
+      date: '21 Oct, 10:15',
+      category: 'Safety',
+      body: 'Ensure your motorcycle brake pads and rain gear are in top condition before going online during downpours.',
+    },
+  ],
+  scheduledOrders: [],
+  paystackBanks: [
+    { name: 'Guaranty Trust Bank', code: '058' },
+    { name: 'Access Bank Plc', code: '044' },
+    { name: 'Zenith Bank Plc', code: '057' },
+    { name: 'First Bank of Nigeria', code: '011' },
+    { name: 'United Bank for Africa (UBA)', code: '033' },
+  ],
+  setDefaultNavApp: async (app, apiBaseUrl = '') => {
+    await get().saveRiderPreferences({ preferences: { defaultNavApp: app } }, apiBaseUrl);
+  },
+  ratePassenger: async (rating: number, comment?: string, apiBaseUrl = '') => {
+    const { showToast, authToken, simulationMode, lastCompletedOrderId, activeOrder } = get();
+    const orderIdToRate = lastCompletedOrderId || activeOrder?._id;
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+
+    if (authToken && !simulationMode && baseUrl && orderIdToRate && !orderIdToRate.startsWith('mock-')) {
+      try {
+        await fetch(`${baseUrl}/api/v1/orders/${orderIdToRate}/rate-passenger`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ rating, comment }),
+        });
+      } catch {
+        // Non-fatal fallback
+      }
+    }
+
+    set({ tripPriceConfirmation: null, isDestinationUpdated: false, lastCompletedOrderId: null });
     showToast(`Passenger rated ${rating} ★${comment ? `: "${comment}"` : ''}. Thank you!`);
   },
 
@@ -959,12 +1192,31 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   },
 
   topUpWallet: async (amountKobo: number, paymentRef?: string, apiBaseUrl = '') => {
-    const { walletBalanceKobo, showToast } = get();
-    const newBalance = walletBalanceKobo + amountKobo;
-    const isStillLocked = newBalance <= -(MAX_CASH_DEBT_LIMIT_KOBO || 500000);
+    const { walletBalanceKobo, showToast, authToken, simulationMode } = get();
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    let resolvedBalance = walletBalanceKobo + amountKobo;
+
+    // Refresh wallet ledger from live backend if authenticated
+    if (authToken && !simulationMode && baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/wallet/me`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.balanceKobo === 'number') {
+            resolvedBalance = data.balanceKobo + (paymentRef ? 0 : amountKobo);
+          }
+        }
+      } catch {
+        // Offline fallback keeps local credit
+      }
+    }
+
+    const isStillLocked = resolvedBalance <= -(MAX_CASH_DEBT_LIMIT_KOBO || 500000);
 
     set({
-      walletBalanceKobo: newBalance,
+      walletBalanceKobo: resolvedBalance,
       isDebtLocked: isStillLocked,
       riderStatus: isStillLocked ? 'offline' : 'available',
     });
@@ -976,7 +1228,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
       }`
     );
 
-    return { success: true, newBalanceKobo: newBalance };
+    return { success: true, newBalanceKobo: resolvedBalance };
   },
 
   setCurrentLocation: (coords, bearing = 0, speed = 0, accuracy = 3.5, simulated = false) => {
@@ -1045,13 +1297,14 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
   syncOfflinePings: async (apiBaseUrl = '') => {
     const { authToken } = get();
-    const result = await offlineTelemetryQueue.flushOfflineQueue(apiBaseUrl, authToken || '');
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    const result = await offlineTelemetryQueue.flushOfflineQueue(baseUrl, authToken || '');
     set({ pendingOfflinePingsCount: result.remainingCount });
     return result;
   },
 
   toggleOnlineStatus: async () => {
-    const { riderStatus, tripPhase, activeOrder, authToken, isDebtLocked, showToast } = get();
+    const { riderStatus, tripPhase, activeOrder, authToken, isDebtLocked, showToast, simulationMode } = get();
 
     // Circuit Breaker Guard: Cannot go online if debt locked
     if (isDebtLocked) {
@@ -1068,20 +1321,12 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
 
     const nextStatus = riderStatus === 'available' ? 'offline' : 'available';
+    const baseUrl = resolveApiBaseUrl();
 
-    // Auditory and Toast Feedback
-    if (nextStatus === 'available') {
-      playMissionAcceptChime();
-      showToast('You are ONLINE • Scanning Lagos corridor');
-    } else {
-      playKeypadChime();
-      showToast('You are now OFFLINE');
-    }
-
-    // If online token is present and not purely simulating, update status on backend
-    if (authToken && !get().simulationMode) {
+    // If online token is present and not purely simulating, update status on backend using resolved APK URL
+    if (authToken && !simulationMode) {
       try {
-        await fetch('/api/v1/riders/status', {
+        const res = await fetch(`${baseUrl}/api/v1/riders/status`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -1093,12 +1338,24 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
             lng: get().currentLocation.lng,
           }),
         });
+        if (!res.ok && (res.status === 403 || res.status === 400)) {
+          const errData = await res.json().catch(() => ({}));
+          playErrorChime();
+          showToast(errData.error || 'Unable to change dispatch availability');
+          return;
+        }
       } catch {
-        // Fallback to local state toggle
+        // Fallback to local state toggle if unreachable
       }
     }
 
-    if (nextStatus === 'offline') {
+    // Auditory and Toast Feedback
+    if (nextStatus === 'available') {
+      playMissionAcceptChime();
+      showToast('You are ONLINE • Scanning Lagos corridor');
+    } else {
+      playKeypadChime();
+      showToast('You are now OFFLINE');
       backgroundLocationService.stopForegroundDeliveryTracking();
     }
 
@@ -1145,7 +1402,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     try {
       if (authToken && !simulationMode) {
-        const res = await fetch(`${apiBaseUrl}/api/v1/dispatch/respond`, {
+        const res = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/dispatch/respond`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1257,7 +1514,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     if (authToken && !simulationMode) {
       try {
-        await fetch(`${apiBaseUrl}/api/v1/dispatch/respond`, {
+        await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/dispatch/respond`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1304,7 +1561,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     try {
       if (nextTargetStatus && authToken && !simulationMode) {
-        const res = await fetch(`${apiBaseUrl}/api/v1/dispatch/orders/${activeOrder._id}/state`, {
+        const res = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/dispatch/orders/${activeOrder._id}/state`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -1374,7 +1631,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/dispatch/orders/${activeOrder._id}/verify-pickup`, {
+      const res = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/dispatch/orders/${activeOrder._id}/verify-pickup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1436,7 +1693,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     }
 
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/dispatch/orders/${activeOrder._id}/verify-delivery`, {
+      const res = await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/dispatch/orders/${activeOrder._id}/verify-delivery`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1525,6 +1782,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     set({
       tripPhase: 'idle',
       riderStatus: nextIsLocked ? 'offline' : 'available',
+      lastCompletedOrderId: activeOrder?._id || null,
       activeOrder: null,
       walletBalanceKobo: nextWalletBalance,
       isDebtLocked: nextIsLocked,
@@ -1562,37 +1820,348 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
   fetchShiftSummary: async (apiBaseUrl = '') => {
     const { authToken } = get();
     if (!authToken) return;
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
     try {
-      const res = await fetch(`${apiBaseUrl}/api/v1/riders/shift-summary`, {
+      const res = await fetch(`${baseUrl}/api/v1/riders/shift-summary`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       if (res.ok) {
         const data = await res.json();
-        set({
-          todayEarningsKobo: data.todayEarningsKobo,
-          tripsCompletedToday: data.tripsCompletedToday,
-          distanceCoveredKm: data.distanceCoveredKm,
-          onTimeSlaPercent: data.onTimeSlaPercent,
-          shiftSettledTrips: data.settledTrips || get().shiftSettledTrips,
-        });
+        const historyItems: DeliveryHistoryItem[] | null = Array.isArray(data.recentHistory)
+          ? data.recentHistory.map((h: any) => ({
+              id: h.orderId || h.trackingCode,
+              trackingCode: h.trackingCode,
+              date: new Date(h.deliveredAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+              time: new Date(h.deliveredAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              timestamp: new Date(h.deliveredAt || Date.now()).getTime(),
+              fromAddress: h.pickupAddress,
+              fromLandmark: h.pickupAddress,
+              toAddress: h.dropoffAddress,
+              toLandmark: h.dropoffAddress,
+              distanceKm: h.distanceKm || 0,
+              durationMins: Math.max(5, Math.round((h.distanceKm || 2) * 3.5)),
+              fareKobo: h.earningKobo || 0,
+              tipKobo: 0,
+              status: h.status === 'cancelled' ? 'cancelled' : 'delivered',
+              proofType: 'pin' as const,
+              pinUsed: h.pinUsed || '',
+              packageType: 'Dispatch Parcel',
+              recipientName: h.customerName || 'Customer',
+              recipientPhone: '',
+            }))
+          : null;
+
+        const mappedVehicles: RiderVehicleOption[] | undefined =
+          Array.isArray(data.vehicles) && data.vehicles.length > 0 ? data.vehicles : undefined;
+        const activeVeh = mappedVehicles?.find((v) => v.isActive) || mappedVehicles?.[0];
+
+        set((state) => ({
+          todayEarningsKobo: typeof data.todayEarningsKobo === 'number' ? data.todayEarningsKobo : state.todayEarningsKobo,
+          walletBalanceKobo: typeof data.walletBalanceKobo === 'number' ? data.walletBalanceKobo : state.walletBalanceKobo,
+          isDebtLocked: typeof data.isDebtLocked === 'boolean' ? data.isDebtLocked : state.isDebtLocked,
+          tripsCompletedToday: typeof data.tripsCompletedToday === 'number' ? data.tripsCompletedToday : state.tripsCompletedToday,
+          distanceCoveredKm: typeof data.distanceCoveredKm === 'number' ? data.distanceCoveredKm : state.distanceCoveredKm,
+          onTimeSlaPercent: typeof data.onTimeSlaPercent === 'number' ? data.onTimeSlaPercent : state.onTimeSlaPercent,
+          shiftSettledTrips: data.settledTrips || state.shiftSettledTrips,
+          plateNumber: data.plateNumber || state.plateNumber,
+          homeDepot: data.homeDepot || state.homeDepot,
+          bankDetails: data.bankDetails || state.bankDetails,
+          vehicles: mappedVehicles || state.vehicles,
+          selectedVehicleId: activeVeh?.id || state.selectedVehicleId,
+          savedAddresses:
+            Array.isArray(data.savedAddresses) && data.savedAddresses.length > 0
+              ? data.savedAddresses
+              : state.savedAddresses,
+          autoConfirm:
+            typeof data.preferences?.autoConfirm === 'boolean'
+              ? data.preferences.autoConfirm
+              : state.autoConfirm,
+          preferredMapEngine:
+            data.preferences?.preferredMapEngine === 'maplibre' ? 'maplibre' : state.preferredMapEngine,
+          dispatchRadiusKm:
+            typeof data.preferences?.dispatchRadiusKm === 'number'
+              ? data.preferences.dispatchRadiusKm
+              : state.dispatchRadiusKm,
+          defaultNavApp:
+            data.preferences?.defaultNavApp === 'waze' ? 'waze' : state.defaultNavApp,
+          liveEarningsPeriods:
+            Array.isArray(data.earningsPeriods) && data.earningsPeriods.length > 0
+              ? data.earningsPeriods
+              : state.liveEarningsPeriods,
+          liveActivityWeeks:
+            Array.isArray(data.activityWeeks) && data.activityWeeks.length > 0
+              ? data.activityWeeks
+              : state.liveActivityWeeks,
+          deliveryHistory:
+            historyItems && historyItems.length > 0 ? historyItems : state.deliveryHistory,
+          inboxNotifications:
+            Array.isArray(data.notifications) && data.notifications.length > 0
+              ? data.notifications
+              : state.inboxNotifications,
+        }));
       }
     } catch {
       // Non-fatal offline fallback
     }
   },
 
-  requestInstantCashout: async (amountKobo, apiBaseUrl = '') => {
-    const { authToken, todayEarningsKobo } = get();
-    const cashoutAmount = amountKobo || todayEarningsKobo;
+  hydrateRiderData: async (apiBaseUrl = '') => {
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    await Promise.allSettled([
+      get().fetchShiftSummary(baseUrl),
+      get().fetchInboxNotifications(baseUrl),
+      get().fetchScheduledOrders(baseUrl),
+      get().fetchPaystackBanks(baseUrl),
+    ]);
+  },
+
+  saveRiderPreferences: async (updates, apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    const nextVehicles = updates.vehicles ?? get().vehicles;
+    const activeVeh = nextVehicles.find((v) => v.isActive) || nextVehicles[0];
+
+    set((state) => ({
+      riderName: updates.fullName ?? state.riderName,
+      riderUser: state.riderUser
+        ? {
+            ...state.riderUser,
+            fullName: updates.fullName ?? state.riderUser.fullName,
+            email: updates.email ?? state.riderUser.email,
+            plateNumber: activeVeh?.plate || state.riderUser.plateNumber,
+          }
+        : state.riderUser,
+      homeDepot: updates.homeDepot ?? state.homeDepot,
+      bankDetails: updates.bankDetails ?? state.bankDetails,
+      vehicles: nextVehicles,
+      selectedVehicleId: activeVeh?.id || state.selectedVehicleId,
+      plateNumber: activeVeh?.plate || state.plateNumber,
+      savedAddresses: updates.savedAddresses ?? state.savedAddresses,
+      autoConfirm: updates.preferences?.autoConfirm ?? state.autoConfirm,
+      preferredMapEngine: updates.preferences?.preferredMapEngine ?? state.preferredMapEngine,
+      dispatchRadiusKm: updates.preferences?.dispatchRadiusKm ?? state.dispatchRadiusKm,
+      defaultNavApp: updates.preferences?.defaultNavApp ?? state.defaultNavApp,
+    }));
+
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!authToken || simulationMode || !baseUrl) {
+      return { success: true };
+    }
+
     try {
-      if (authToken) {
-        const res = await fetch(`${apiBaseUrl}/api/v1/riders/cashout`, {
+      const res = await fetch(`${baseUrl}/api/v1/riders/preferences`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return { success: false, error: err.error || 'Failed to save preferences' };
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Offline — saved locally' };
+    }
+  },
+
+  selectActiveVehicle: async (vehicleId: string, apiBaseUrl = '') => {
+    const nextVehicles = get().vehicles.map((v) => ({
+      ...v,
+      isActive: v.id === vehicleId,
+    }));
+    await get().saveRiderPreferences({ vehicles: nextVehicles }, apiBaseUrl);
+  },
+
+  addRiderVehicle: async (plate: string, description: string, apiBaseUrl = '') => {
+    const created: RiderVehicleOption = {
+      id: `veh-${Date.now()}`,
+      plate: plate.trim().toUpperCase(),
+      description: description.trim(),
+      isActive: true,
+    };
+    const nextVehicles = [
+      ...get().vehicles.map((v) => ({ ...v, isActive: false })),
+      created,
+    ];
+    await get().saveRiderPreferences({ vehicles: nextVehicles }, apiBaseUrl);
+    return created;
+  },
+
+  updateSavedAddress: async (addr: SavedAddressOption, apiBaseUrl = '') => {
+    const exists = get().savedAddresses.some((a) => a.id === addr.id);
+    const nextAddresses = exists
+      ? get().savedAddresses.map((a) => (a.id === addr.id ? addr : a))
+      : [...get().savedAddresses, addr];
+    await get().saveRiderPreferences({ savedAddresses: nextAddresses }, apiBaseUrl);
+  },
+
+  initializePaystackTopUp: async (amountKobo: number, apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (authToken && !simulationMode && baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/wallet/topup/initialize`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${authToken}`,
           },
-          body: JSON.stringify({ amountKobo: cashoutAmount }),
+          body: JSON.stringify({ amountKobo }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.reference) {
+          return {
+            success: true,
+            reference: data.reference,
+            authorizationUrl: data.authorizationUrl,
+          };
+        }
+        return { success: false, error: data.error || 'Paystack initialization failed' };
+      } catch (err: any) {
+        return { success: false, error: err?.message || 'Network error initializing Paystack' };
+      }
+    }
+
+    return {
+      success: true,
+      reference: `PSK-SIM-${Date.now()}`,
+      authorizationUrl: 'https://checkout.paystack.com/bayniks-demo',
+    };
+  },
+
+  fetchPaystackBanks: async (apiBaseUrl = '') => {
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!baseUrl) return get().paystackBanks;
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/payout/banks`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.banks) && data.banks.length > 0) {
+          set({ paystackBanks: data.banks });
+          return data.banks;
+        }
+      }
+    } catch {
+      // Keep fallback Nigerian bank list
+    }
+    return get().paystackBanks;
+  },
+
+  resolveBankAccount: async (accountNumber: string, bankCode: string, apiBaseUrl = '') => {
+    if (!/^\d{10}$/.test(accountNumber)) {
+      return { success: false, error: 'Account number must be 10 digits' };
+    }
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!get().simulationMode && baseUrl) {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/payout/resolve-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accountNumber, bankCode }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.accountName) {
+          return { success: true, accountName: data.accountName };
+        }
+      } catch {
+        // Fallback below
+      }
+    }
+    const resolvedName = (get().riderName || get().riderUser?.fullName || 'VERIFIED COURIER').toUpperCase();
+    return { success: true, accountName: resolvedName };
+  },
+
+  fetchInboxNotifications: async (apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!authToken || simulationMode || !baseUrl) return;
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/riders/notifications`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.notifications) && data.notifications.length > 0) {
+          set({ inboxNotifications: data.notifications });
+        }
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+  },
+
+  fetchScheduledOrders: async (apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    if (!authToken || simulationMode || !baseUrl) return;
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/riders/scheduled-orders`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.orders)) {
+          set({ scheduledOrders: data.orders });
+        }
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+  },
+
+  submitOrderDispute: async (orderId: string, topic: string, details?: string, apiBaseUrl = '') => {
+    const { authToken, simulationMode } = get();
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    const localTicket = `DIS-${Date.now().toString().slice(-6)}`;
+    if (authToken && !simulationMode && baseUrl && orderId && !orderId.startsWith('TRIP-')) {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/orders/${orderId}/disputes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ topic, details }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          return {
+            success: true,
+            ticketId: data.ticketId || localTicket,
+            message: data.message || `Support ticket opened for "${topic}"`,
+          };
+        }
+      } catch {
+        // Offline fallback
+      }
+    }
+    return {
+      success: true,
+      ticketId: localTicket,
+      message: `Support ticket ${localTicket} logged for "${topic}"`,
+    };
+  },
+
+  requestInstantCashout: async (amountKobo, apiBaseUrl = '') => {
+    const { authToken, todayEarningsKobo, bankDetails } = get();
+    const cashoutAmount = amountKobo || todayEarningsKobo;
+    const baseUrl = resolveApiBaseUrl(apiBaseUrl);
+    try {
+      if (authToken) {
+        const res = await fetch(`${baseUrl}/api/v1/riders/cashout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            amountKobo: cashoutAmount,
+            bankCode: bankDetails.bankCode,
+            accountNumber: bankDetails.accountNumber || '0123456789',
+            accountName: bankDetails.accountName || get().riderName || 'Verified Rider',
+          }),
         });
         if (res.ok) {
           set({ todayEarningsKobo: 0 });
@@ -1620,7 +2189,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
 
     if (authToken && activeOrder) {
       try {
-        await fetch(`${apiBaseUrl}/api/v1/orders/${activeOrder._id}/messages`, {
+        await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/orders/${activeOrder._id}/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1643,7 +2212,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     const sosTicket = `SOS-${Date.now().toString().slice(-6)}`;
     try {
       if (authToken) {
-        await fetch(`${apiBaseUrl}/api/v1/riders/emergency/sos`, {
+        await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/riders/emergency/sos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1669,7 +2238,7 @@ export const useRiderStore = create<RiderStoreState>((set, get) => {
     const { currentLocation, activeOrder, authToken } = get();
     try {
       if (authToken) {
-        await fetch(`${apiBaseUrl}/api/v1/riders/incidents`, {
+        await fetch(`${resolveApiBaseUrl(apiBaseUrl)}/api/v1/riders/incidents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

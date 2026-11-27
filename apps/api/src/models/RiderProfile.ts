@@ -8,6 +8,21 @@ import {
   type KycStatus,
 } from '@logistics/shared-types';
 
+export interface IRiderVehicle {
+  id: string;
+  plate: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface IRiderSavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
+
 export interface IRiderProfile extends Document {
   userId: Types.ObjectId;
   fleetOwnerId?: Types.ObjectId | null;
@@ -20,6 +35,21 @@ export interface IRiderProfile extends Document {
   kycRejectionReason?: string | null;
   status: RiderStatus;
   rating: number;
+  homeDepot?: string;
+  bankDetails?: {
+    bankCode: string;
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  };
+  vehicles?: IRiderVehicle[];
+  savedAddresses?: IRiderSavedAddress[];
+  preferences?: {
+    autoConfirm: boolean;
+    preferredMapEngine: 'google' | 'maplibre';
+    dispatchRadiusKm: number;
+    defaultNavApp: 'google' | 'waze';
+  };
   lastLocation: {
     type: 'Point';
     coordinates: [number, number]; // [longitude, latitude] - Golden Rule 4
@@ -124,6 +154,46 @@ export const RiderProfileSchema = new Schema<IRiderProfile>(
     lastSeenAt: {
       type: Date,
       default: Date.now,
+    },
+    homeDepot: {
+      type: String,
+      trim: true,
+      default: 'Yaba Central',
+    },
+    bankDetails: {
+      bankCode: { type: String, trim: true, default: '058' },
+      bankName: { type: String, trim: true, default: 'Guaranty Trust Bank (GTB)' },
+      accountNumber: { type: String, trim: true, default: '' },
+      accountName: { type: String, trim: true, default: '' },
+    },
+    vehicles: {
+      type: [
+        {
+          id: { type: String, required: true },
+          plate: { type: String, required: true, uppercase: true, trim: true },
+          description: { type: String, required: true, trim: true },
+          isActive: { type: Boolean, default: false },
+        },
+      ],
+      default: [],
+    },
+    savedAddresses: {
+      type: [
+        {
+          id: { type: String, required: true },
+          label: { type: String, required: true, trim: true },
+          address: { type: String, required: true, trim: true },
+          lat: { type: Number, required: true },
+          lng: { type: Number, required: true },
+        },
+      ],
+      default: [],
+    },
+    preferences: {
+      autoConfirm: { type: Boolean, default: true },
+      preferredMapEngine: { type: String, enum: ['google', 'maplibre'], default: 'google' },
+      dispatchRadiusKm: { type: Number, default: 2, min: 1, max: 25 },
+      defaultNavApp: { type: String, enum: ['google', 'waze'], default: 'google' },
     },
   },
   {

@@ -186,15 +186,15 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({
   onBack,
   showBackButton = false,
 }) => {
-  const { deliveryHistory } = useRiderStore();
+  const { deliveryHistory, simulationMode, fetchShiftSummary } = useRiderStore();
   const [selectedTrip, setSelectedTrip] = useState<TripReceiptData | null>(null);
 
   const rides = useMemo<TripReceiptData[]>(() => {
     if (deliveryHistory.length === 0) {
-      return DEFAULT_RIDE_HISTORY;
+      return simulationMode ? DEFAULT_RIDE_HISTORY : [];
     }
     return deliveryHistory.map(mapHistoryItemToTripReceipt);
-  }, [deliveryHistory]);
+  }, [deliveryHistory, simulationMode]);
 
   return (
     <div
@@ -224,7 +224,22 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({
 
       {/* Hairline-Divided Trip List */}
       <div className="divide-y divide-zinc-100" data-testid="ride-history-list">
-        {rides.map((trip) => {
+        {rides.length === 0 ? (
+          <div className="px-6 py-16 text-center space-y-3" data-testid="ride-history-empty">
+            <p className="text-sm font-bold text-[#18181B]">No completed deliveries yet</p>
+            <p className="text-xs text-zinc-500">
+              Completed dispatches and payouts will appear here in real time.
+            </p>
+            <button
+              type="button"
+              onClick={() => fetchShiftSummary()}
+              className="px-4 py-2 rounded-full bg-[#18181B] text-[#FF5722] text-xs font-bold"
+            >
+              Sync Trip History
+            </button>
+          </div>
+        ) : (
+        rides.map((trip) => {
           const isCompleted = trip.status === 'completed';
 
           return (
@@ -275,7 +290,8 @@ export const DeliveryHistoryScreen: React.FC<DeliveryHistoryScreenProps> = ({
               </div>
             </button>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Full-Screen Trip Detail & Support Modal */}

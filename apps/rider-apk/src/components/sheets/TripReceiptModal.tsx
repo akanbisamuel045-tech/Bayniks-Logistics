@@ -75,14 +75,16 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
   onClose,
   trip,
 }) => {
-  const { showToast } = useRiderStore();
+  const { showToast, submitOrderDispute } = useRiderStore();
   const [supportStage, setSupportStage] = useState<SupportStage>('none');
   const [selectedSupportTopic, setSelectedSupportTopic] = useState<string | null>(null);
+  const [disputeTicketId, setDisputeTicketId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       setSupportStage('none');
       setSelectedSupportTopic(null);
+      setDisputeTicketId(null);
     }
   }, [isOpen, trip?.id]);
 
@@ -120,6 +122,15 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
     setSelectedSupportTopic(label);
     setSupportStage('submitted');
     showToast(`Support ticket opened for "${label}". Reviewing trip ${currentTrip.date}, ${currentTrip.time}.`);
+    void submitOrderDispute(
+      currentTrip.id,
+      label,
+      `Reported for trip ${currentTrip.id} (${currentTrip.date})`
+    ).then((res) => {
+      if (res.ticketId) {
+        setDisputeTicketId(res.ticketId);
+      }
+    });
   };
 
   const handleSelectGeneralHelp = (label: string) => {
@@ -127,6 +138,15 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
     setSelectedSupportTopic(label);
     setSupportStage('submitted');
     showToast(`Support request opened under "${label}".`);
+    void submitOrderDispute(
+      currentTrip.id,
+      label,
+      `General inquiry from trip ${currentTrip.id}`
+    ).then((res) => {
+      if (res.ticketId) {
+        setDisputeTicketId(res.ticketId);
+      }
+    });
   };
 
   if (supportStage !== 'none') {
@@ -237,6 +257,7 @@ export const TripReceiptModal: React.FC<TripReceiptModalProps> = ({
                 </p>
                 <p className="text-[12.5px] text-zinc-400">
                   Trip {currentTrip.date}, {currentTrip.time} ({currentTrip.id})
+                  {disputeTicketId ? ` • Ref ${disputeTicketId}` : ''}
                 </p>
               </div>
               <div className="pt-2 space-y-2.5">

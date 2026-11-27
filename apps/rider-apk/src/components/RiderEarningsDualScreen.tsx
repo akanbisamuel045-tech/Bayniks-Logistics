@@ -308,7 +308,7 @@ export const RiderEarningsDualScreen: React.FC<RiderEarningsDualScreenProps> = (
   onOpenHistory,
   initialSegment = 'earnings',
 }) => {
-  const { walletBalanceKobo, todayEarningsKobo, showToast } = useRiderStore();
+  const { walletBalanceKobo, todayEarningsKobo, showToast, liveEarningsPeriods, simulationMode } = useRiderStore();
 
   const [activeSegment, setActiveSegment] = useState<'earnings' | 'balances'>(() => {
     if (typeof window !== 'undefined') {
@@ -370,17 +370,24 @@ export const RiderEarningsDualScreen: React.FC<RiderEarningsDualScreenProps> = (
     },
   ];
 
-  // Live wallet integration on Today's balance & Current week/this month
-  const weeklyPeriods: EarningsPeriodData[] = WEEKLY_PERIODS.map((p) => {
-    if (p.id !== 'w-current' || todayEarningsNaira === 0) return p;
+  // Live wallet & backend weekly aggregation when authenticated; curated fallback in simulation
+  const baseWeeklyPeriods: EarningsPeriodData[] =
+    !simulationMode && liveEarningsPeriods && liveEarningsPeriods.length > 0
+      ? liveEarningsPeriods
+      : WEEKLY_PERIODS;
+
+  const weeklyPeriods: EarningsPeriodData[] = baseWeeklyPeriods.map((p, idx) => {
+    const isLatestBucket = p.id === 'w-current' || idx === baseWeeklyPeriods.length - 1;
+    if (!isLatestBucket || todayEarningsNaira === 0) return p;
+    if (!simulationMode && liveEarningsPeriods && liveEarningsPeriods.length > 0) return p;
     return {
       ...p,
       totalNaira: todayEarningsNaira,
       expensesNaira: todayExpensesNaira,
       netNaira: todayNetNaira,
       yMaxNaira: Math.max(10000, Math.ceil(todayEarningsNaira / 5000) * 5000),
-      bars: p.bars.map((b, idx) =>
-        idx === 3 ? { ...b, totalNaira: todayEarningsNaira, expensesNaira: todayExpensesNaira, netNaira: todayNetNaira } : b
+      bars: p.bars.map((b, bIdx) =>
+        bIdx === 3 ? { ...b, totalNaira: todayEarningsNaira, expensesNaira: todayExpensesNaira, netNaira: todayNetNaira } : b
       ),
     };
   });

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { X, CreditCard, ShieldCheck, CheckCircle2, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { playMissionAcceptChime, playKeypadChime } from '../../utils/audioChimes';
+import { X, CreditCard, CheckCircle2, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { playMissionAcceptChime, playKeypadChime, playErrorChime } from '../../utils/audioChimes';
+import { useRiderStore } from '../../store/riderStore';
 
 export interface VirtualDebtTopUpModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentBalanceKobo: number;
-  onTopUpSuccess: (amountKobo: number) => Promise<void>;
+  onTopUpSuccess: (amountKobo: number, paymentRef?: string) => Promise<void>;
 }
 
 function formatKoboToNaira(kobo: number): string {
@@ -20,6 +21,7 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
   currentBalanceKobo,
   onTopUpSuccess,
 }) => {
+  const { initializePaystackTopUp, showToast } = useRiderStore();
   const isNegative = currentBalanceKobo < 0;
   const currentDebtKobo = isNegative ? Math.abs(currentBalanceKobo) : 0;
   const fullDebtNaira = Math.max(1000, Math.ceil(currentDebtKobo / 100));
@@ -29,6 +31,7 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
   const [paymentChannel, setPaymentChannel] = useState<'card' | 'bank_transfer' | 'ussd'>('card');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [paymentRef, setPaymentRef] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -50,18 +53,26 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
   const handleExecutePayment = async () => {
     if (topUpAmountNaira < 500) return;
     setIsProcessing(true);
-    playMissionAcceptChime();
 
     try {
-      // Simulate/trigger Paystack payment processing delay
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      await onTopUpSuccess(topUpAmountNaira * 100);
+      const amountKobo = topUpAmountNaira * 100;
+      const init = await initializePaystackTopUp(amountKobo);
+      if (!init.success) {
+        playErrorChime();
+        showToast(init.error || 'Could not initialize Paystack checkout');
+        setIsProcessing(false);
+        return;
+      }
+
+      setPaymentRef(init.reference || null);
+      playMissionAcceptChime();
+      await onTopUpSuccess(amountKobo, init.reference);
       setIsSuccess(true);
       setTimeout(() => {
         setIsSuccess(false);
         setIsProcessing(false);
         onClose();
-      }, 1500);
+      }, 1000);
     } catch {
       setIsProcessing(false);
     }
@@ -174,7 +185,7 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
                   onClick={() => setPaymentChannel(method.id as any)}
                   className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all ${
                     paymentChannel === method.id
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-extrabold'
+                      ? 'border-[#FF5722] bg-[#18181B] text-[#FF5722] font-extrabold'
                       : 'border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
                   }`}
                 >
@@ -187,8 +198,8 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
           {/* Secure Badge */}
           <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1 border-t border-neutral-100">
             <div className="flex items-center gap-1.5 font-bold">
-              <Lock size={13} className="text-emerald-600" />
-              <span>Secured by Paystack PCI-DSS</span>
+              <Lock size={13} className="text-[#FF5722]" />
+              <span>{paymentRef ? `Ref: ${paymentRef}` : 'Secured by Paystack PCI-DSS'}</span>
             </div>
             <span className="font-extrabold text-neutral-800">
               Total: ₦{topUpAmountNaira.toLocaleString('en-NG')}
@@ -202,10 +213,10 @@ export const VirtualDebtTopUpModal: React.FC<VirtualDebtTopUpModalProps> = ({
             onClick={handleExecutePayment}
             className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] ${
               isSuccess
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-[#FF5722] text-white'
                 : isProcessing
                 ? 'bg-neutral-800 text-white cursor-wait'
-                : 'bg-neutral-900 hover:bg-black text-white'
+                : 'bg-[#18181B] hover:bg-black text-white'
             }`}
             data-testid="btn-execute-topup"
           >

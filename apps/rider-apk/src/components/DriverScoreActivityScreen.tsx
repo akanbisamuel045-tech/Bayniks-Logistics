@@ -5,6 +5,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { playKeypadChime } from '../utils/audioChimes';
+import { useRiderStore } from '../store/riderStore';
 
 export interface DriverScoreActivityScreenProps {
   onBack: () => void;
@@ -174,6 +175,12 @@ export const DriverScoreActivityScreen: React.FC<DriverScoreActivityScreenProps>
     return 'trips';
   });
 
+  const { liveActivityWeeks, simulationMode } = useRiderStore();
+  const activeWeeks =
+    !simulationMode && liveActivityWeeks && liveActivityWeeks.length > 0
+      ? liveActivityWeeks
+      : ACTIVITY_WEEKS;
+
   const [selectedWeekId, setSelectedWeekId] = useState<string>('w-1010');
   const [selectedDayIdx, setSelectedDayIdx] = useState<number>(1);
   const [proTipIdx, setProTipIdx] = useState<number>(0);
@@ -195,7 +202,9 @@ export const DriverScoreActivityScreen: React.FC<DriverScoreActivityScreenProps>
   }, [selectedWeekId, activitySubTab]);
 
   const currentWeek =
-    ACTIVITY_WEEKS.find((w) => w.id === selectedWeekId) || ACTIVITY_WEEKS[1]!;
+    activeWeeks.find((w) => w.id === selectedWeekId) ||
+    activeWeeks[activeWeeks.length - 1] ||
+    ACTIVITY_WEEKS[1]!;
 
   const handleSelectWeek = (week: ActivityWeekData) => {
     playKeypadChime();
@@ -371,7 +380,7 @@ export const DriverScoreActivityScreen: React.FC<DriverScoreActivityScreenProps>
               className="shrink-0 bg-white border-b border-zinc-200/70 overflow-x-auto hide-scrollbar px-4 py-2.5 flex items-center gap-5"
               data-testid="activity-week-strip"
             >
-              {ACTIVITY_WEEKS.map((week) => {
+              {activeWeeks.map((week) => {
                 const isSelected = week.id === currentWeek.id;
                 return (
                   <button
