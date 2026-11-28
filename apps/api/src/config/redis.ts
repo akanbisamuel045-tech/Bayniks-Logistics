@@ -1,16 +1,22 @@
 import Redis from 'ioredis';
-import dotenv from 'dotenv';
+import './env';
 
-dotenv.config();
+export function getRedisUrl(): string {
+  return process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+}
 
-export const DEFAULT_REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+export const DEFAULT_REDIS_URL = getRedisUrl();
 
 let redisInstance: Redis | null = null;
 
-export function getRedisClient(url: string = DEFAULT_REDIS_URL): Redis {
+export function getRedisClient(url?: string): Redis {
   if (!redisInstance) {
-    redisInstance = new Redis(url, {
+    const resolvedUrl = url || getRedisUrl();
+    const isTls = resolvedUrl.startsWith('rediss://');
+
+    redisInstance = new Redis(resolvedUrl, {
       maxRetriesPerRequest: 3,
+      ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
       retryStrategy(times) {
         if (times > 5) {
           return null; // stop retrying
@@ -44,4 +50,3 @@ export async function checkRedisHealth(client?: Redis): Promise<{ status: 'ok' |
     };
   }
 }
-

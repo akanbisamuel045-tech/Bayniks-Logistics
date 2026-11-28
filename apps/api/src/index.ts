@@ -86,4 +86,18 @@ export * from './socket/socket.gateway';
 
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   sampleBootstrap();
+  const isEntryScript =
+    typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module;
+  const isCliRun =
+    typeof process !== 'undefined' &&
+    Array.isArray(process.argv) &&
+    typeof process.argv[1] === 'string' &&
+    /(index\.(ts|js))$/.test(process.argv[1].replace(/\\/g, '/'));
+
+  if (isEntryScript || isCliRun) {
+    startServer().catch((err) => {
+      console.error('[Logistics API] Failed to start server:', err);
+      process.exit(1);
+    });
+  }
 }

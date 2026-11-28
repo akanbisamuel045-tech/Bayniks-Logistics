@@ -1,20 +1,29 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import './env';
 
-dotenv.config();
+export function getMongoUri(): string {
+  return (
+    process.env.MONGO_URI ||
+    process.env.MONGODB_URI ||
+    'mongodb://127.0.0.1:27017/logistics_db?replicaSet=rs0'
+  );
+}
 
-export const DEFAULT_MONGO_URI =
-  process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/logistics_db?replicaSet=rs0';
+export const DEFAULT_MONGO_URI = getMongoUri();
 
-export async function connectMongo(uri: string = DEFAULT_MONGO_URI): Promise<typeof mongoose> {
+export async function connectMongo(uri?: string): Promise<typeof mongoose> {
   if (mongoose.connection.readyState === 1) {
     return mongoose;
   }
 
-  // Ensure 2dsphere and unique indexes are automatically built
-  await mongoose.connect(uri, {
+  const resolvedUri = uri || getMongoUri();
+  const isSrvAtlas = resolvedUri.startsWith('mongodb+srv://');
+
+  // Ensure 2dsphere and unique indexes are automatically built; give Atlas SRV + TLS 10s
+  await mongoose.connect(resolvedUri, {
     autoIndex: true,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: isSrvAtlas ? 10000 : 5000,
+    appName: 'bayniks-api',
   });
 
   return mongoose;
@@ -51,4 +60,3 @@ export async function checkMongoHealth(): Promise<{ status: 'ok' | 'error'; read
     };
   }
 }
-
